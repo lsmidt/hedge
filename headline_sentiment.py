@@ -1,5 +1,5 @@
 """
-Sentiment analysis of current news headlines using NewsAPI and Python Natural Language Toolkit. 
+Sentiment analysis of recent news headlines using NewsAPI and Python Natural Language Toolkit. 
 
 Citation of VADER Sentiment Analysis Model:
 Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text. Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
@@ -34,7 +34,7 @@ sia = SIA.SentimentIntensityAnalyzer()
 ###-------- IEX Methods -----------###
     
 
-def IEX_format_data(symbol, data):
+def iex_format_data(symbol, data):
     """
     INPUT decoded JSON data from IEX news archive. Output of "get_news_data".
     RETURN {symbol : [(article text, polarity score, source, datetime)]} for SINGLE stock symbol
@@ -67,7 +67,7 @@ def IEX_format_data(symbol, data):
     return results_dict 
 
 
-def run_IEX_scan(query_list):
+def run_iex_scan(query_list):
     """
     INPUT list of stock symbol queries
     Abstracts code to run multiple queries at once.
@@ -77,7 +77,7 @@ def run_IEX_scan(query_list):
     IEX_aggregate_dict = {}
     for query in query_list:
         IEX_data = IEX.get_news_data(query)
-        fmt_data = IEX_format_data(query, IEX_data)
+        fmt_data = iex_format_data(query, IEX_data)
 
         avg = average_net_scores_over_time(fmt_data[query], find_earliest_time(fmt_data[query]))
         IEX_aggregate_dict[query] = avg
@@ -86,13 +86,13 @@ def run_IEX_scan(query_list):
         #bar_plot_scores(IEX_results_dict[query], query)
         scatter_plot_scores(IEX_results_dict[query], query)
 
-    IEX_final = classify_polarity_dictionary(IEX_aggregate_dict)
+    iex_final = classify_polarity_dictionary(IEX_aggregate_dict)
 
     printer = pprint.PrettyPrinter(width=40, compact=False)
     print("Aggregate News polarity score ")
     printer.pprint(IEX_aggregate_dict)
 
-    return IEX_final
+    return iex_final
 
 
 ###-------- Common Methods ----------###
@@ -132,9 +132,9 @@ def classify_polarity_dictionary(aggregate_score_dict):
     result_dict = {}
 
     for query, score in aggregate_score_dict.items():
-        if type(score) == type("string"):
+        if type(score) == type("str"):
             result_dict[query] = "No Articles"
-        elif score > 0.2 :
+        elif score > 0.2:
             result_dict[query] = "1"
         elif score < -0.2:
             result_dict[query] = "0"
@@ -237,7 +237,7 @@ def scatter_plot_scores(article_list, title):
         classified_list.append(classify_polarity_score((article_tuple)[1]))
         
 
-    # # normalize date range so only one score exists per day. Not finished
+    # TODO: normalize date range so only one score exists per day. Not finished
 
     # remove_date_indicies = []
 
@@ -268,9 +268,9 @@ def scatter_plot_scores(article_list, title):
     x_tick_locator = mtd.AutoDateLocator(maxticks=50,minticks=2, interval_multiples=True)
     x_tick_formatter = mtd.AutoDateFormatter(x_tick_locator)
 
-    ax = plt.axes()
-    ax.xaxis.set_major_locator(x_tick_locator)
-    ax.xaxis.set_major_formatter(x_tick_formatter)
+    axis = plt.axes()
+    axis.xaxis.set_major_locator(x_tick_locator)
+    axis.xaxis.set_major_formatter(x_tick_formatter)
 
     plt.show()
 
@@ -287,9 +287,9 @@ def bar_plot_scores(article_list, title):
         date_list.append(article_tuple[3])
 
 
-    ax = plt.subplot(111)
-    ax.bar(date_list, classified_list, width=1)
-    ax.xaxis_date()
+    axis = plt.subplot(111)
+    axis.bar(date_list, classified_list, width=1)
+    axis.xaxis_date()
     plt.title(title)
 
     plt.show()
@@ -311,7 +311,7 @@ def run_news_scan(queries):
     """
 
     # first run NewsAPI scan 
-    #scores_dict = NA_get_scores(queries)
+    #scores_dict = news_api_get_scores(queries)
     #agg = average_net_scores_over_time(scores_dict)
     #final = classify_polarity_dictionary(agg)
 
@@ -320,18 +320,18 @@ def run_news_scan(queries):
 
     # then run IEX scan
 
-    IEX_final = run_IEX_scan(queries)
+    iex_final = run_iex_scan(queries)
    
     # combine results dictionaries
-    #final.update(IEX_final)
+    #final.update(iex_final)
 
-    return IEX_final
+    return iex_final
 
 
 
 ###------------ NewsAPI Methods -----------###
 
-def NA_format_data(news_api_object):
+def news_api_format_data(news_api_object):
     """
     Extract the headlines and descriptions from a NewsAPI Headlines object into two lists
 
@@ -357,7 +357,7 @@ def NA_format_data(news_api_object):
     return list(zip(title, desc, source, date_time))
 
 
-def NA_get_scores(query_list):
+def news_api_get_scores(query_list):
     """
     INPUT the news query
     RETURN query : [(article, score), (...)]
@@ -370,7 +370,7 @@ def NA_get_scores(query_list):
     for query in query_list:
         headline_obj = NEWS_API.get_top_headlines(language="en", q=query, country="us")
     
-        headline_list = NA_format_data(headline_obj)
+        headline_list = news_api_format_data(headline_obj)
         results_dict[query] = []
         print("Number of articles for " + query + str(len(headline_list)))
         
@@ -388,8 +388,9 @@ def NA_get_scores(query_list):
 
 
 # run program
-results = run_news_scan(["AA", "TIVO"])
-print(results)
+
+result = run_news_scan(["AA", "TIVO"])
+print(result)
 
 
 
