@@ -1,7 +1,8 @@
 """
-Basic IEXTrading Python API wrapper
+IEXTrading Python API wrapper
 
 Louis Smidt
+06/06/2018
 """
 
 import requests
@@ -77,18 +78,20 @@ class IEX_API_Client:
                 return day_data_dict["changePercent"]
 
         return 0
-   		
-    def get_chart_data(self, symbol, time_range="1y", filter_field=""):
+
+    @staticmethod
+    def get_chart_data(symbol, time_range="1y", filter_field=""):
         """
         RETURN JSON data parsed as a Python dictionary 
         INPUT filter_field string to filter result
-            time_range string to select chart
+         time_range string to select chart
         """	
 
         url_str = "https://api.iextrading.com/1.0/stock/" + symbol + "/chart/" + time_range 
 
         r = requests.get(url_str)
         data = r.json()
+
         return data
 
 
