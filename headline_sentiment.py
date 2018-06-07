@@ -194,7 +194,12 @@ def average_net_scores_over_time(article_list, start, end=datetime.datetime.now(
 
 #     for sd_tuple in article_list:
         
-
+def daterange(start_date, end_date):
+    """
+    Produces a generator for dates, allowing for easy iteration over a range of dates. 
+    """
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + datetime.timedelta(n)
 
 def date_to_datetime(date_time):
     """
@@ -384,5 +389,11 @@ def news_api_get_scores(query_list):
 
 # run program
 
-RESULT = run_news_scan(["AA", "TIVO"])
-print(RESULT)
+#RESULT = run_news_scan(["AA", "TIVO"])
+#print(RESULT)
+
+
+start_date = datetime.date(2013, 1, 1)
+end_date = datetime.date(2015, 6, 2)
+for single_date in daterange(start_date, end_date):
+    print(single_date.strftime("%Y-%m-%d"))
