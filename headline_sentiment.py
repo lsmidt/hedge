@@ -12,6 +12,7 @@ Louis Smidt
 
 import pprint
 import datetime
+from collections import defaultdict
 #import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -225,6 +226,36 @@ def classify_change_percentage(change_percentage):
     
     return 0
 
+def normalize_date_scores(scores, start_date, end_date=datetime.datetime.today()):
+    """
+    RETURN {datetime : score , ...} for each datetime in given daterange, where score is an average of the daily scores
+    INPUT [(date, score), (date, score), ...]
+    """
+    
+    date_scores = defaultdict(list)
+    final_dict = {}
+
+    # build final dict with all dates in range
+    for n in daterange(start_date, end_date):
+        final_dict[n] = 0
+
+    # fill score dictionary
+    for score in scores:
+        if score[1] >= start_date & score[1] <= end_date:
+           date_scores[score[0]].append(score[1])
+
+    # normalize score dictionary into finals dict
+    for date, score_list in date_scores:
+        avg = 0
+        num = 0
+        for score in score_list:
+            avg += score
+            num += 1
+        avg = 0 if num == 0 else float(avg / num)
+        final_dict[date] = avg
+
+    return final_dict
+        
 
 def scatter_plot_scores(article_list, title):
     """
@@ -239,7 +270,7 @@ def scatter_plot_scores(article_list, title):
         date_list.append(article_tuple[3])
         score_list.append(article_tuple[1])
         classified_list.append(classify_polarity_score((article_tuple)[1]))
-        
+
 
     # TODO: normalize date range so only one score exists per day. Not finished
 
@@ -389,11 +420,5 @@ def news_api_get_scores(query_list):
 
 # run program
 
-#RESULT = run_news_scan(["AA", "TIVO"])
-#print(RESULT)
-
-
-start_date = datetime.date(2013, 1, 1)
-end_date = datetime.date(2015, 6, 2)
-for single_date in daterange(start_date, end_date):
-    print(single_date.strftime("%Y-%m-%d"))
+RESULT = run_news_scan(["AA", "TIVO"])
+print(RESULT)
