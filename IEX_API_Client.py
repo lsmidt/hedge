@@ -1,5 +1,5 @@
 """
-IEXTrading Python API wrapper
+Basic IEXTrading Python API wrapper
 
 Louis Smidt
 06/06/2018
@@ -8,6 +8,7 @@ Louis Smidt
 import requests
 import datetime
 import dateutil.relativedelta as relativedelta
+import matplotlib.pyplot as plt
 
 
 class IEX_API_Client:
@@ -83,9 +84,9 @@ class IEX_API_Client:
         """
         RETURN JSON data parsed as a Python dictionary 
         INPUT filter_field string to filter result
-         time_range string to select chart
+        time_range string to select chart
 
-         TODO: implement filter_field
+        TODO: implement filter_field
         """	
 
         url_str = "https://api.iextrading.com/1.0/stock/" + symbol + "/chart/" + time_range 
@@ -94,6 +95,16 @@ class IEX_API_Client:
         data = r.json()
 
         return data
+
+    def plot_stock_chart(self, symbol, time_range="1y"):
+        """
+        TODO: Generate a matplotlib of a stock symbol over the given range
+        """
+
+        pass
+    
+
+
 
 
 IEX = IEX_API_Client()

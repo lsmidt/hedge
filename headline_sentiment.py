@@ -121,6 +121,14 @@ def find_latest_date(article_list):
 
     return max(dates_list)
 
+def get_polarity_score(text):
+    """
+    RETURN VADER result on text block
+    """
+
+    scores = SIA.polarity_scores(text)
+    return scores["compound"]
+
 
 def classify_polarity_dictionary(aggregate_score_dict):
     """
@@ -137,9 +145,9 @@ def classify_polarity_dictionary(aggregate_score_dict):
         elif score > 0.2:
             result_dict[query] = "1"
         elif score < -0.2:
-            result_dict[query] = "0"
-        else:
             result_dict[query] = "-1"
+        else:
+            result_dict[query] = "0"
 
     return result_dict
     
@@ -230,7 +238,7 @@ def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
 
     # fill score dictionary
     for score in scores:
-        score_date = score[0].date()
+        score_date = score[0]
         if (score_date >= start_date) & (score_date <= end_date):
            date_scores[score_date].append(score[1])
 
@@ -284,9 +292,9 @@ def bar_plot_scores(article_list, title):
 
     for article_tuple in article_list:
         classified_score_list.append(classify_polarity_score((article_tuple)[1]))
-        date_list.append(article_tuple[3])
+        date_list.append(article_tuple[3].date())
 
-    min_date = min(date_list).date()
+    min_date = min(date_list)
     normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min_date)
 
     axis = plt.subplot(111)
@@ -295,13 +303,18 @@ def bar_plot_scores(article_list, title):
 
     plt.show()
 
-def get_polarity_score(text):
+def mse_stock_script(symbol, script_results):
     """
-    RETURN VADER result on text block
+    RETURN the mean squared error between a stock's percent daily change and
+            a script's results over the same time period
+
+    INPUT script_results as {date: 1 OR -1 OR 0, ... } for sequential dates
     """
 
-    scores = SIA.polarity_scores(text)
-    return scores["compound"]
+
+
+    pass
+
 
 
 def run_news_scan(queries):
@@ -323,6 +336,7 @@ def run_news_scan(queries):
     #final = classify_polarity_dictionary(agg)
 
     return iex_final
+
 
 
 
