@@ -221,9 +221,9 @@ def classify_change_percentage(change_percentage):
     if change_percentage > 0.2:
         return 1
     elif change_percentage < -0.2:
-        return 0
+        return -1
     
-    return -1
+    return 0
 
 
 def scatter_plot_scores(article_list, title):
