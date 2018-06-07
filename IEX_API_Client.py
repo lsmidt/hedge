@@ -6,7 +6,6 @@ Louis Smidt
 """
 
 import requests
-import json
 import datetime
 import dateutil.relativedelta as relativedelta
 
@@ -28,14 +27,14 @@ class IEX_API_Client:
         return data
 
     def get_single_stock_data(self, symbol):
-       """
-       RETURN parsed JSON of stock data as Python dictionary
-       """
-       url_string = "https://api.iextrading.com/1.0/stock/" + symbol + "/quote"
-       r = requests.get(url_string)
+        """
+        RETURN parsed JSON of stock data as Python dictionary
+        """
+        url_string = "https://api.iextrading.com/1.0/stock/" + symbol + "/quote"
+        r = requests.get(url_string)
 
-       data = r.json()
-       return data
+        data = r.json()
+        return data
     
     def get_percent_change(self, symbol):
         """
@@ -85,6 +84,8 @@ class IEX_API_Client:
         RETURN JSON data parsed as a Python dictionary 
         INPUT filter_field string to filter result
          time_range string to select chart
+
+         TODO: implement filter_field
         """	
 
         url_str = "https://api.iextrading.com/1.0/stock/" + symbol + "/chart/" + time_range 
