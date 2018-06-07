@@ -72,19 +72,19 @@ def run_iex_scan(query_list):
     INPUT list of stock symbol queries
     Abstracts code to run multiple queries at once.
     """
-
+    
     iex_results_dict = {}
     iex_aggregate_dict = {}
     for query in query_list:
         iex_data = IEX.get_news_data(query)
         fmt_data = iex_format_data(query, iex_data)
 
-        avg = average_net_scores_over_time(fmt_data[query], find_earliest_time(fmt_data[query]))
+        avg = average_net_scores_over_time(fmt_data[query], find_earliest_date(fmt_data[query]))
         iex_aggregate_dict[query] = avg
 
         iex_results_dict.update(fmt_data)
-        #bar_plot_scores(iex_results_dict[query], query)
-        scatter_plot_scores(iex_results_dict[query], query)
+        bar_plot_scores(iex_results_dict[query], query)
+        #scatter_plot_scores(iex_results_dict[query], query)
 
     iex_final = classify_polarity_dictionary(iex_aggregate_dict)
 
@@ -97,7 +97,7 @@ def run_iex_scan(query_list):
 
 ###-------- Common Methods ----------###
 
-def find_earliest_time(article_list):
+def find_earliest_date(article_list):
     """
     RETURN datetime object of earliest article
     INPUT [(text, score, source, datetime object)]
@@ -107,9 +107,9 @@ def find_earliest_time(article_list):
     for article_tuple in article_list:
         dates_list.append(article_tuple[3])
 
-    return min(dates_list)
+    return min(dates_list).date()
 
-def find_latest_time(article_list):
+def find_latest_date(article_list):
     """
     RETURN datetime object of earliest article
     INPUT [(text, score, source, datetime object)]
@@ -155,7 +155,7 @@ def classify_polarity_score(score):
     else:
         return 0
 
-def average_net_scores_over_time(article_list, start, end=datetime.datetime.now()):
+def average_net_scores_over_time(article_list, start_date, end_date=datetime.datetime.today()):
     """
     INPUT [(text, score, source, datetime object), (...)] as article_list; start datetime object, end datetime object
         if no end is given all until present moment are calculated
@@ -170,7 +170,7 @@ def average_net_scores_over_time(article_list, start, end=datetime.datetime.now(
     article_count = 0
 
     for article_tuple in article_list:
-        if (article_tuple[3] > start) & (article_tuple[3] < end):
+        if (article_tuple[3].date() > start_date) & (article_tuple[3].date() < end_date.date()):
             score = article_tuple[1]
             avg += score
             article_count += 1
@@ -182,18 +182,6 @@ def average_net_scores_over_time(article_list, start, end=datetime.datetime.now(
         avg = 0
 
     return avg
-    
-
-# def average_daily_scores(article_list):
-#     """
-#     INPUT [(score, datetime)] for each article
-#     RETURN [(score, datetime)] where each datetime is a unique day and score represents the 
-#             average of all scores for articles on that day 
-#     """
-
-#     daily_list = []
-
-#     for sd_tuple in article_list:
         
 def daterange(start_date, end_date):
     """
@@ -226,26 +214,28 @@ def classify_change_percentage(change_percentage):
     
     return 0
 
-def normalize_date_scores(scores, start_date, end_date=datetime.datetime.today()):
+def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
     """
     RETURN {datetime : score , ...} for each datetime in given daterange, where score is an average of the daily scores
     INPUT [(date, score), (date, score), ...]
     """
     
-    date_scores = defaultdict(list)
+    date_scores = {}
     final_dict = {}
 
     # build final dict with all dates in range
     for n in daterange(start_date, end_date):
         final_dict[n] = 0
+        date_scores[n] = []
 
     # fill score dictionary
     for score in scores:
-        if score[1] >= start_date & score[1] <= end_date:
-           date_scores[score[0]].append(score[1])
+        score_date = score[0].date()
+        if (score_date >= start_date) & (score_date <= end_date):
+           date_scores[score_date].append(score[1])
 
     # normalize score dictionary into finals dict
-    for date, score_list in date_scores:
+    for date, score_list in date_scores.items():
         avg = 0
         num = 0
         for score in score_list:
@@ -264,37 +254,12 @@ def scatter_plot_scores(article_list, title):
     """
     date_list = []
     score_list = []
-    classified_list = []
+    classified_score_list = []
 
     for article_tuple in article_list:
         date_list.append(article_tuple[3])
         score_list.append(article_tuple[1])
-        classified_list.append(classify_polarity_score((article_tuple)[1]))
-
-
-    # TODO: normalize date range so only one score exists per day. Not finished
-
-    # remove_date_indicies = []
-
-    # for i in range(0, len(date_list)):
-    #     date = date_list[i].date()
-    #     avg = score_list[i]
-    #     num_on_day = 1
-    #     for j in range(0, len(date_list)):
-    #         other_date = date_list[j].date()
-    #         if (date == other_date) & (i != j):
-    #             avg += score_list[j]
-    #             num_on_day += 1
-    #             remove_date_indicies.append(j)
-    #             score_list.pop(j)
-        
-    #     for index in range(0, len(remove_date_indicies)):
-    #         date_list.pop(index)
-
-    #     remove_date_indicies.clear()
-        
-    #     score_list[i] = float(avg / num_on_day)
-
+        classified_score_list.append(classify_polarity_score((article_tuple)[1]))
 
     plot_dates = mtd.date2num(date_list)
     plt.plot_date(plot_dates, score_list)
@@ -314,17 +279,18 @@ def bar_plot_scores(article_list, title):
     """
     Create bar plot of scores
     """
-    classified_list = []
+    classified_score_list = []
     date_list = []
 
     for article_tuple in article_list:
-        classified_list.append(classify_polarity_score((article_tuple)[1]))
+        classified_score_list.append(classify_polarity_score((article_tuple)[1]))
         date_list.append(article_tuple[3])
 
+    min_date = min(date_list).date()
+    normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min_date)
 
     axis = plt.subplot(111)
-    axis.bar(date_list, classified_list, width=1)
-    axis.xaxis_date()
+    axis.bar(range(len(normalized_dict)), normalized_dict.values())
     plt.title(title)
 
     plt.show()
