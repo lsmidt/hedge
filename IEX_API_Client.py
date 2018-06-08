@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 class IEX_API_Client:
 
     @staticmethod
-    def get_news_data(symbol, length=50):
+    def get_news_data(symbol, length=100):
         """
         RETURN JSON of last 50 news articles from IEX API
         INPUT stock symbol as string; length of article list as integer 

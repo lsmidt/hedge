@@ -1,5 +1,5 @@
 """
-Sentiment analysis of recent news headlines using NewsAPI and Python Natural Language Toolkit. 
+Sentiment analysis of recent news headlines using IEX Trading News and Python Natural Language Toolkit. 
 
 Citation of VADER Sentiment Analysis Model:
 Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text. Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
@@ -30,9 +30,8 @@ NEWS_API = newsapi_client.NewsApiClient(api_key='a76f5e16666f4e66aa4514ea27d425d
 SIA = sia.SentimentIntensityAnalyzer()
 
 
-###-------- IEX Methods -----------###
+###-------------------- IEX Methods -------------------###
     
-
 def iex_format_data(symbol, data):
     """
     INPUT decoded JSON data from IEX news archive. Output of "get_news_data".
@@ -74,16 +73,21 @@ def run_iex_scan(query_list):
     
     iex_results_dict = {}
     iex_aggregate_dict = {}
+
     for query in query_list:
+        # for each query, get news data, format it, add to results dictionary
         iex_data = IEX.get_news_data(query)
         fmt_data = iex_format_data(query, iex_data)
+        iex_results_dict.update(fmt_data)
 
+        # find the combined average sentiment score over the time period of the news, for each query
         avg = average_net_scores_over_time(fmt_data[query], find_earliest_date(fmt_data[query]))
         iex_aggregate_dict[query] = avg
 
-        iex_results_dict.update(fmt_data)
+        # plot scores
+        # TODO: in this method, calculate normalized scores before passing to plot methods
         bar_plot_scores(iex_results_dict[query], query)
-        #scatter_plot_scores(iex_results_dict[query], query)
+        # scatter_plot_scores(iex_results_dict[query], query)
 
     iex_final = classify_polarity_dictionary(iex_aggregate_dict)
 
@@ -94,7 +98,7 @@ def run_iex_scan(query_list):
     return iex_final
 
 
-###-------- Common Methods ----------###
+###------------------ Common Methods --------------------###
 
 def find_earliest_date(article_list):
     """
@@ -199,13 +203,13 @@ def date_to_datetime(date_time):
 
     return time
 
-def classify_score(change_percentage: float) -> float:
+def classify_score(change_percentage: float, confidence_interval=0.2) -> float:
     """
     Classify the change percentage of a stock as Positive, Negative or Neutral (1, -1, 0)
     """
-    if change_percentage > 0.2:
+    if change_percentage > confidence_interval:
         return 1.0
-    elif change_percentage < -0.2:
+    elif change_percentage < -confidence_interval:
         return -1.0
     
     return 0.0
@@ -228,7 +232,7 @@ def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
     for score in scores:
         score_date = score[0]
         if (score_date >= start_date) & (score_date <= end_date):
-           date_scores[score_date].append(score[1])
+            date_scores[score_date].append(score[1])
 
     # normalize score dictionary into finals dict
     for date, score_list in date_scores.items():
@@ -276,63 +280,67 @@ def scatter_plot_scores(article_list, symbol):
 def bar_plot_scores(article_list, symbol):
     """
     Create bar plot of scores
+
+    INPUT: [(title, score, source, datetime), (...), ...]
     """
-    classified_score_list = []
-    date_list = []
 
-    for article_tuple in article_list:
-        classified_score_list.append(classify_score((article_tuple)[1]))
-        date_list.append(article_tuple[3].date())
+    # unpack atricle_list into a classified score list and a date list, both lists of Date objects
+    date_list = [x.date() for x in list(zip(*article_list))[3]]
+    classified_score_list = [classify_score(x) for x in list(zip(*article_list))[1]]
 
-    min_date = min(date_list)
-    normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min_date)
+    # create the normalized dict, such that every date has only one score associated 
+    normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min(date_list))
 
-    error = mse_stock_prediction(symbol, normalized_dict)
+    # determine the error between the sentiment and the actual percent changes
+    error_dict = error_stock_prediction(symbol, normalized_dict)
+    error = average_error(error_dict)
     print("Error is" + str(error))
 
+    # TODO: create a bar plot of the dates to the sentiment score on that date
     axis = plt.subplot(111)
-    axis.bar(range(len(normalized_dict)), normalized_dict.values())
+    #axis.bar(normalized_dict.keys(), normalized_dict.values())
+    axis.bar(error_dict.keys(), error_dict.values())
     plt.title(symbol)
 
     plt.show()
 
-def mse_stock_prediction(symbol, script_results):
+def error_stock_prediction(symbol: str, script_results: dict) -> dict:
     """
     RETURN the mean squared error between a stock's percent daily change and
             a script's results over the same time period
 
     INPUT script_results as {date: 1 OR -1 OR 0, ... } for sequential dates
     """
+    # get percent changes of the symbol in the given period
     from_date = min(script_results.keys())
-
     change_percentages = IEX.get_percent_change_from_date(symbol, from_date)
 
+    # build dict of classified percent changes for each date
     changes_classified = {}
     for date, percent in change_percentages.items():
-        changes_classified[date] = classify_score(percent)
+        changes_classified[date] = classify_score(percent, 1)
 
-
-    net_difference = 0
-    num_days = 0
-
-    # FIXME: Bottom loop iterates too many times on TIVO for "50" articles. More like 100? 
+    # find the error between sentiment and classified changes for each day (that there exists a known percent change)
+    error_dict = {}
 
     for date, change in changes_classified.items():
-        # print(str(date) + " score is" + str(script_results[date]) + " change percent is" + str(change_percentages[date]))
         try:
             day_sentiment = script_results[date]
         except KeyError:
             day_sentiment = 0
 
         day_difference = change - day_sentiment
-        net_difference += day_difference
-        num_days += 1
+        error_dict[date] = day_difference
 
-    avgerage_difference = float(net_difference / num_days)
+    return error_dict
 
-    return avgerage_difference
+def average_error(error_dict: dict) -> float:
+    """
+    RETURN float value of mean squared error present in the error dictionary
+    """
+    return sum(error_dict.values()) / len(error_dict)
 
-
+    
 
 def run_news_scan(queries):
     """
@@ -357,7 +365,7 @@ def run_news_scan(queries):
 
 
 
-###------------ NewsAPI Methods -----------###
+###---------------------- NewsAPI Methods ----------------------###
 
 def news_api_format_data(news_api_object):
     """
