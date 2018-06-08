@@ -58,7 +58,7 @@ class IEX_API_Client:
         
     def get_percent_change_from_date(self, symbol, from_date):
         """
-        RETURN percent change of symbol on specific date (ignoring time)
+        RETURN percent change of symbol from specific date (ignoring time)
         """
 
         # TODO: Change the time_range properly for larger or smaller than 2 years

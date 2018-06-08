@@ -86,8 +86,8 @@ def run_iex_scan(query_list):
 
         # plot scores
         # TODO: in this method, calculate normalized scores before passing to plot methods
-        bar_plot_scores(iex_results_dict[query], query)
-        # scatter_plot_scores(iex_results_dict[query], query)
+        # bar_plot_scores(iex_results_dict[query], query)
+        scatter_plot_scores(iex_results_dict[query], query)
 
     iex_final = classify_polarity_dictionary(iex_aggregate_dict)
 
@@ -214,6 +214,17 @@ def classify_score(change_percentage: float, confidence_interval=0.2) -> float:
     
     return 0.0
 
+def create_classified_dict(normalized_dict: dict, classification_interval: float) -> dict:
+    """
+    RETURN a normalized, classified dict of dates : scores
+    """
+    classified_dict = {}
+    for date, score in normalized_dict.items():
+        classified_dict[date] = classify_score(score, classification_interval)
+
+    return classified_dict
+
+
 def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
     """
     RETURN {datetime : score , ...} for each datetime in given daterange, where score is an average of the daily scores
@@ -245,34 +256,58 @@ def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
         final_dict[date] = avg
 
     return final_dict
-        
+
+def scatter_plot_normalized_dict(norm_dict: dict) -> None:
+    """
+    plot a normalized dictionary
+    """   
+
+    plt.plot(norm_dict.keys(), norm_dict.values(), "ro-")
+    plt.show()
+
+
 
 def scatter_plot_scores(article_list, symbol):
     """
     plot article dates with their polarity scores
     INPUT [(text, polarity score, source, datetime object), (...)]
     """
-    date_list = []
+# unpack atricle_list into a classified score list and a date list, both lists of Date objects
+    date_list = [x.date() for x in list(zip(*article_list))[3]]
+    classified_score_list = [classify_score(x) for x in list(zip(*article_list))[1]]
     score_list = []
-    classified_score_list = []
-
-    for article_tuple in article_list:
-        date_list.append(article_tuple[3])
-        score_list.append(article_tuple[1])
-        classified_score_list.append(classify_score((article_tuple)[1]))
 
     # TODO Add support for plotting normalized date-scores
 
-    plot_dates = mtd.date2num(date_list)
-    plt.plot_date(plot_dates, score_list)
+    # create the normalized dict, such that every date has only one score associated 
+    norm_stmt_scores = normalize_date_scores(list(zip(date_list, classified_score_list)), min(date_list))
+    norm_classified_stmt_scores = create_classified_dict(norm_stmt_scores, 0.2)
+   
+    # determine the error between the sentiment and the actual percent changes
+    error_dict = error_stock_prediction(symbol, norm_stmt_scores)
+    error = average_error(error_dict)
+
+    norm_error_dict = error_stock_prediction(symbol, norm_classified_stmt_scores)
+    classified_error = average_error(norm_error_dict)
+    print("Scatter Plot")
+    print("Error is " + str(error) + " for unclassified")
+    print("Error is " + str(classified_error) + " for classified")
+
+    # SENTIMENT PLOTS
+    # plt.plot(norm_stmt_scores.keys(), norm_stmt_scores.values(), "go-")
+    plt.plot(norm_classified_stmt_scores.keys(), norm_classified_stmt_scores.values(), "ro-")
+    
+    # ERROR PLOTS
+    # plt.plot(error_dict.keys(), error_dict.values(), "ro--")
+    plt.plot(norm_error_dict.keys(), norm_error_dict.values(), "bo--")
     plt.title(symbol)
 
     x_tick_locator = mtd.AutoDateLocator(maxticks=50, minticks=2, interval_multiples=True)
     x_tick_formatter = mtd.AutoDateFormatter(x_tick_locator)
 
-    axis = plt.axes()
-    axis.xaxis.set_major_locator(x_tick_locator)
-    axis.xaxis.set_major_formatter(x_tick_formatter)
+    #axis = plt.axes()
+    #axis.xaxis.set_major_locator(x_tick_locator)
+    #axis.xaxis.set_major_formatter(x_tick_formatter)
 
     plt.show()
 
@@ -289,16 +324,21 @@ def bar_plot_scores(article_list, symbol):
     classified_score_list = [classify_score(x) for x in list(zip(*article_list))[1]]
 
     # create the normalized dict, such that every date has only one score associated 
-    normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min(date_list))
-
-    # determine the error between the sentiment and the actual percent changes
-    error_dict = error_stock_prediction(symbol, normalized_dict)
+    norm_stmt_scores = normalize_date_scores(list(zip(date_list, classified_score_list)), min(date_list))
+    norm_classified_stmt_scores = create_classified_dict(norm_stmt_scores, 0.2)
+   
+   # determine the error between the sentiment and the actual percent changes
+    error_dict = error_stock_prediction(symbol, norm_stmt_scores)
     error = average_error(error_dict)
-    print("Error is" + str(error))
+
+    norm_error_dict = error_stock_prediction(symbol, norm_classified_stmt_scores)
+    classified_error = average_error(norm_error_dict)
+    print("Error is " + str(error) + " for unclassified")
+    print("Error is " + str(classified_error) + " for classified")
 
     # TODO: create a bar plot of the dates to the sentiment score on that date
     axis = plt.subplot(111)
-    #axis.bar(normalized_dict.keys(), normalized_dict.values())
+    #axis.bar(norm_stmt_scores.keys(), norm_stmt_scores.values())
     axis.bar(error_dict.keys(), error_dict.values())
     plt.title(symbol)
 
@@ -314,6 +354,8 @@ def error_stock_prediction(symbol: str, script_results: dict) -> dict:
     # get percent changes of the symbol in the given period
     from_date = min(script_results.keys())
     change_percentages = IEX.get_percent_change_from_date(symbol, from_date)
+
+    scatter_plot_normalized_dict(change_percentages)
 
     # build dict of classified percent changes for each date
     changes_classified = {}
