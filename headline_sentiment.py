@@ -211,16 +211,16 @@ def date_to_datetime(date_time):
 
     return time
 
-def classify_change_percentage(change_percentage):
+def classify_change_percentage(change_percentage: float) -> float:
     """
     Classify the change percentage of a stock as Positive, Negative or Neutral (1, -1, 0)
     """
     if change_percentage > 0.2:
-        return 1
+        return 1.0
     elif change_percentage < -0.2:
-        return -1
+        return -1.0
     
-    return 0
+    return 0.0
 
 def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
     """
@@ -317,10 +317,15 @@ def mse_stock_prediction(symbol, script_results):
 
     change_percentages = IEX.get_percent_change_from_date(symbol, from_date)
 
+    changes_classified = {}
+    for date, percent in change_percentages.items():
+        changes_classified[date] = classify_change_percentage(percent)
+
+
     net_difference = 0
     num_days = 0
 
-    for date, change in change_percentages.items():
+    for date, change in changes_classified.items():
         # print(str(date) + " score is" + str(script_results[date]) + " change percent is" + str(change_percentages[date]))
         try:
             day_sentiment = script_results[date]
