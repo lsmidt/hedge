@@ -56,28 +56,28 @@ class IEX_API_Client:
         return data["latestPrice"]
         
         
-    def get_percent_change_on_date(self, symbol, date_time_obj):
+    def get_percent_change_from_date(self, symbol, from_date):
         """
         RETURN percent change of symbol on specific date (ignoring time)
         """
-        date = date_time_obj.date()
-        today = date.today()
 
         # TODO: Change the time_range properly for larger or smaller than 2 years
         # diff_date = today - relativedelta.relativedelta(date)
         # diff_yr = today - relativedelta.relativedelta(years=1)
 
-        change_data = self.get_chart_data(symbol, time_range="2y")
+        change_data = self.get_chart_data(symbol, time_range="1y")
 
+        change_dict = {}
 
         for day_data_dict in change_data:
             date_string_stamp = day_data_dict["date"]
             datetime_stamp = datetime.datetime.strptime(date_string_stamp, "%Y-%m-%d")
+            date_stamp = datetime_stamp.date()
 
-            if datetime_stamp == date_time_obj.date():
-                return day_data_dict["changePercent"]
+            if date_stamp > from_date :
+                change_dict[date_stamp] = day_data_dict["changePercent"]
 
-        return 0
+        return change_dict
 
     @staticmethod
     def get_chart_data(symbol, time_range="1y", filter_field=""):
@@ -110,4 +110,4 @@ class IEX_API_Client:
 IEX = IEX_API_Client()
 
 #print(IEX.get_stock_quote("AAPL"))
-print(IEX.get_percent_change_on_date("AAPL", datetime.datetime(2018, 2, 11)))
+print(IEX.get_percent_change_from_date("AAPL", datetime.date(2018, 2, 11)))

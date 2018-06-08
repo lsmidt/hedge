@@ -297,23 +297,43 @@ def bar_plot_scores(article_list, title):
     min_date = min(date_list)
     normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min_date)
 
+    error = mse_stock_prediction(title, normalized_dict)
+    print("Error is" + str(error))
+
     axis = plt.subplot(111)
     axis.bar(range(len(normalized_dict)), normalized_dict.values())
     plt.title(title)
 
     plt.show()
 
-def mse_stock_script(symbol, script_results):
+def mse_stock_prediction(symbol, script_results):
     """
     RETURN the mean squared error between a stock's percent daily change and
             a script's results over the same time period
 
     INPUT script_results as {date: 1 OR -1 OR 0, ... } for sequential dates
     """
+    from_date = min(script_results.keys())
 
+    change_percentages = IEX.get_percent_change_from_date(symbol, from_date)
 
+    net_difference = 0
+    num_days = 0
 
-    pass
+    for date, change in change_percentages.items():
+        # print(str(date) + " score is" + str(script_results[date]) + " change percent is" + str(change_percentages[date]))
+        try:
+            day_sentiment = script_results[date]
+        except KeyError:
+            day_sentiment = 0
+
+        day_difference = change - day_sentiment
+        net_difference += day_difference
+        num_days += 1
+
+    avgerage_difference = float(net_difference / num_days)
+
+    return avgerage_difference
 
 
 
@@ -401,4 +421,4 @@ def news_api_get_scores(query_list):
 # run program
 
 RESULT = run_news_scan(["AA", "TIVO"])
-print(RESULT)
+# print(RESULT)
