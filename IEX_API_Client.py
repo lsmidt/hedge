@@ -74,7 +74,7 @@ class IEX_API_Client:
             datetime_stamp = datetime.datetime.strptime(date_string_stamp, "%Y-%m-%d")
             date_stamp = datetime_stamp.date()
 
-            if date_stamp > from_date :
+            if date_stamp >= from_date :
                 change_dict[date_stamp] = day_data_dict["changePercent"]
 
         return change_dict
@@ -85,9 +85,8 @@ class IEX_API_Client:
         RETURN JSON data parsed as a Python dictionary 
         INPUT filter_field string to filter result
         time_range string to select chart
-
-        TODO: implement filter_field
         """	
+        # TODO: implement filter_field
 
         url_str = "https://api.iextrading.com/1.0/stock/" + symbol + "/chart/" + time_range 
 
@@ -98,8 +97,10 @@ class IEX_API_Client:
 
     def plot_stock_chart(self, symbol, time_range="1y"):
         """
-        TODO: Generate a matplotlib of a stock symbol over the given range
+        Plot a stock chart over the given range
         """
+        # TODO: Generate a matplotlib of a stock symbol over the given range
+
 
         pass
     

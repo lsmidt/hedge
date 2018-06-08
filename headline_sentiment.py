@@ -12,7 +12,6 @@ Louis Smidt
 
 import pprint
 import datetime
-from collections import defaultdict
 #import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -151,19 +150,8 @@ def classify_polarity_dictionary(aggregate_score_dict):
 
     return result_dict
     
-def classify_polarity_score(score):
-    """
-    classify a single float
-    RETURN 1, 0, -1
-    """
-    if score > 0.2:
-        return 1
-    elif score < -0.2:
-        return -1
-    else:
-        return 0
 
-def average_net_scores_over_time(article_list, start_date, end_date=datetime.datetime.today()):
+def average_net_scores_over_time(article_list, start_date, end_date=datetime.date.today()):
     """
     INPUT [(text, score, source, datetime object), (...)] as article_list; start datetime object, end datetime object
         if no end is given all until present moment are calculated
@@ -178,7 +166,7 @@ def average_net_scores_over_time(article_list, start_date, end_date=datetime.dat
     article_count = 0
 
     for article_tuple in article_list:
-        if (article_tuple[3].date() > start_date) & (article_tuple[3].date() < end_date.date()):
+        if (article_tuple[3].date() > start_date) & (article_tuple[3].date() < end_date):
             score = article_tuple[1]
             avg += score
             article_count += 1
@@ -211,7 +199,7 @@ def date_to_datetime(date_time):
 
     return time
 
-def classify_change_percentage(change_percentage: float) -> float:
+def classify_score(change_percentage: float) -> float:
     """
     Classify the change percentage of a stock as Positive, Negative or Neutral (1, -1, 0)
     """
@@ -255,7 +243,7 @@ def normalize_date_scores(scores, start_date, end_date=datetime.date.today()):
     return final_dict
         
 
-def scatter_plot_scores(article_list, title):
+def scatter_plot_scores(article_list, symbol):
     """
     plot article dates with their polarity scores
     INPUT [(text, polarity score, source, datetime object), (...)]
@@ -267,11 +255,13 @@ def scatter_plot_scores(article_list, title):
     for article_tuple in article_list:
         date_list.append(article_tuple[3])
         score_list.append(article_tuple[1])
-        classified_score_list.append(classify_polarity_score((article_tuple)[1]))
+        classified_score_list.append(classify_score((article_tuple)[1]))
+
+    # TODO Add support for plotting normalized date-scores
 
     plot_dates = mtd.date2num(date_list)
     plt.plot_date(plot_dates, score_list)
-    plt.title(title)
+    plt.title(symbol)
 
     x_tick_locator = mtd.AutoDateLocator(maxticks=50, minticks=2, interval_multiples=True)
     x_tick_formatter = mtd.AutoDateFormatter(x_tick_locator)
@@ -283,7 +273,7 @@ def scatter_plot_scores(article_list, title):
     plt.show()
 
 
-def bar_plot_scores(article_list, title):
+def bar_plot_scores(article_list, symbol):
     """
     Create bar plot of scores
     """
@@ -291,18 +281,18 @@ def bar_plot_scores(article_list, title):
     date_list = []
 
     for article_tuple in article_list:
-        classified_score_list.append(classify_polarity_score((article_tuple)[1]))
+        classified_score_list.append(classify_score((article_tuple)[1]))
         date_list.append(article_tuple[3].date())
 
     min_date = min(date_list)
     normalized_dict = normalize_date_scores(list(zip(date_list, classified_score_list)), min_date)
 
-    error = mse_stock_prediction(title, normalized_dict)
+    error = mse_stock_prediction(symbol, normalized_dict)
     print("Error is" + str(error))
 
     axis = plt.subplot(111)
     axis.bar(range(len(normalized_dict)), normalized_dict.values())
-    plt.title(title)
+    plt.title(symbol)
 
     plt.show()
 
@@ -319,11 +309,13 @@ def mse_stock_prediction(symbol, script_results):
 
     changes_classified = {}
     for date, percent in change_percentages.items():
-        changes_classified[date] = classify_change_percentage(percent)
+        changes_classified[date] = classify_score(percent)
 
 
     net_difference = 0
     num_days = 0
+
+    # FIXME: Bottom loop iterates too many times on TIVO for "50" articles. More like 100? 
 
     for date, change in changes_classified.items():
         # print(str(date) + " score is" + str(script_results[date]) + " change percent is" + str(change_percentages[date]))
