@@ -17,6 +17,14 @@ Twitter Consumer Key
 Analyze Tweets from speficic list of individuals
 Quantify value of tweet content based on number of followers
 Can you find a tweet @ an account?
+
+dictionaries: positive correlation keywords, negative correlation keywords
 '''
 
-#this is a test because I'm not sure I know how to pull :(
+import twitter
+api = twitter.Api(consumer_key='consumer_key',      consumer_secret='consumer_secret',
+                  access_token_key='access_token',  access_token_secret='access_token_secret')
+
+
+status = api.GetUserTimeline('snap')
+#response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
