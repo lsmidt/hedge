@@ -272,10 +272,10 @@ def scatter_plot_scores(article_list, symbol):
     plot article dates with their polarity scores
     INPUT [(text, polarity score, source, datetime object), (...)]
     """
-# unpack atricle_list into a classified score list and a date list, both lists of Date objects
+    # unpack atricle_list into a classified score list and a date list, both lists of Date objects
     date_list = [x.date() for x in list(zip(*article_list))[3]]
     classified_score_list = [classify_score(x) for x in list(zip(*article_list))[1]]
-    score_list = []
+    score_list = list(zip(*article_list))[1]
 
     # TODO Add support for plotting normalized date-scores
 
@@ -407,7 +407,9 @@ def run_news_scan(queries):
 
 
 
-###---------------------- NewsAPI Methods ----------------------###
+###---------------------- NewsAPI Methods ----------------------###    
+# NOTE: This API has been truncated and is not in use in the
+# current version of headline_sentiment
 
 def news_api_format_data(news_api_object):
     """
@@ -418,6 +420,7 @@ def news_api_format_data(news_api_object):
 
     works on single query
     """
+
     title = []
     desc = []    
     date_time = []
@@ -465,7 +468,7 @@ def news_api_get_scores(query_list):
 
 
 
-# run program
+#----------- run program ------------#
 
 RESULT = run_news_scan(["AA", "TIVO"])
 # print(RESULT)
