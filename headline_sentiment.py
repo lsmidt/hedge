@@ -1,14 +1,15 @@
-"""
-Sentiment analysis of recent news headlines using IEX Trading News and Python Natural Language Toolkit.
+# Hedge
+# 
+# Sentiment analysis of recent news headlines using IEX Trading News and Python Natural Language Toolkit.
+#
+# Citation of VADER Sentiment Analysis Model:
+# Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text. Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
+#
+# News headlines powered by NewsAPI.org and IEX Trading API
+#
+# Louis Smidt
+# 05/28/2018
 
-Citation of VADER Sentiment Analysis Model:
-Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text. Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
-
-News headlines powered by NewsAPI.org and IEX Trading API
-
-Louis Smidt
-05/28/2018
-"""
 
 import pprint
 import datetime

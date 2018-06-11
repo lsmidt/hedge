@@ -1,24 +1,24 @@
-'''
-GOAL: To return a confidence index of specific company stock price longevity based on major macroeconomic changes
-noted by 'influential' twitter users (1,000,000+ followers)
+# Hedge
+ 
+# GOAL: To return a confidence index of specific company stock price longevity based on major macroeconomic changes noted by 'influential' twitter users (1,000,000+ followers)
+#
+# Max Gillespie & Louis Smidt
+# Hedge Team
+# 6/09/18
 
-Max Gillespie & Louis Smidt
-6/09/18
-'''
 
-'''
-Action Items:
+# Action Items:
+#
+# 2 Functions:
+##     Mentions: Analyze sentiment of a standard person @ing a company account
+# #    Company Score: Analyze macroeconomic factors from influential individuals
+#
+# Analyze Tweets from speficic list of individuals
+# Quantify value of tweet content based on number of followers
+# Can you find a tweet @ an account?
 
-2 Functions:
-    Analyze sentiment of a standard person @ing a company account
-    Analyze macroeconomic factors from influential individuals
+# dictionaries: positive correlation keywords, negative correlation keywords
 
-Analyze Tweets from speficic list of individuals
-Quantify value of tweet content based on number of followers
-Can you find a tweet @ an account?
-
-dictionaries: positive correlation keywords, negative correlation keywords
-'''
 
 import twitter
 from datetime import date
@@ -32,6 +32,10 @@ def csv_to_dict_list(csv_file) -> list:
     parse csv file into a list of dictionaries
     """
     pass
+
+
+
+######----------------- Company Score -------------------######
 
 def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
     """
@@ -52,13 +56,17 @@ def find_tweet_target(tweet_text: str) -> str:
     """
     pass
 
+
+
+######----------------- Mentions ----------------#######
+
 def get_recent_mentions(account_id: str, number: int) -> list:
     """
     find the 'number' most recent mentions of an account
     """
     pass
 
-def shows_purchase_intent(tweet_text) -> bool:
+def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
     check tweet text for indication that customer purchased product from the target company
     """
@@ -70,10 +78,16 @@ def get_account_id_from_name(account_screen_name: str) -> int:
     """
     pass
 
-def run_scan(stock_symbol: str)
 
 
-#--------------- Run program ---------------#
+#####--------------- Run program -----------------######
+
+def run_scan(stock_symbol: str):
+    """
+    
+    """
+    pass
+
 
 STATUS = API.GetUserTimeline('snap')
 # response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
