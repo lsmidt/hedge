@@ -3,7 +3,6 @@
 # GOAL: To return a confidence index of specific company stock price longevity based on major macroeconomic changes noted by 'influential' twitter users (1,000,000+ followers)
 #
 # Max Gillespie & Louis Smidt
-# Hedge Team
 # 6/09/18
 
 
@@ -20,14 +19,15 @@
 # dictionaries: positive correlation keywords, negative correlation keywords
 
 
-import twitter
+import twitter # used for mentions
+import tweepy # used for streaming
 import nltk
 from datetime import date
 import csv
 import pprint
 import vaderSentiment.vaderSentiment as sia
-from nltk.tag import StanfordNERTagger # for Named Entity Resolution
-from nltk.metrics.scores import accuracy # 
+from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
+from nltk.metrics.scores import accuracy 
 
 # Vader sentiment object
 SIA = sia.SentimentIntensityAnalyzer()
@@ -35,28 +35,36 @@ SIA = sia.SentimentIntensityAnalyzer()
 # read CSV file of tickers to names
 # tickers = csv_to_dict_list(stock_tickers.csv)
 
-# Twitter API Object
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
 CONSUMER_SECRET = 'OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc'
 AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
 AXS_TOKEN_SECRET = 'e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ'
 
-API = twitter.Api(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET, access_token_key=AXS_TOKEN_KEY, access_token_secret=AXS_TOKEN_SECRET)
+# python-witter API Object
+PT_API = twitter.Api(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET, access_token_key=AXS_TOKEN_KEY, access_token_secret=AXS_TOKEN_SECRET)
 
-def csv_to_dict_list(csv_file) -> list:
-    """
-    parse csv file into a list of dictionaries
-    """
-    csv.DictReader(csv_file)
+# tweepy object
+auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
+TWEEPY_API = tweepy.API(auth)
 
 
-######----------------- Company Score -------------------######
+######----------------- Company Score (Live Stream) -------------------######
 
-def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
+def start_tweet_stream(search_term: str):
     """
-    RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
+    begin the streaming process 
     """
-    pass
+
+def filter_tweet(tweet):
+    """
+    filter the tweet from the stream if it is not useful
+    """
+
+def save_tweet_to_file(tweet):
+    """
+    save the tweet to a file
+    """
 
 def save_stream_from_user(user_id: int):
     """
@@ -78,7 +86,13 @@ def find_tweet_target(tweet_text: str) -> str:
     pass
 
 
-######----------------- Mentions ----------------#######
+######----------------- Mentions (Average Sentiment)----------------#######
+
+def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
+    """
+    RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
+    """
+    pass
 
 def get_recent_mentions(account_id: str, number: int) -> list:
     """
@@ -88,15 +102,16 @@ def get_recent_mentions(account_id: str, number: int) -> list:
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
-    check tweet text for indication that customer purchased product from the target company
+    check tweet text for indication that customer purchased product from the target company. 
+    Look for a noun and a verb in the sentence. 
     """
     pass
 
-def get_account_id_from_name(account_screen_name: str) -> int:
+def get_account_id_from_name(screen_name: str) -> int:
     """
     RETURN the numeric id associated with an account
     """
-    pass
+    return PT_API.GetUser(screen_name=screen_name).id
 
 
 
@@ -109,12 +124,13 @@ def run_scan(stock_symbol: str):
     pass
 
 
-USER = API.GetUser(screen_name="Snapchat")
-STATUS = API.GetUserTimeline(USER)
+USER = PT_API.GetUser(screen_name="Snapchat")
+STATUS = PT_API.GetUserTimeline(get_account_id_from_name("Snapchat"))
 # response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
 
-TEST = API.GetTrendsCurrent()
+TEST = PT_API.GetTrendsCurrent()
 
 printer = pprint.PrettyPrinter()
-printer.pprint(STATUS)
+for item in STATUS:
+    printer.pprint(item.text)
 #printer.pprint(TEST)
