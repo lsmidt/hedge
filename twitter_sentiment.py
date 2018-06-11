@@ -21,9 +21,15 @@
 
 
 import twitter
+import nltk
 from datetime import date
 import csv
+import pprint
+import vaderSentiment.vaderSentiment as sia
+from nltk.tag import StanfordNERTagger
+from nltk.metrics.scores import accuracy
 
+SIA = sia.SentimentIntensityAnalyzer()
 
 API = twitter.Api(consumer_key='zQuVUVHVWNZd7yfMNdyXx4NgJ', consumer_secret='OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc', access_token_key='1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC', access_token_secret='e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ')
 
@@ -34,7 +40,6 @@ def csv_to_dict_list(csv_file) -> list:
     pass
 
 
-
 ######----------------- Company Score -------------------######
 
 def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
@@ -43,19 +48,24 @@ def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
     """
     pass
 
+def stream_from_user(user_id: int):
+    """
+    Open a streaming connection from a user and save all tweets to a database
+    """
+    pass
+
 def find_tweet_sentiment(tweet_text: str) -> float:
     """
     determine the sentiment of a tweet for a specific company
     """
-    pass
+    return SIA.polarity_scores(tweet_text)["compound"]
 
 def find_tweet_target(tweet_text: str) -> str:
     """
-    determine what company a tweet is most likely talking about.
+    perform Named Entity Resolution to determine what company a tweet is most likely talking about.
     RETURN str representing company ticker symbol
     """
     pass
-
 
 
 ######----------------- Mentions ----------------#######
@@ -89,5 +99,12 @@ def run_scan(stock_symbol: str):
     pass
 
 
-STATUS = API.GetUserTimeline('snap')
+USER = API.GetUser(screen_name="Snapchat")
+STATUS = API.GetUserTimeline(USER)
 # response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
+
+TEST = API.GetTrendsCurrent()
+
+printer = pprint.PrettyPrinter()
+printer.pprint(STATUS)
+#printer.pprint(TEST)

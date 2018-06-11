@@ -463,7 +463,8 @@ def news_api_get_scores(query_list):
             results = (td_tuple[0], article_polarity, td_tuple[2], td_tuple[3])
             results_dict[query].append(results)
 
-    return results_dict
+    #return results_dict
+    pass
 
 
 
