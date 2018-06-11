@@ -26,18 +26,28 @@ from datetime import date
 import csv
 import pprint
 import vaderSentiment.vaderSentiment as sia
-from nltk.tag import StanfordNERTagger
-from nltk.metrics.scores import accuracy
+from nltk.tag import StanfordNERTagger # for Named Entity Resolution
+from nltk.metrics.scores import accuracy # 
 
+# Vader sentiment object
 SIA = sia.SentimentIntensityAnalyzer()
 
-API = twitter.Api(consumer_key='zQuVUVHVWNZd7yfMNdyXx4NgJ', consumer_secret='OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc', access_token_key='1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC', access_token_secret='e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ')
+# read CSV file of tickers to names
+# tickers = csv_to_dict_list(stock_tickers.csv)
+
+# Twitter API Object
+CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
+CONSUMER_SECRET = 'OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc'
+AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
+AXS_TOKEN_SECRET = 'e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ'
+
+API = twitter.Api(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET, access_token_key=AXS_TOKEN_KEY, access_token_secret=AXS_TOKEN_SECRET)
 
 def csv_to_dict_list(csv_file) -> list:
     """
     parse csv file into a list of dictionaries
     """
-    pass
+    csv.DictReader(csv_file)
 
 
 ######----------------- Company Score -------------------######
@@ -48,9 +58,9 @@ def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
     """
     pass
 
-def stream_from_user(user_id: int):
+def save_stream_from_user(user_id: int):
     """
-    Open a streaming connection from a user and save all tweets to a database
+    Open a streaming connection from a user and save all tweets to a database for post_processing
     """
     pass
 
