@@ -117,7 +117,7 @@ def save_tweet_to_file(tweet, polarity_score):
     user_location=tweet.user.location,
     text=tweet.text,
     user_name=tweet.user.screen_name,
-    tweet_date=str(tweet.created_at),
+    tweet_date=tweet.created_at,
     user_followers=tweet.user.followers_count,
     id_str=tweet.id_str,
     retweet_count=tweet.retweet_count,
