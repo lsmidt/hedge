@@ -1,5 +1,5 @@
 # Hedge
- 
+
 # GOAL: To return a confidence index of specific company stock price longevity based on major macroeconomic changes noted by 'influential' twitter users (1,000,000+ followers)
 #
 # Max Gillespie & Louis Smidt
@@ -28,10 +28,10 @@ import csv
 import pprint
 import vaderSentiment.vaderSentiment as sia
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
-from nltk.metrics.scores import accuracy 
+from nltk.metrics.scores import accuracy
 
 # connect Dataset to Tweetbase
-db = dataset.connect("sqlite:///tweetbase")    
+db = dataset.connect("sqlite:///tweetbase")
 
 # make pretty printer
 printer = pprint.PrettyPrinter()
@@ -63,10 +63,11 @@ class StreamListener(tweepy.StreamListener):
     def on_status(self, status):
         if not filter_tweet(status):
             return
-        
-        print(status.text)
-        
+
+
         polarity_score = find_tweet_sentiment(status)
+
+        print(status.text, '(', polarity_score, ')')
 
         description = status.user.description
         loc = status.user.location
@@ -76,10 +77,10 @@ class StreamListener(tweepy.StreamListener):
         id_str = status.id_str
         tweet_date = status.created_at
         retweets = status.retweet_count
-        
+
         table = db["tweets"]
 
-        # add to the 
+        # add to the
         table.insert(dict(
         user_description=description,
         user_location=loc,
@@ -101,13 +102,13 @@ class StreamListener(tweepy.StreamListener):
 
 def start_tweet_stream(search_terms: list, filter_level="low"):
     """
-    begin the streaming process. This method blocks the thread until the connection is closed by default 
+    begin the streaming process. This method blocks the thread until the connection is closed by default
     """
     stream_listener = StreamListener()
     stream = tweepy.Stream(auth, stream_listener)
 
     # couple database for storage
-    
+
 
     printer.pprint("NOW STREAMING")
     stream.filter(track=search_terms, filter_level = filter_level, languages = ["en"])
@@ -166,8 +167,8 @@ def get_recent_mentions(account_id: str, number: int) -> list:
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
-    check tweet text for indication that customer purchased product from the target company. 
-    Look for a noun and a verb in the sentence. 
+    check tweet text for indication that customer purchased product from the target company.
+    Look for a noun and a verb in the sentence.
     """
     pass
 
@@ -183,7 +184,7 @@ def get_account_id_from_name(screen_name: str) -> int:
 
 def run_scan(stock_symbol: str):
     """
-    
+
     """
     pass
 
