@@ -67,8 +67,6 @@ class StreamListener(tweepy.StreamListener):
 
         polarity_score = find_tweet_sentiment(status)
 
-        print(status.text, '(', polarity_score, ')')
-
         description = status.user.description
         loc = status.user.location
         text = status.text
@@ -91,7 +89,10 @@ class StreamListener(tweepy.StreamListener):
         id_str=id_str,
         retweet_count=retweets,
         polarity=polarity_score
-))
+        ))
+
+        print(text, '(', polarity_score, ')')
+    
 
     def on_error(self, error_code):
         if error_code == 420:
@@ -200,4 +201,4 @@ def run_scan(stock_symbol: str):
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
 
-start_tweet_stream(["snapchat", "Trump"])
+start_tweet_stream(["snapchat", "BMW"])
