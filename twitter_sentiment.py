@@ -22,12 +22,19 @@
 import twitter # used for mentions
 import tweepy # used for streaming
 import nltk
+import dataset
 from datetime import date
 import csv
 import pprint
 import vaderSentiment.vaderSentiment as sia
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy 
+
+# connect Dataset to Tweetbase
+db = dataset.connect("sqlite:///tweetbase")    
+
+# make pretty printer
+printer = pprint.PrettyPrinter()
 
 # Vader sentiment object
 SIA = sia.SentimentIntensityAnalyzer()
@@ -49,39 +56,77 @@ auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
 class StreamListener(tweepy.StreamListener):
+    """
+    Override the StreamListener class to add custom filtering functionality to the stream listener
+    """
 
     def on_status(self, status):
-        if hasattr(status, "retweeted_status"):
+        if not filter_tweet(status):
             return
         
         print(status.text)
+        
+        polarity_score = find_tweet_sentiment(status)
+
+        description = status.user.description
+        loc = status.user.location
+        text = status.text
+        name = status.user.screen_name
+        followers = status.user.followers_count
+        id_str = status.id_str
+        tweet_date = status.created_at
+        retweets = status.retweet_count
+        
+        table = db["tweets"]
+        table.insert(dict(
+        user_description=description,
+        user_location=loc,
+        text=text,
+        user_name=name,
+        tweet_date=tweet_date,
+        user_followers=followers,
+        id_str=id_str,
+        retweet_count=retweets,
+        polarity=polarity_score
+))
 
     def on_error(self, error_code):
         if error_code == 420:
             return False
 
 
-stream_listener = StreamListener()
-stream = tweepy.Stream(auth, stream_listener)
-stream.filter(track=["snapchat", "Snapchat", "snap chat"], filter_level = "low", languages = ["en"])
-
-
 ######----------------- Company Score (Live Stream) -------------------######
 
-def start_tweet_stream(search_term: str):
+def start_tweet_stream(search_terms: list, filter_level="low"):
     """
-    begin the streaming process 
+    begin the streaming process. This method blocks the thread until the connection is closed by default 
     """
+    stream_listener = StreamListener()
+    stream = tweepy.Stream(auth, stream_listener)
+
+    # couple database for storage
+    
+
+    printer.pprint("NOW STREAMING")
+    stream.filter(track=search_terms, filter_level = filter_level, languages = ["en"])
+
 
 def filter_tweet(tweet):
     """
     filter the tweet from the stream if it is not useful
     """
+    if hasattr(tweet, "retweeted_status"):
+        return False
+    if tweet.user.friends_count < 50000:
+        return False
+
+    return True
 
 def save_tweet_to_file(tweet):
     """
-    save the tweet to a file
+    save the tweet to a SQLite DB using Dataset
     """
+
 
 def save_stream_from_user(user_id: int):
     """
@@ -89,11 +134,11 @@ def save_stream_from_user(user_id: int):
     """
     pass
 
-def find_tweet_sentiment(tweet_text: str) -> float:
+def find_tweet_sentiment(tweet) -> float:
     """
     determine the sentiment of a tweet for a specific company
     """
-    return SIA.polarity_scores(tweet_text)["compound"]
+    return SIA.polarity_scores(tweet.text)["compound"]
 
 def find_tweet_target(tweet_text: str) -> str:
     """
@@ -151,3 +196,5 @@ def run_scan(stock_symbol: str):
 # for item in STATUS:
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
+
+start_tweet_stream(["snapchat", "Trump"])
