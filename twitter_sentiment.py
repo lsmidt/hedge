@@ -31,7 +31,7 @@ from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
 
 # connect Dataset to Tweetbase
-db = dataset.connect("sqlite:///tweetbase")
+db = dataset.connect("sqlite:///tweetbase.db")
 
 # make pretty printer
 printer = pprint.PrettyPrinter()
@@ -64,37 +64,18 @@ class StreamListener(tweepy.StreamListener):
         if not filter_tweet(status):
             return
 
-
+        # get polarity score of tweet contents
         polarity_score = find_tweet_sentiment(status)
 
-        description = status.user.description
-        loc = status.user.location
-        text = status.text
-        name = status.user.screen_name
-        followers = status.user.followers_count
-        id_str = status.id_str
-        tweet_date = status.created_at
-        retweets = status.retweet_count
+        # save tweet contents and polarity score to file
+        save_tweet_to_file(status, polarity_score)
 
-        table = db["tweets"]
-
-        # add to the
-        table.insert(dict(
-        user_description=description,
-        user_location=loc,
-        text=text,
-        user_name=name,
-        tweet_date=tweet_date,
-        user_followers=followers,
-        id_str=id_str,
-        retweet_count=retweets,
-        polarity=polarity_score
-        ))
-
-        print(text, '(', polarity_score, ')')
+        # print tweet and score
+        print(status.text, '(', polarity_score, ')')
 
 
     def on_error(self, error_code):
+        print("Error" + str(error_code))
         if error_code == 420:
             return False
 
@@ -110,7 +91,6 @@ def start_tweet_stream(search_terms: list, filter_level="low"):
 
     # couple database for storage
 
-
     printer.pprint("NOW STREAMING")
     stream.filter(track=search_terms, filter_level = filter_level, languages = ["en"])
 
@@ -121,15 +101,30 @@ def filter_tweet(tweet):
     """
     if hasattr(tweet, "retweeted_status"):
         return False
-    if tweet.user.friends_count < 50000:
+    if tweet.user.friends_count < 100:
         return False
 
     return True
 
-def save_tweet_to_file(tweet):
+def save_tweet_to_file(tweet, polarity_score):
     """
     save the tweet to a SQLite DB using Dataset
     """
+    table = db["tweets"]
+
+    tweet_contents = dict(
+    user_description=tweet.user.description,
+    user_location=tweet.user.location,
+    text=tweet.text,
+    user_name=tweet.user.screen_name,
+    tweet_date=str(tweet.created_at),
+    user_followers=tweet.user.followers_count,
+    id_str=tweet.id_str,
+    retweet_count=tweet.retweet_count,
+    polarity=polarity_score
+    )
+
+    table.insert(tweet_contents)
 
 
 def save_stream_from_user(user_id: int):
@@ -188,7 +183,7 @@ def run_scan(stock_symbol: str):
     for line in file:
         data = line.split(',')
         if data[0] == stock_symbol:
-            start_tweet_stream(data)
+            start_tweet_stream(data[0:4])
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
