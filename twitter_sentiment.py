@@ -92,7 +92,7 @@ class StreamListener(tweepy.StreamListener):
         ))
 
         print(text, '(', polarity_score, ')')
-    
+
 
     def on_error(self, error_code):
         if error_code == 420:
@@ -184,10 +184,11 @@ def get_account_id_from_name(screen_name: str) -> int:
 #####--------------- Run program -----------------######
 
 def run_scan(stock_symbol: str):
-    """
-
-    """
-    pass
+    file = open('stock_tickers.csv')
+    for line in file:
+        data = line.split(',')
+        if data[0] == stock_symbol:
+            start_tweet_stream(data)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
@@ -201,4 +202,6 @@ def run_scan(stock_symbol: str):
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
 
-start_tweet_stream(["snapchat", "BMW"])
+run_scan('AA')
+
+#start_tweet_stream(["@Snap", "Trump"])
