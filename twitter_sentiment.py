@@ -78,6 +78,8 @@ class StreamListener(tweepy.StreamListener):
         retweets = status.retweet_count
         
         table = db["tweets"]
+
+        # add to the 
         table.insert(dict(
         user_description=description,
         user_location=loc,
