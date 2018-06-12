@@ -48,6 +48,23 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
+class StreamListener(tweepy.StreamListener):
+
+    def on_status(self, status):
+        if hasattr(status, "retweeted_status"):
+            return
+        
+        print(status.text)
+
+    def on_error(self, error_code):
+        if error_code == 420:
+            return False
+
+
+stream_listener = StreamListener()
+stream = tweepy.Stream(auth, stream_listener)
+stream.filter(track=["snapchat", "Snapchat", "snap chat"], filter_level = "low", languages = ["en"])
+
 
 ######----------------- Company Score (Live Stream) -------------------######
 
@@ -124,13 +141,13 @@ def run_scan(stock_symbol: str):
     pass
 
 
-USER = PT_API.GetUser(screen_name="Snapchat")
-STATUS = PT_API.GetUserTimeline(get_account_id_from_name("Snapchat"))
-# response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
+# USER = PT_API.GetUser(screen_name="Snapchat")
+# STATUS = PT_API.GetUserTimeline(get_account_id_from_name("Snapchat"))
+# # response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
 
-TEST = PT_API.GetTrendsCurrent()
+# TEST = PT_API.GetTrendsCurrent()
 
-printer = pprint.PrettyPrinter()
-for item in STATUS:
-    printer.pprint(item.text)
-#printer.pprint(TEST)
+# printer = pprint.PrettyPrinter()
+# for item in STATUS:
+#     printer.pprint(item.text)
+# #printer.pprint(TEST)
