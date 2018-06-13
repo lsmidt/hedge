@@ -1,6 +1,6 @@
 Ticker,Name,Sector,Industry,Price,Collection
 A,Agilent Technologies Inc.,Healthcare,Medical Laboratories & Research,WIKI/A,stocks/a
-AA,Alcoa Inc.,Basic Materials,Aluminum,WIKI/AA,stocks/aa
+AA,Alcoa Inc.,Basic Materials,Aluminum Industry,WIKI/AA,stocks/aa
 AAME,Atlantic American Corp.,Financial,Life Insurance,NA,stocks/aame
 AAN,"Aaron's, Inc.",Services,Rental & Leasing Services,WIKI/AAN,stocks/aan
 AAON,AAON Inc.,Industrial Goods,General Building Materials,WIKI/AAON,stocks/aaon
@@ -617,7 +617,7 @@ CEMP,"Cempra, Inc.",Healthcare,Biotechnology,WIKI/CEMP,stocks/cemp
 CENT,Central Garden & Pet Company,Consumer Goods,Food - Major Diversified,NA,stocks/cent
 CENTA,Central Garden & Pet Company,,,WIKI/CENTA,NA
 CEMI,"Chembio Diagnostics, Inc.",Healthcare,Diagnostic Substances,NA,stocks/cemi
-CENX,Century Aluminum Co.,Basic Materials,Aluminum,WIKI/CENX,stocks/cenx
+CENX,Century Aluminum Co.,Basic Materials,Aluminum Industry,WIKI/CENX,stocks/cenx
 CEP,Constellation Energy Partners LLC,Basic Materials,Oil & Gas Drilling & Exploration,NA,stocks/cep
 CERN,Cerner Corporation,Technology,Healthcare Information Services,WIKI/CERN,stocks/cern
 CERS,Cerus Corporation,Healthcare,Biotechnology,WIKI/CERS,stocks/cers
@@ -2110,7 +2110,7 @@ NNBR,NN Inc.,Industrial Goods,Machine Tools & Accessories,WIKI/NNBR,stocks/nnbr
 NNI,"Nelnet, Inc.",Financial,Credit Services,WIKI/NNI,stocks/nni
 NNN,"National Retail Properties, Inc.",Financial,REIT - Diversified,NA,stocks/nnn
 NOBH,Nobility Homes Inc.,Industrial Goods,Manufactured Housing,NA,stocks/nobh
-NOR,Noranda Aluminum Holding Corp.,Basic Materials,Aluminum,WIKI/NOR,stocks/nor
+NOR,Noranda Aluminum Holding Corp.,Basic Materials,Aluminum Industry,WIKI/NOR,stocks/nor
 NOC,Northrop Grumman Corporation,Industrial Goods,Aerospace/Defense - Major Diversified,WIKI/NOC,stocks/noc
 NOV,"National Oilwell Varco, Inc.",Basic Materials,Oil & Gas Equipment & Services,WIKI/NOV,stocks/nov
 NOVB,North Valley Bancorp,Financial,Regional - Pacific Banks,NA,stocks/novb
@@ -2700,6 +2700,7 @@ SMTX,SMTC Corporation,Technology,Printed Circuit Boards,NA,stocks/smtx
 SN,Sanchez Energy Corporation,Basic Materials,Independent Oil & Gas,WIKI/SN,stocks/sn
 SNA,Snap-on Inc.,Industrial Goods,Small Tools & Accessories,WIKI/SNA,stocks/sna
 SNAK,"Inventure Foods, Inc.",Consumer Goods,Processed & Packaged Goods,WIKI/SNAK,stocks/snak
+SNAP,"Snapchat",Technology,Social Media,,
 SNBC,Sun Bancorp Inc.,Financial,Regional - Northeast Banks,WIKI/SNBC,stocks/snbc
 SNCR,"Synchronoss Technologies, Inc.",Technology,Application Software,WIKI/SNCR,stocks/sncr
 SNDK,SanDisk Corp.,Technology,Data Storage Devices,WIKI/SNDK,stocks/sndk

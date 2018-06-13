@@ -183,7 +183,7 @@ def run_scan(stock_symbol: str):
     for line in file:
         data = line.split(',')
         if data[0] == stock_symbol:
-            start_tweet_stream(data[0:4])
+            start_tweet_stream(data[1])
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
@@ -197,6 +197,6 @@ def run_scan(stock_symbol: str):
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
 
-run_scan('AA')
+run_scan('SNAP')
 
 #start_tweet_stream(["@Snap", "Trump"])
