@@ -19,16 +19,18 @@
 # dictionaries: positive correlation keywords, negative correlation keywords
 
 
-import twitter # used for mentions
+from twython import Twython # used for mentions
 import tweepy # used for streaming
-import nltk
 import dataset
 from datetime import date
-import csv
+import pandas as pd
 import pprint
 import vaderSentiment.vaderSentiment as sia
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
+
+from fuzzywuzzy import process
+from fuzzywuzzy import fuzz
 
 # connect Dataset to Tweetbase
 db = dataset.connect("sqlite:///tweetbase.db")
@@ -48,12 +50,17 @@ AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
 AXS_TOKEN_SECRET = 'e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ'
 
 # python-witter API Object
-PT_API = twitter.Api(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET, access_token_key=AXS_TOKEN_KEY, access_token_secret=AXS_TOKEN_SECRET)
+TWY = Twython(app_key=CONSUMER_KEY, app_secret=CONSUMER_SECRET, oauth_token=AXS_TOKEN_KEY, oauth_token_secret=AXS_TOKEN_SECRET)
 
 # tweepy object
 auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
+
+# Stanford NER Object
+jar = '/Users/louissmidt/Documents/Software/stanford-english-corenlp-2018-02-27-models.jar'
+model = '/Users/louissmidt/Documents/Software/stanford-ner-2018-02-27/classifiers/english.all.3class.distsim.crf.ser.gz'
+tagger = StanfordNERTagger(model, jar)
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -70,6 +77,9 @@ class StreamListener(tweepy.StreamListener):
         # save tweet contents and polarity score to file
         save_tweet_to_file(status, polarity_score)
 
+        # find the target of the tweet
+        # find_tweet_target(status.text)
+
         # print tweet and score
         print(status.text, '(', polarity_score, ')')
 
@@ -80,9 +90,9 @@ class StreamListener(tweepy.StreamListener):
             return False
 
 
-######----------------- Company Score (Live Stream) -------------------######
+######----------------- Company Score (Live Stream Sentiment) -------------------######
 
-def start_tweet_stream(search_terms: list, filter_level="low"):
+def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="low"):
     """
     begin the streaming process. This method blocks the thread until the connection is closed by default
     """
@@ -92,8 +102,10 @@ def start_tweet_stream(search_terms: list, filter_level="low"):
     # couple database for storage
 
     printer.pprint("NOW STREAMING")
-    stream.filter(track=search_terms, filter_level = filter_level, languages = ["en"])
-
+    if follow_user_id is None:
+        stream.filter(track=search_terms, filter_level=filter_level, languages = ["en"])
+    else:
+        stream.filter(track=search_terms, follow=follow_user_id, filter_level=filter_level, languages=["en"])
 
 def filter_tweet(tweet):
     """
@@ -101,7 +113,9 @@ def filter_tweet(tweet):
     """
     if hasattr(tweet, "retweeted_status"):
         return False
-    if tweet.user.friends_count < 100:
+    if tweet.user.friends_count < 10000:
+        return False
+    if "http" in tweet.text:
         return False
 
     return True
@@ -144,16 +158,49 @@ def find_tweet_target(tweet_text: str) -> str:
     perform Named Entity Resolution to determine what company a tweet is most likely talking about.
     RETURN str representing company ticker symbol
     """
-    pass
+    # FIXME: tagger.tag crashes with a tokenizer error.
+    tag_list = tagger.tag(tweet_text)
+    split_list = tag_list.split()
+    # account for non grouping by grouping consecutive orgs
+    found_org_list = []
 
+    for word_tuple in split_list:
+        if word_tuple[1] == "ORGANIZATION":
+            found_org_list.append(word_tuple[0])
 
-######----------------- Mentions (Average Sentiment)----------------#######
+    # fuzzy string match words in a csv of stock tickers we track
+    org_score = {}
+    
+    df = pd.read_csv("stock_ticker_subset.csv")
+    org_names = df.Name
+    org_tickers = df.Ticker
 
-def get_relevant_tweets(number: int, from_date: date, to_date: date) -> list:
+    for org in found_org_list:
+        org_score[org] = process.extractOne(org, org_names, scorer=fuzz.partial_token_sort_ratio)
+
+    return None  
+
+######----------------- Mentions (Moving Average Sentiment)----------------#######
+# Iterate over a list of company and product names, for each, produce a search query, load a page of 100 tweets 
+# save the highest id per page, use that to advance pages. Save the lowest id you encounter, then close the connection
+# and advance to the next symbol. Use the max_id and since parameters to keep track of back logged tweets when reconnecting. 
+# Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
+# Generate the moving average. 
+
+def get_search_results(query: str, max_id: int=None, since_id: int=None) -> list:
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
-    pass
+    search_result = TWY.search(q=query, max_id=max_id, since_id=since_id, result_type="popular", count=100)
+
+    _max_id = search_result.search_metadata.max_id
+    _since_id = search_result.search_metadata.since_id
+    _next_page_query = search_result.search_metadata.next_results
+    
+    for i in range(0, 5): 
+        next_result = TWY.search(q=next_page_query, max_id=_max_id, )
+        
+        search_result.update()
 
 def get_recent_mentions(account_id: str, number: int) -> list:
     """
@@ -178,12 +225,24 @@ def get_account_id_from_name(screen_name: str) -> int:
 
 #####--------------- Run program -----------------######
 
-def run_scan(stock_symbol: str):
+def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
+    """
+    Begin streaming tweets matching the stock symbol or from the account in real time. 
+    """
     file = open('stock_tickers.csv')
     for line in file:
         data = line.split(',')
         if data[0] == stock_symbol:
-            start_tweet_stream(data[1])
+            start_tweet_stream(data[1], follow_user_id=account_id)
+
+def search_tweets(ticker_search_dict: dict): 
+    """
+    Begin the tweet search loop with the companies in the ticker_search_dict
+    """
+    index_dict = dict.fromkeys(ticker_search_dict, {("max_id", 0), ("since_id", 0)})
+
+    for ticker, search_list in ticker_search_dict.items():
+        results = get_search_results(search_list)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
@@ -192,11 +251,11 @@ def run_scan(stock_symbol: str):
 
 # TEST = PT_API.GetTrendsCurrent()
 
-# printer = pprint.PrettyPrinter()
 # for item in STATUS:
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
 
-run_scan('SNAP')
+# scan_realtime_tweets('SNAP')
 
-#start_tweet_stream(["@Snap", "Trump"])
+search_dict = {"AAPL" : "Apple Mac iPhone iOS"}
+search_tweets(search_dict)
