@@ -22,6 +22,7 @@
 from twython import Twython # used for mentions
 import tweepy # used for streaming
 import dataset
+import urllib.parse
 from datetime import date
 import pandas as pd
 import pprint
@@ -187,22 +188,30 @@ def find_tweet_target(tweet_text: str) -> str:
 # Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
 # Generate the moving average. 
 
-def get_search_results(query: str, max_id: int=None, since_id: int=None) -> list:
+def get_search_results(company_name: str, query: str, max_id: int=None, since_id: int=None) -> list:
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
-    search_result = TWY.search(q=query,result_type="mixed", count=50, lang="en")
+    tweets= {}
 
-    _max_id = search_result["search_metadata"]["max_id"]
-    _since_id = search_result["search_metadata"]["since_id"]
-    _next_page_query = search_result["search_metadata"]["refresh_url"]
+    # Search tweets matching query
+    query_result = TWY.search(q=query, result_type="popular", count=50, lang="en")
+    
+    # find account matching 
+    
+    
+    
+    #tweets.update(query_result["statuses"])
+
+    _max_id = query_result["search_metadata"]["max_id"]
+    _since_id = query_result["search_metadata"]["since_id"]
+    _next_page_query = query_result["search_metadata"]["refresh_url"]
+
 
     for i in range(0, 5): 
-        next_url = "https://api.twitter.com/1.1/search/tweets.json" + _next_page_query
-        next_result = TWY.request(next_url)
-        _next_page_query = next_result["search_metadata"]["refresh_url"]
-     #   
-      #  search_result.update()
+        next_result = TWY.search(q=query, since_id=_since_id, max_id=_max_id, count=50, lang="en")
+        _next_page_query = next_result["search_metadata"]["refresh_url"]   
+        tweets.update(next_result["statuses"])
     return None
 
 def get_recent_mentions(account_id: str, number: int) -> list:
@@ -211,19 +220,13 @@ def get_recent_mentions(account_id: str, number: int) -> list:
     """
     pass
 
+
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
     check tweet text for indication that customer purchased product from the target company.
     Look for a noun and a verb in the sentence.
     """
     pass
-
-def get_account_id_from_name(screen_name: str) -> int:
-    """
-    RETURN the numeric id associated with an account
-    """
-    return PT_API.GetUser(screen_name=screen_name).id
-
 
 
 #####--------------- Run program -----------------######
@@ -245,7 +248,7 @@ def search_tweets(ticker_search_dict: dict):
     index_dict = dict.fromkeys(ticker_search_dict, {"max_id": 0, "since_id": 0})
 
     for ticker, search_list in ticker_search_dict.items():
-        get_search_results(search_list)
+        get_search_results(ticker, search_list)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
