@@ -191,16 +191,19 @@ def get_search_results(query: str, max_id: int=None, since_id: int=None) -> list
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
-    search_result = TWY.search(q=query, max_id=max_id, since_id=since_id, result_type="popular", count=100)
+    search_result = TWY.search(q=query,result_type="mixed", count=50, lang="en")
 
-    _max_id = search_result.search_metadata.max_id
-    _since_id = search_result.search_metadata.since_id
-    _next_page_query = search_result.search_metadata.next_results
-    
+    _max_id = search_result["search_metadata"]["max_id"]
+    _since_id = search_result["search_metadata"]["since_id"]
+    _next_page_query = search_result["search_metadata"]["refresh_url"]
+
     for i in range(0, 5): 
-        next_result = TWY.search(q=next_page_query, max_id=_max_id, )
-        
-        search_result.update()
+        next_url = "https://api.twitter.com/1.1/search/tweets.json" + _next_page_query
+        next_result = TWY.request(next_url)
+        _next_page_query = next_result["search_metadata"]["refresh_url"]
+     #   
+      #  search_result.update()
+    return None
 
 def get_recent_mentions(account_id: str, number: int) -> list:
     """
@@ -239,10 +242,10 @@ def search_tweets(ticker_search_dict: dict):
     """
     Begin the tweet search loop with the companies in the ticker_search_dict
     """
-    index_dict = dict.fromkeys(ticker_search_dict, {("max_id", 0), ("since_id", 0)})
+    index_dict = dict.fromkeys(ticker_search_dict, {"max_id": 0, "since_id": 0})
 
     for ticker, search_list in ticker_search_dict.items():
-        results = get_search_results(search_list)
+        get_search_results(search_list)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
