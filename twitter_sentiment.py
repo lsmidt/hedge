@@ -61,7 +61,7 @@ TWEEPY_API = tweepy.API(auth)
 # Stanford NER Object
 jar = '/Users/louissmidt/Documents/Software/stanford-english-corenlp-2018-02-27-models.jar'
 model = '/Users/louissmidt/Documents/Software/stanford-ner-2018-02-27/classifiers/english.all.3class.distsim.crf.ser.gz'
-tagger = StanfordNERTagger(model, jar)
+#tagger = StanfordNERTagger(model, jar)
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -192,21 +192,15 @@ def get_search_results(company_name: str, query: str, max_id: int=None, since_id
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
-    tweets= {}
-
     # Search tweets matching query
     query_result = TWY.search(q=query, result_type="popular", count=50, lang="en")
-    
+    tweets = query_result["statuses"]
     # find account matching 
-    
-    
-    
+
     #tweets.update(query_result["statuses"])
 
     _max_id = query_result["search_metadata"]["max_id"]
     _since_id = query_result["search_metadata"]["since_id"]
-    _next_page_query = query_result["search_metadata"]["refresh_url"]
-
 
     for i in range(0, 5): 
         next_result = TWY.search(q=query, since_id=_since_id, max_id=_max_id, count=50, lang="en")
