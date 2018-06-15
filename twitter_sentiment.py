@@ -61,7 +61,7 @@ TWEEPY_API = tweepy.API(auth)
 # Stanford NER Object
 jar = '/Users/louissmidt/Documents/Software/stanford-english-corenlp-2018-02-27-models.jar'
 model = '/Users/louissmidt/Documents/Software/stanford-ner-2018-02-27/classifiers/english.all.3class.distsim.crf.ser.gz'
-#tagger = StanfordNERTagger(model, jar)
+tagger = StanfordNERTagger(model, jar)
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -183,7 +183,7 @@ def find_tweet_target(tweet_text: str) -> str:
 
 ######----------------- Mentions (Moving Average Sentiment)----------------#######
 # Iterate over a list of company and product names, for each, produce a search query, load a page of 100 tweets 
-# save the highest id per page, use that to advance pages. Save the lowest id you encounter, then close the connection
+# save the highest id per page, use that to advance pages. Save the lowest id encountered, then close the connection
 # and advance to the next symbol. Use the max_id and since parameters to keep track of back logged tweets when reconnecting. 
 # Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
 # Generate the moving average. 
@@ -192,28 +192,46 @@ def get_search_results(company_name: str, query: str, max_id: int=None, since_id
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
-    # Search tweets matching query
-    query_result = TWY.search(q=query, result_type="popular", count=50, lang="en")
-    tweets = query_result["statuses"]
-    # find account matching 
-
+    # Method 1: Search tweets matching query
+    initial_result = TWY.search(q=query, result_type="mixed", count=50, lang="en")
+    search_tweets = initial_result["statuses"]
+    # generator_res = TWY.cursor(TWY.search, q=query, result_type="popular", lang="eng")
+   
     #tweets.update(query_result["statuses"])
 
-    _max_id = query_result["search_metadata"]["max_id"]
-    _since_id = query_result["search_metadata"]["since_id"]
+    _max_id = initial_result["search_metadata"]["max_id"]
+    _since_id = initial_result["search_metadata"]["since_id"]
 
+    # paginate results by updating max_id variable
     for i in range(0, 5): 
-        next_result = TWY.search(q=query, since_id=_since_id, max_id=_max_id, count=50, lang="en")
-        _next_page_query = next_result["search_metadata"]["refresh_url"]   
-        tweets.update(next_result["statuses"])
-    return None
+        next_result = TWY.search(q=query, max_id=_max_id-1, count=50, lang="en")
+        if len(next_result["statuses"]) == 0:
+            break
+        search_tweets.append(next_result["statuses"])
+        _max_id = next_result["search_metadata"]["max_id"]
+        _since_id = min(next_result["search_metadata"]["since_id"], _since_id)
+
+
+    # Method 2: find account matching company name, search timeline and mentions
+    (screen_name, user_id) = find_account_from_string(company_name)
+    timeline_tweets = TWY.get_user_timeline(user_id=user_id)
+
+    # TODO: Paginate the timeline results, add
+    
+    return (search_tweets, since_id)
 
 def get_recent_mentions(account_id: str, number: int) -> list:
     """
     find the 'number' most recent mentions of an account
     """
-    pass
 
+def find_account_from_string(search_string: str):
+    """
+    Return the (screen_name, user_id) of the account associated with the string
+    """
+    user_search = TWY.search_users(q=search_string, count=3)
+    candidate = user_search[0] # assume top twitter result is of the correct account
+    return (candidate["screen_name"], candidate["id"]) 
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
@@ -242,7 +260,7 @@ def search_tweets(ticker_search_dict: dict):
     index_dict = dict.fromkeys(ticker_search_dict, {"max_id": 0, "since_id": 0})
 
     for ticker, search_list in ticker_search_dict.items():
-        get_search_results(ticker, search_list)
+        get_search_results(search_list[0], search_list)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
