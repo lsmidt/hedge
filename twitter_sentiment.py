@@ -23,6 +23,7 @@ from twython import Twython # used for mentions
 import tweepy # used for streaming
 import dataset
 import urllib.parse
+import copy
 from datetime import date
 import pandas as pd
 import pprint
@@ -59,8 +60,8 @@ auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
 # Stanford NER Object
-jar = '/Users/louissmidt/Documents/Software/stanford-english-corenlp-2018-02-27-models.jar'
-model = '/Users/louissmidt/Documents/Software/stanford-ner-2018-02-27/classifiers/english.all.3class.distsim.crf.ser.gz'
+jar = 'stanford-ner-3.9.1.jar'
+model = 'english.all.3class.distsim.crf.ser.gz'
 tagger = StanfordNERTagger(model, jar)
 
 class StreamListener(tweepy.StreamListener):
@@ -182,56 +183,81 @@ def find_tweet_target(tweet_text: str) -> str:
     return None  
 
 ######----------------- Mentions (Moving Average Sentiment)----------------#######
-# Iterate over a list of company and product names, for each, produce a search query, load a page of 100 tweets 
+# Iterate over a list of company and product names, for each, produce a search search_terms, load a page of 100 tweets 
 # save the highest id per page, use that to advance pages. Save the lowest id encountered, then close the connection
 # and advance to the next symbol. Use the max_id and since parameters to keep track of back logged tweets when reconnecting. 
 # Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
 # Generate the moving average. 
 
-def get_search_results(company_name: str, query: str, max_id: int=None, since_id: int=None) -> list:
+def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id: int=None, since_id: int=None) -> list:
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
-    # Method 1: Search tweets matching query
-    initial_result = TWY.search(q=query, result_type="mixed", count=50, lang="en")
+    # Method 1: Search for tweets matching search_terms
+    initial_result = TWY.search(q=search_terms, result_type="mixed", lang="en")
     search_tweets = initial_result["statuses"]
-    # generator_res = TWY.cursor(TWY.search, q=query, result_type="popular", lang="eng")
    
-    #tweets.update(query_result["statuses"])
+    #tweets.update(search_terms_result["statuses"])
 
     _max_id = initial_result["search_metadata"]["max_id"]
     _since_id = initial_result["search_metadata"]["since_id"]
 
     # paginate results by updating max_id variable
+    # FIXME: This pagination does not return only unique results, whether that's an API issue or a code issue is unknown
     for i in range(0, 5): 
-        next_result = TWY.search(q=query, max_id=_max_id-1, count=50, lang="en")
+        next_result = TWY.search(q=search_terms, max_id=_max_id-1, lang="en")
         if len(next_result["statuses"]) == 0:
             break
         search_tweets.append(next_result["statuses"])
         _max_id = next_result["search_metadata"]["max_id"]
         _since_id = min(next_result["search_metadata"]["since_id"], _since_id)
 
+    # Method 2: search timeline and mentions of account of company
+    user_id = lookup_user_id(screen_name)
+    timeline = get_user_timeline(user_id)
+    mentions = get_recent_mentions(screen_name)
 
-    # Method 2: find account matching company name, search timeline and mentions
-    (screen_name, user_id) = find_account_from_string(company_name)
-    timeline_tweets = TWY.get_user_timeline(user_id=user_id)
-
-    # TODO: Paginate the timeline results, add
-    
     return (search_tweets, since_id)
 
-def get_recent_mentions(account_id: str, number: int) -> list:
+def get_recent_mentions(screen_name: str) -> list:
     """
-    find the 'number' most recent mentions of an account
+    find recent mentions of an account given its screen name by searching "@screen_name"
     """
+    mentions = TWY.search(q="@" + screen_name, count=100, lang="en")
+    _max_id = mentions["search_metadata"]["max_id"]
+    tweets = []
+    
+    for i in range(0, 5):
+        if len(mentions["statuses"]) == 0:
+            break 
 
-def find_account_from_string(search_string: str):
+        _max_id = mentions["search_metadata"]["max_id"]
+
+        lowest_id = _max_id
+        for tweet in mentions["statuses"]:
+            lowest_id = min(lowest_id, tweet["id"])
+            tweets.append(tweet)
+
+        mentions = TWY.search(q="@"+screen_name, max_id=lowest_id-1, count=100, lang="en")
+
+    return mentions
+
+def get_user_timeline(account_id: int):
     """
-    Return the (screen_name, user_id) of the account associated with the string
+    find a user's timeline 
     """
-    user_search = TWY.search_users(q=search_string, count=3)
-    candidate = user_search[0] # assume top twitter result is of the correct account
-    return (candidate["screen_name"], candidate["id"]) 
+    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
+
+    # TODO: Paginate the timeline results, add results of this to search results
+
+    return timeline_tweets
+
+def lookup_user_id(screen_name: str) -> int:
+    """
+    Return the user_id of the account associated with the string
+    """
+    user = TWY.show_user(screen_name=screen_name)
+    return user["id"]
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
@@ -247,7 +273,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
     """
     Begin streaming tweets matching the stock symbol or from the account in real time. 
     """
-    file = open('stock_tickers.csv')
+    file = open('stock_tickers_subset.csv')
     for line in file:
         data = line.split(',')
         if data[0] == stock_symbol:
@@ -257,10 +283,16 @@ def search_tweets(ticker_search_dict: dict):
     """
     Begin the tweet search loop with the companies in the ticker_search_dict
     """
-    index_dict = dict.fromkeys(ticker_search_dict, {"max_id": 0, "since_id": 0})
+    # make dict to keep track of since_id
+    index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
 
-    for ticker, search_list in ticker_search_dict.items():
-        get_search_results(search_list[0], search_list)
+    # make list to keep track of tweets
+    tweets = [] 
+
+    for id_tuple, search_list in ticker_search_dict.items():
+        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list)
+        tweets.append(found_tweets)
+        index_dict[id_tuple]["since_id"] = since_id 
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
@@ -275,5 +307,6 @@ def search_tweets(ticker_search_dict: dict):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {"AAPL" : "Apple Mac iPhone iOS"}
+search_dict = {("AAPL", "Apple") : "Apple Mac iPhone iOS macOS iPod",
+                ("SNAP", "Snap"): "Snap Snapchat"}
 search_tweets(search_dict)
