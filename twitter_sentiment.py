@@ -265,7 +265,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Look for a noun and a verb in the sentence.
     """
     pass
-
+ 
 
 #####--------------- Run program -----------------######
 
