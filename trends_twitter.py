@@ -10,16 +10,21 @@ Max Gillespie
 6/15/2018
 '''
 
-#from nltk.tokenize import TweetTokenizer
 import nltk
+import tweepy
 
-#from nltk.tokenize import TweetTokenizer
-#tknzr = nltk.tokenize.TweetTokenizer()
-
-
+temp_trend_dictionary = dict()
 
 s1 = "I Love chipotle!"
-#tokens = tknzr.tag(s1)
+
 tagged = nltk.tag.pos_tag(s1.split(' '))
 
-print (tagged)
+for word in tagged:
+    if (word[1] == 'NN'):
+        if not (word[0].lower() in temp_trend_dictionary.keys()):
+            temp_trend_dictionary[ word[0] ] = 1
+        else:
+            temp_trend_dictionary[word[0]]+= 1
+
+
+print (temp_trend_dictionary)
