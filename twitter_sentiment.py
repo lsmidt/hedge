@@ -5,7 +5,6 @@
 # Max Gillespie & Louis Smidt
 # 6/09/18
 
-
 # Action Items:
 #
 # 2 Functions:
@@ -14,9 +13,7 @@
 #
 # Analyze Tweets from speficic list of individuals
 # Quantify value of tweet content based on number of followers
-# Can you find a tweet @ an account?
 
-# dictionaries: positive correlation keywords, negative correlation keywords
 
 
 from twython import Twython # used for mentions
@@ -70,14 +67,14 @@ class StreamListener(tweepy.StreamListener):
     """
 
     def on_status(self, status):
-        if not filter_tweet(status):
+        if not filter_tweet( status):
             return
 
         # get polarity score of tweet contents
         polarity_score = find_tweet_sentiment(status)
 
         # save tweet contents and polarity score to file
-        save_tweet_to_file(status, polarity_score)
+        save_tweet_to_file("live_stream", status, polarity_score)
 
         # find the target of the tweet
         # find_tweet_target(status.text)
@@ -87,7 +84,7 @@ class StreamListener(tweepy.StreamListener):
 
 
     def on_error(self, error_code):
-        print("Error" + str(error_code))
+        print("Error" + str( error_code))
         if error_code == 420:
             return False
 
@@ -102,10 +99,7 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream = tweepy.Stream(auth, stream_listener)
 
     printer.pprint("NOW STREAMING")
-    if follow_user_id is None:
-        stream.filter(track=search_terms, filter_level=filter_level, languages = ["en"])
-    else:
-        stream.filter(track=search_terms, follow=follow_user_id, filter_level=filter_level, languages=["en"])
+    stream.filter(track=search_terms, filter_level=filter_level, languages = ["en"])
 
 def filter_tweet(tweet):
     """
@@ -117,14 +111,16 @@ def filter_tweet(tweet):
         return False
     if "http" in tweet.text:
         return False
+    if not tweet_shows_purchase_intent(tweet.text):
+        return False
 
     return True
 
-def save_tweet_to_file(tweet, polarity_score):
+def save_tweet_to_file(db_title: str, tweet: dict, polarity_score: float):
     """
     save the tweet to a SQLite DB using Dataset
     """
-    table = db["tweets"]
+    table = db[db_title]
 
     tweet_contents = dict(
     user_description=tweet.user.description,
@@ -140,12 +136,14 @@ def save_tweet_to_file(tweet, polarity_score):
 
     table.insert(tweet_contents)
 
-
 def save_stream_from_user(user_id: int):
     """
     Open a streaming connection from a user and save all tweets to a database for post_processing
     """
-    pass
+    stream_listener = StreamListener()
+    stream = tweepy.Stream(auth, stream_listener)
+    printer.pprint( "NOW STREAMING FROM" + str( lookup_user_id( user_id)))
+    stream.filter(track=search_terms, follow=follow_user_id, filter_level=filter_level, languages=["en"])
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -159,7 +157,7 @@ def find_tweet_target(tweet_text: str) -> str:
     RETURN str representing company ticker symbol
     """
     # FIXME: tagger.tag crashes with a tokenizer error.
-    tag_list = tagger.tag(tweet_text)
+    tag_list = tagger.tag( tweet_text)
     split_list = tag_list.split()
     # account for non grouping by grouping consecutive orgs
     found_org_list = []
@@ -192,7 +190,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
     # Method 1: Search for tweets matching search_terms
-    search_result = TWY.search(q=search_terms, result_type="mixed", lang="en")
+    search_result = TWY.search(q=search_terms, result_type="mixed", count=100, lang="en")
     tweets = []
 
     # paginate results by updating max_id variable
@@ -209,15 +207,15 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
             lowest_id = min(lowest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, max_id=_max_id-1, lang="en")
+        search_result = TWY.search(q=search_terms, max_id=_max_id-1, count=100, lang="en")
    
 
     # Method 2: search timeline and mentions of account of company
-    user_id = lookup_user_id(screen_name)
-    timeline = get_user_timeline(user_id)
-    mentions = get_recent_mentions(screen_name)
+    # user_id = lookup_user_id(screen_name)
+    # timeline = get_user_timeline(user_id)
+    # mentions = get_recent_mentions(screen_name)
 
-    return (search_tweets, since_id)
+    return (tweets, since_id)
 
 def get_recent_mentions(screen_name: str) -> list:
     """
@@ -262,9 +260,16 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
     check tweet text for indication that customer purchased product from the target company.
     Look for a noun and a verb in the sentence.
+    return true if word is found, false else
     """
-    pass
- 
+    pi_list = ["bought", "used", "new", "my", "got", "are", "had", "flew", "ate"] 
+    # simple test words before POS tagging implemented
+    for word in tweet_text.split():
+        if word.lower() in pi_list:
+            return True
+    return False
+
+    
 
 #####--------------- Run program -----------------######
 
@@ -292,6 +297,10 @@ def search_tweets(ticker_search_dict: dict):
         found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list)
         tweets.append(found_tweets)
         index_dict[id_tuple]["since_id"] = since_id 
+        for tweet in found_tweets:
+            # save to a database
+            polarity = find_tweet_sentiment(tweet)
+            save_tweet_to_file("searched_tweets", tweet, polarity)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
@@ -304,8 +313,8 @@ def search_tweets(ticker_search_dict: dict):
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
 
-# scan_realtime_tweets('SNAP')
+scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : "Apple Mac iPhone iOS macOS iPod",
+search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat"}
-search_tweets(search_dict)
+# search_tweets(search_dict)
