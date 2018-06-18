@@ -143,7 +143,7 @@ def save_stream_from_user(user_id: int):
     stream_listener = StreamListener()
     stream = tweepy.Stream(auth, stream_listener)
     printer.pprint( "NOW STREAMING FROM" + str( lookup_user_id( user_id)))
-    stream.filter(track=search_terms, follow=follow_user_id, filter_level=filter_level, languages=["en"])
+    stream.filter(follow=user_id, languages=["en"])
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -277,7 +277,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
     """
     Begin streaming tweets matching the stock symbol or from the account in real time. 
     """
-    file = open('stock_tickers_subset.csv')
+    file = open('stock_ticker_subset.csv')
     for line in file:
         data = line.split(',')
         if data[0] == stock_symbol:
