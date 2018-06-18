@@ -101,8 +101,6 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream_listener = StreamListener()
     stream = tweepy.Stream(auth, stream_listener)
 
-    # couple database for storage
-
     printer.pprint("NOW STREAMING")
     if follow_user_id is None:
         stream.filter(track=search_terms, filter_level=filter_level, languages = ["en"])
@@ -194,23 +192,26 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
     # Method 1: Search for tweets matching search_terms
-    initial_result = TWY.search(q=search_terms, result_type="mixed", lang="en")
-    search_tweets = initial_result["statuses"]
-   
-    #tweets.update(search_terms_result["statuses"])
-
-    _max_id = initial_result["search_metadata"]["max_id"]
-    _since_id = initial_result["search_metadata"]["since_id"]
+    search_result = TWY.search(q=search_terms, result_type="mixed", lang="en")
+    tweets = []
 
     # paginate results by updating max_id variable
-    # FIXME: This pagination does not return only unique results, whether that's an API issue or a code issue is unknown
     for i in range(0, 5): 
-        next_result = TWY.search(q=search_terms, max_id=_max_id-1, lang="en")
-        if len(next_result["statuses"]) == 0:
+        if len(search_result["statuses"]) == 0:
             break
-        search_tweets.append(next_result["statuses"])
-        _max_id = next_result["search_metadata"]["max_id"]
-        _since_id = min(next_result["search_metadata"]["since_id"], _since_id)
+
+        _max_id = search_result["search_metadata"]["max_id"]
+        # Have not mastered since_id pagination
+        # _since_id = min(search_result["search_metadata"]["since_id"], _since_id)
+
+        lowest_id = _max_id
+        for tweet in search_result["statuses"]:
+            lowest_id = min(lowest_id, tweet["id"])
+            tweets.append(tweet)
+
+        tweets.append(next_result["statuses"])
+        search_result = TWY.search(q=search_terms, max_id=_max_id-1, lang="en")
+   
 
     # Method 2: search timeline and mentions of account of company
     user_id = lookup_user_id(screen_name)
@@ -224,7 +225,6 @@ def get_recent_mentions(screen_name: str) -> list:
     find recent mentions of an account given its screen name by searching "@screen_name"
     """
     mentions = TWY.search(q="@" + screen_name, count=100, lang="en")
-    _max_id = mentions["search_metadata"]["max_id"]
     tweets = []
     
     for i in range(0, 5):
