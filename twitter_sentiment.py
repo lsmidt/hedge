@@ -209,7 +209,6 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
             lowest_id = min(lowest_id, tweet["id"])
             tweets.append(tweet)
 
-        tweets.append(next_result["statuses"])
         search_result = TWY.search(q=search_terms, max_id=_max_id-1, lang="en")
    
 
