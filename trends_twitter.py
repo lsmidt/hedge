@@ -21,10 +21,17 @@ tagged = nltk.tag.pos_tag(s1.split(' '))
 
 for word in tagged:
     if (word[1] == 'NN'):
+        removals = {'?', ',', '.', '!'}
+        tmp = word[0]
+
+        # strip word of any punctuation left from nltk fucking my shit
+        for r in removals:
+            tmp = tmp.replace(r, '')
+
         if not (word[0].lower() in temp_trend_dictionary.keys()):
-            temp_trend_dictionary[ word[0] ] = 1
+            temp_trend_dictionary[ tmp ] = 1
         else:
-            temp_trend_dictionary[word[0]]+= 1
+            temp_trend_dictionary[ tmp ]+= 1
 
 
 print (temp_trend_dictionary)
