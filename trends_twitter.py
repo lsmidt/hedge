@@ -12,13 +12,47 @@ Max Gillespie
 
 import nltk
 import tweepy
+import pprint
 
 
 ''' ---------------------------- INSTANTIATIONS --------------------------------'''
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
 CONSUMER_SECRET = 'OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc'
+AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
+AXS_TOKEN_SECRET = 'e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ'
+
+printer = pprint.PrettyPrinter()
 
 auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
+TWEEPY_API = tweepy.API(auth)
+
+class StreamListener(tweepy.StreamListener):
+    """
+    Override the StreamListener class to add custom filtering functionality to the stream listener
+    """
+
+    def on_status(self, status):
+        if not filter_tweet( status):
+            return
+
+        # get polarity score of tweet contents
+        polarity_score = find_tweet_sentiment(status)
+
+        # save tweet contents and polarity score to file
+        save_tweet_to_file("live_stream", status, polarity_score)
+
+        # find the target of the tweet
+        # find_tweet_target(status.text)
+
+        # print tweet and score
+        print(status.text, '(', polarity_score, ')')
+
+
+    def on_error(self, error_code):
+        print("Error" + str( error_code))
+        if error_code == 420:
+            return False
 
 
 ''' ---------------------------- FUNCTIONS ------------------------------------ '''
@@ -34,6 +68,10 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
 
 
 ''' ---------------------------------- MAIN ---------------------------------- '''
+
+start_tweet_stream( ["snap"] )
+
+'''
 temp_trend_dictionary = dict()
 temp_strings = { "I Love chipotle!" }
 
@@ -56,3 +94,4 @@ for str in temp_strings:
 
 
 print (temp_trend_dictionary)
+'''
