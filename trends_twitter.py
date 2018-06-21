@@ -14,62 +14,48 @@ import nltk
 import tweepy
 import pprint
 
+from tweepy import OAuthHandler
+from tweepy import Stream
+from tweepy.streaming import StreamListener
 
-''' ---------------------------- INSTANTIATIONS --------------------------------'''
-CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
-CONSUMER_SECRET = 'OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc'
-AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
-AXS_TOKEN_SECRET = 'e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ'
+consumer_key = 'Q5Eyxjj0HbffR43T7ouLtpPui'
+consumer_secret = 'Ai0WjHlG2f8m3fDL7PmAJ4O52Z3WGNraNnEn4X9p6pt4wHJb1I'
+access_token = '1006605731267796992-bqtWgA9GKTz1Xlx8pY8JDdz5Mt9uBO'
+access_secret = '11TkXZVM1bW2QbWNb2xItwXqlx03NU55UPBnU1qMQ63bz'
 
-printer = pprint.PrettyPrinter()
+auth = OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_secret)
 
-auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
-auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
-TWEEPY_API = tweepy.API(auth)
+api = tweepy.API(auth)
 
-class StreamListener(tweepy.StreamListener):
-    """
-    Override the StreamListener class to add custom filtering functionality to the stream listener
-    """
+tweets_collected = 0
 
-    def on_status(self, status):
-        if not filter_tweet( status):
-            return
+class MyListener(StreamListener):
 
-        # get polarity score of tweet contents
-        polarity_score = find_tweet_sentiment(status)
+    def on_data(self, data):
+        global tweets_collected
 
-        # save tweet contents and polarity score to file
-        save_tweet_to_file("live_stream", status, polarity_score)
+        try:
+            with open('python.json', 'a') as f:
+                f.write(data)
 
-        # find the target of the tweet
-        # find_tweet_target(status.text)
+                tweets_collected += 1
+                print(tweets_collected)
 
-        # print tweet and score
-        print(status.text, '(', polarity_score, ')')
+                return True
+        except BaseException as e:
+            print("Error on_data: %s" % str(e))
+        return True
 
-
-    def on_error(self, error_code):
-        print("Error" + str( error_code))
-        if error_code == 420:
-            return False
+    def on_error(self, status):
+        print(status)
+        return True
 
 
-''' ---------------------------- FUNCTIONS ------------------------------------ '''
-def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="low"):
-    """
-    begin the streaming process. This method blocks the thread until the connection is closed by default
-    """
-    stream_listener = StreamListener()
-    stream = tweepy.Stream(auth, stream_listener)
 
-    printer.pprint("NOW STREAMING")
-    stream.filter(track=search_terms, filter_level=filter_level, languages = ["en"])
+twitter_stream = Stream(auth, MyListener())
+twitter_stream.filter(track=['Neymar'])
 
-
-''' ---------------------------------- MAIN ---------------------------------- '''
-
-start_tweet_stream( ["snap"] )
 
 '''
 temp_trend_dictionary = dict()
