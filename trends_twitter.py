@@ -15,12 +15,14 @@ import tweepy
 import pprint
 import json
 import string
+import operator
 
-from nltk.corpus import stopwords
 from tweepy import OAuthHandler
 from tweepy import Stream
+from collections import Counter
 from tweepy.streaming import StreamListener
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
 
 ''' -------------------------- INSTANTIATIONS -------------------------------'''
@@ -35,7 +37,7 @@ auth.set_access_token(access_token, access_secret)
 api = tweepy.API(auth)
 
 punctuation = list(string.punctuation)
-stop = stopwords.words('english') + punctuation + ['rt', 'via']
+stop = stopwords.words('english') + punctuation + ['rt', 'via', ':', 'https', '@']
 
 tweets_collected = 0
 
@@ -51,7 +53,7 @@ class MyListener(StreamListener):
 
             tweets_collected += 1
             print(tweets_collected)
-            if (tweets_collected >= 2):
+            if (tweets_collected >= 100):
                 return False
 
             return True
@@ -65,15 +67,23 @@ class MyListener(StreamListener):
 
 
 ''' ---------------------------- FUNCTIONS ---------------------------------'''
-def tokenize_tweets():
+def tokenize_tweets(extra_stop = []):
     f = open('python.json', 'r')
+    count_all = Counter()
+
     for line in f:
         tweet = json.loads(line) # load it as Python dict
-        print(word_tokenize(tweet["text"].lower())) # pretty-print
 
+        terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if (term not in stop and term not in extra_stop)]
+        count_all.update(terms_stop)
+        # print(word_tokenize(tweet["text"].lower())) # pretty-print
+
+    # print(count_all.most_common(5)) # print 5 most common words
+    return (count_all.most_common(5))
 
 ''' ------------------------------ MAIN -----------------------------------'''
 topics = list()
+most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
 
 topics.append("World Cup")
@@ -84,4 +94,11 @@ for topic in topics:
     twitter_stream.filter(track=[topic])
     j.close()
 
-    tokenize_tweets()
+    most_common_words.append(tokenize_tweets(word_tokenize(topic.lower())))
+
+''' PARSING '''
+for i in range(len(topics)):
+    print (topic + ":")
+
+    for word in most_common_words:
+        print('\t', most_common_words[i])
