@@ -41,6 +41,8 @@ class MyListener(StreamListener):
 
                 tweets_collected += 1
                 print(tweets_collected)
+                if (tweets_collected >= 100):
+                    return False
 
                 return True
         except BaseException as e:
@@ -54,7 +56,7 @@ class MyListener(StreamListener):
 
 
 twitter_stream = Stream(auth, MyListener())
-twitter_stream.filter(track=['Neymar'])
+twitter_stream.filter(track=['World Cup'])
 
 
 '''
