@@ -13,11 +13,17 @@ Max Gillespie
 import nltk
 import tweepy
 import pprint
+import json
+import string
 
+from nltk.corpus import stopwords
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+from nltk.tokenize import word_tokenize
 
+
+''' -------------------------- INSTANTIATIONS -------------------------------'''
 consumer_key = 'Q5Eyxjj0HbffR43T7ouLtpPui'
 consumer_secret = 'Ai0WjHlG2f8m3fDL7PmAJ4O52Z3WGNraNnEn4X9p6pt4wHJb1I'
 access_token = '1006605731267796992-bqtWgA9GKTz1Xlx8pY8JDdz5Mt9uBO'
@@ -28,23 +34,27 @@ auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
 
+punctuation = list(string.punctuation)
+stop = stopwords.words('english') + punctuation + ['rt', 'via']
+
 tweets_collected = 0
 
+''' ----------------------------- CLASSES ----------------------------------'''
 class MyListener(StreamListener):
 
     def on_data(self, data):
         global tweets_collected
+        global j
 
         try:
-            with open('python.json', 'a') as f:
-                f.write(data)
+            j.write(data)
 
-                tweets_collected += 1
-                print(tweets_collected)
-                if (tweets_collected >= 100):
-                    return False
+            tweets_collected += 1
+            print(tweets_collected)
+            if (tweets_collected >= 2):
+                return False
 
-                return True
+            return True
         except BaseException as e:
             print("Error on_data: %s" % str(e))
         return True
@@ -54,32 +64,24 @@ class MyListener(StreamListener):
         return True
 
 
+''' ---------------------------- FUNCTIONS ---------------------------------'''
+def tokenize_tweets():
+    f = open('python.json', 'r')
+    for line in f:
+        tweet = json.loads(line) # load it as Python dict
+        print(word_tokenize(tweet["text"].lower())) # pretty-print
 
+
+''' ------------------------------ MAIN -----------------------------------'''
+topics = list()
 twitter_stream = Stream(auth, MyListener())
-twitter_stream.filter(track=['World Cup'])
 
+topics.append("World Cup")
 
-'''
-temp_trend_dictionary = dict()
-temp_strings = { "I Love chipotle!" }
+for topic in topics:
+    j = open('python.json', 'w')
 
-for str in temp_strings:
-    tagged = nltk.tag.pos_tag(str.split(' '))
+    twitter_stream.filter(track=[topic])
+    j.close()
 
-    for word in tagged:
-        if (word[1] == 'NN'):
-            removals = {'?', ',', '.', '!'}
-            tmp = word[0]
-
-            # strip word of any punctuation left from nltk fucking my shit
-            for r in removals:
-                tmp = tmp.replace(r, '')
-
-            if not (word[0].lower() in temp_trend_dictionary.keys()):
-                temp_trend_dictionary[ tmp ] = 1
-            else:
-                temp_trend_dictionary[ tmp ]+= 1
-
-
-print (temp_trend_dictionary)
-'''
+    tokenize_tweets()
