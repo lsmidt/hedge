@@ -37,9 +37,9 @@ auth.set_access_token(access_token, access_secret)
 api = tweepy.API(auth)
 
 punctuation = list(string.punctuation)
-stop = stopwords.words('english') + punctuation + ['rt', 'via', ':', 'https', '@']
+stop = stopwords.words('english') + punctuation + \
+        ['rt', 'via', ':', 'https', '@', "'", "''", '...']
 
-tweets_collected = 0
 
 ''' ----------------------------- CLASSES ----------------------------------'''
 class MyListener(StreamListener):
@@ -53,7 +53,7 @@ class MyListener(StreamListener):
 
             tweets_collected += 1
             print(tweets_collected)
-            if (tweets_collected >= 100):
+            if (tweets_collected >= 20):
                 return False
 
             return True
@@ -82,13 +82,12 @@ def tokenize_tweets(extra_stop = []):
     return (count_all.most_common(5))
 
 ''' ------------------------------ MAIN -----------------------------------'''
-topics = list()
+topics = ["World Cup", "Apple", "Donald Trump"]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
 
-topics.append("World Cup")
-
 for topic in topics:
+    tweets_collected = 0
     j = open('python.json', 'w')
 
     twitter_stream.filter(track=[topic])
@@ -98,7 +97,5 @@ for topic in topics:
 
 ''' PARSING '''
 for i in range(len(topics)):
-    print (topic + ":")
-
-    for word in most_common_words:
-        print('\t', most_common_words[i])
+    print (topics[i] + ":")
+    print('\t', most_common_words[i])
