@@ -48,12 +48,16 @@ class MyListener(StreamListener):
         global tweets_collected
         global j
 
+        t = json.loads(data)
+        if not filter_tweet(t):
+            return
+
         try:
             j.write(data)
 
             tweets_collected += 1
             print(tweets_collected)
-            if (tweets_collected >= 100):
+            if (tweets_collected >= 60):
                 return False
 
             return True
@@ -81,8 +85,24 @@ def tokenize_tweets(extra_stop = []):
     # print(count_all.most_common(5)) # print 5 most common words
     return (count_all.most_common(5))
 
+def filter_tweet(tweet):
+    """
+    filter the tweet from the stream if it is not useful
+    """
+
+    if 'retweeted' in tweet:
+        if tweet['retweeted']:
+            return False
+    if 'friends_count' in tweet:
+        if tweet['friends_count'] < 1000:
+            return False
+
+    return True
+
+
 ''' ------------------------------ MAIN -----------------------------------'''
-topics = ["World Cup", "Kanye West", "Donald Trump"]
+topics = ["World Cup", "Donald Trump", "iPhone"]
+# topics = [ "snapchat" ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
 
