@@ -5,6 +5,12 @@ GOAL: Poll all words that are NOT parts of speech from twitter to attempt to ide
 PURPOSE:
     Potential upside for social media campaigning; trend identificiation => sudo apt-get free_pr
 
+TODO:
+    How can this be used in the best way possible? *** LET'S TALK ABOUT THIS ***
+        1. Social Media
+        2. Informing additional search items in another program?
+        3. Figure out a way to identify trends for a specific company?
+
 
 Max Gillespie
 6/15/2018
@@ -100,7 +106,7 @@ def filter_tweet(tweet):
 
     return True
 
-# test comment
+
 ''' ------------------------------ MAIN -----------------------------------'''
 topics = ["World Cup", "Donald Trump", "iPhone"]
 # topics = [ "snapchat" ]
