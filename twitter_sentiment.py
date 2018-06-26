@@ -168,7 +168,7 @@ def find_tweet_target(tweet_text: str) -> str:
 
     # fuzzy string match words in a csv of stock tickers we track
     org_score = {}
-    
+
     df = pd.read_csv("stock_ticker_subset.csv")
     org_names = df.Name
     org_tickers = df.Ticker
@@ -176,14 +176,14 @@ def find_tweet_target(tweet_text: str) -> str:
     for org in found_org_list:
         org_score[org] = process.extractOne(org, org_names, scorer=fuzz.partial_token_sort_ratio)
 
-    return None  
+    return None
 
 ######----------------- Mentions (Moving Average Sentiment)----------------#######
-# Iterate over a list of company and product names, for each, produce a search search_terms, load a page of 100 tweets 
+# Iterate over a list of company and product names, for each, produce a search search_terms, load a page of 100 tweets
 # save the highest id per page, use that to advance pages. Save the lowest id encountered, then close the connection
-# and advance to the next symbol. Use the max_id and since parameters to keep track of back logged tweets when reconnecting. 
-# Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
-# Generate the moving average. 
+# and advance to the next symbol. Use the max_id and since parameters to keep track of back logged tweets when reconnecting.
+# Experiment with number of tweets you can fetch to produce a strictly quantized dataset.
+# Generate the moving average.
 
 def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id: int=None, since_id: int=None) -> list:
     """
@@ -194,7 +194,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
     tweets = []
 
     # paginate results by updating max_id variable
-    for i in range(0, 5): 
+    for i in range(0, 5):
         if len(search_result["statuses"]) == 0:
             break
 
@@ -208,7 +208,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
             tweets.append(tweet)
 
         search_result = TWY.search(q=search_terms, max_id=_max_id-1, count=100, lang="en")
-   
+
 
     # Method 2: search timeline and mentions of account of company
     # user_id = lookup_user_id(screen_name)
@@ -223,10 +223,10 @@ def get_recent_mentions(screen_name: str) -> list:
     """
     mentions = TWY.search(q="@" + screen_name, count=100, lang="en")
     tweets = []
-    
+
     for i in range(0, 5):
         if len(mentions["statuses"]) == 0:
-            break 
+            break
 
         _max_id = mentions["search_metadata"]["max_id"]
 
@@ -241,7 +241,7 @@ def get_recent_mentions(screen_name: str) -> list:
 
 def get_user_timeline(account_id: int):
     """
-    find a user's timeline 
+    find a user's timeline
     """
     timeline_tweets = TWY.get_user_timeline(user_id=account_id)
 
@@ -262,20 +262,20 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Look for a noun and a verb in the sentence.
     return true if word is found, false else
     """
-    pi_list = ["bought", "used", "new", "my", "got", "are", "had", "flew", "ate"] 
+    pi_list = ["bought", "used", "new", "my", "got", "are", "had", "flew", "ate"]
     # simple test words before POS tagging implemented
     for word in tweet_text.split():
         if word.lower() in pi_list:
             return True
     return False
 
-    
+
 
 #####--------------- Run program -----------------######
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
     """
-    Begin streaming tweets matching the stock symbol or from the account in real time. 
+    Begin streaming tweets matching the stock symbol or from the account in real time.
     """
     file = open('stock_ticker_subset.csv')
     for line in file:
@@ -283,7 +283,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
         if data[0] == stock_symbol:
             start_tweet_stream(data[1], follow_user_id=account_id)
 
-def search_tweets(ticker_search_dict: dict): 
+def search_tweets(ticker_search_dict: dict):
     """
     Begin the tweet search loop with the companies in the ticker_search_dict
     """
@@ -291,12 +291,12 @@ def search_tweets(ticker_search_dict: dict):
     index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
 
     # make list to keep track of tweets
-    tweets = [] 
+    tweets = []
 
     for id_tuple, search_list in ticker_search_dict.items():
         found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list)
         tweets.append(found_tweets)
-        index_dict[id_tuple]["since_id"] = since_id 
+        index_dict[id_tuple]["since_id"] = since_id
         for tweet in found_tweets:
             # save to a database
             polarity = find_tweet_sentiment(tweet)
@@ -312,6 +312,7 @@ def search_tweets(ticker_search_dict: dict):
 # for item in STATUS:
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
+
 
 scan_realtime_tweets('SNAP')
 

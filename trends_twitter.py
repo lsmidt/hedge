@@ -78,7 +78,8 @@ def tokenize_tweets(extra_stop = []):
     for line in f:
         tweet = json.loads(line) # load it as Python dict
 
-        terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if (term not in stop and term not in extra_stop)]
+        terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
+                                    (term not in stop and term not in extra_stop)]
         count_all.update(terms_stop)
         # print(word_tokenize(tweet["text"].lower())) # pretty-print
 
