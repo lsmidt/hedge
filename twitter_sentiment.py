@@ -15,7 +15,6 @@
 # Quantify value of tweet content based on number of followers
 
 
-
 from twython import Twython # used for mentions
 import tweepy # used for streaming
 import dataset
@@ -54,7 +53,7 @@ auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
 # Stanford NER Object
-jar = 'stanford-ner-3.9.1.jar'
+jar ='stanford-english-corenlp-2018-02-27-models.jar'
 model = 'english.all.3class.distsim.crf.ser.gz'
 tagger = StanfordNERTagger(model, jar)
 
@@ -74,7 +73,7 @@ class StreamListener(tweepy.StreamListener):
         save_tweet_to_file("live_stream", status, polarity_score)
 
         # find the target of the tweet
-        # find_tweet_target(status.text)
+        find_tweet_target(status.text)
 
         # print tweet and score
         print(status.text, '(', polarity_score, ')')
@@ -102,13 +101,14 @@ def filter_tweet(tweet):
     """
     filter the tweet from the stream if it is not useful
     """
+    text = tweet.text
     if hasattr(tweet, "retweeted_status"):
         return False
-    if tweet.user.friends_count < 10000:
+    if tweet.user.friends_count < 1000:
         return False
-    if "http" in tweet.text:
+    if "http" in text:
         return False
-    if not tweet_shows_purchase_intent(tweet.text):
+    if not tweet_shows_purchase_intent(text):
         return False
 
     return True
@@ -182,7 +182,7 @@ def find_tweet_target(tweet_text: str) -> str:
 # Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
 # Generate the moving average. 
 
-def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id: int=None, since_id: int=None) -> list:
+def get_search_results(screen_name: str, ticker: str, search_terms: str, since_id: int=None) -> list:
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
@@ -265,7 +265,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Look for a noun and a verb in the sentence.
     return true if word is found, false else
     """
-    pi_list = ["bought", "used", "new", "my", "got", "are", "had", "flew", "ate"] 
+    pi_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"] 
     # simple test words before POS tagging implemented
     for word in tweet_text.split():
         if word.lower() in pi_list:
@@ -340,3 +340,4 @@ def search_tweets(ticker_search_dict: dict):
 search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat"}
 search_tweets(search_dict)
+
