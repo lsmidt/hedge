@@ -40,9 +40,6 @@ printer = pprint.PrettyPrinter()
 # Vader sentiment object
 SIA = sia.SentimentIntensityAnalyzer()
 
-# read CSV file of tickers to names
-# tickers = csv_to_dict_list(stock_tickers.csv)
-
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
 CONSUMER_SECRET = 'OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc'
 AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
@@ -116,7 +113,7 @@ def filter_tweet(tweet):
 
     return True
 
-def save_tweet_to_file(db_title: str, tweet: dict, polarity_score: float):
+def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
     save the tweet to a SQLite DB using Dataset
     """
@@ -190,24 +187,30 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
     # Method 1: Search for tweets matching search_terms
-    search_result = TWY.search(q=search_terms, result_type="mixed", count=100, lang="en")
+    if since_id is None:
+        since_id = 0
+    
+    search_result = TWY.search(q=search_terms, result_type="mixed", since_id=since_id, count=50, lang="en")
     tweets = []
+
+    _max_id = search_result["search_metadata"]["max_id"]
+    _since_id = search_result["search_metadata"]["since_id"]
+
+    highest_id = _since_id
+    lowest_id = _max_id
 
     # paginate results by updating max_id variable
     for i in range(0, 5): 
         if len(search_result["statuses"]) == 0:
             break
 
-        _max_id = search_result["search_metadata"]["max_id"]
-        # Have not mastered since_id pagination
-        # _since_id = min(search_result["search_metadata"]["since_id"], _since_id)
 
-        lowest_id = _max_id
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
+            highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, max_id=_max_id-1, count=100, lang="en")
+        search_result = TWY.search(q=search_terms, max_id=lowest_id-1, count=50, lang="en")
    
 
     # Method 2: search timeline and mentions of account of company
@@ -215,7 +218,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, max_id:
     # timeline = get_user_timeline(user_id)
     # mentions = get_recent_mentions(screen_name)
 
-    return (tweets, since_id)
+    return (tweets, highest_id)
 
 def get_recent_mentions(screen_name: str) -> list:
     """
@@ -283,6 +286,25 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
         if data[0] == stock_symbol:
             start_tweet_stream(data[1], follow_user_id=account_id)
 
+
+def save_to_file(db_name, tweet: dict, polarity_score):
+
+    table = db[db_name]
+
+    tweet_contents = dict(
+    text=tweet["text"],
+    user_name=tweet["user"]["screen_name"],
+    tweet_date=tweet["created_at"],
+    user_followers=tweet["user"]["followers_count"],
+    id_str=tweet["id_str"],
+    retweet_count=tweet["retweet_count"],
+    polarity=polarity_score
+    )
+        
+    table.insert(tweet_contents)
+
+
+
 def search_tweets(ticker_search_dict: dict): 
     """
     Begin the tweet search loop with the companies in the ticker_search_dict
@@ -295,12 +317,12 @@ def search_tweets(ticker_search_dict: dict):
 
     for id_tuple, search_list in ticker_search_dict.items():
         found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list)
-        tweets.append(found_tweets)
         index_dict[id_tuple]["since_id"] = since_id 
         for tweet in found_tweets:
             # save to a database
-            polarity = find_tweet_sentiment(tweet)
-            save_tweet_to_file("searched_tweets", tweet, polarity)
+            tweets.append(tweet)
+            polarity = SIA.polarity_scores(tweet["text"])["compound"]
+            save_to_file("searched_tweets", tweet, polarity)
 
 
 # USER = PT_API.GetUser(screen_name="Snapchat")
@@ -313,8 +335,8 @@ def search_tweets(ticker_search_dict: dict):
 #     printer.pprint(item.text)
 # #printer.pprint(TEST)
 
-scan_realtime_tweets('SNAP')
+# scan_realtime_tweets('SNAP')
 
 search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat"}
-# search_tweets(search_dict)
+search_tweets(search_dict)
