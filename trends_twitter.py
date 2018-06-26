@@ -100,7 +100,7 @@ def filter_tweet(tweet):
 
     return True
 
-
+# test comment
 ''' ------------------------------ MAIN -----------------------------------'''
 topics = ["World Cup", "Donald Trump", "iPhone"]
 # topics = [ "snapchat" ]
