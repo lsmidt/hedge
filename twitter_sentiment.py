@@ -52,11 +52,6 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
-# Stanford NER Object
-jar ='stanford-english-corenlp-2018-02-27-models.jar'
-model = 'english.all.3class.distsim.crf.ser.gz'
-tagger = StanfordNERTagger(model, jar)
-
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -154,24 +149,24 @@ def find_tweet_target(tweet_text: str) -> str:
     RETURN str representing company ticker symbol
     """
     # FIXME: tagger.tag crashes with a tokenizer error.
-    tag_list = tagger.tag( tweet_text)
-    split_list = tag_list.split()
-    # account for non grouping by grouping consecutive orgs
-    found_org_list = []
+    # tag_list = tagger.tag( tweet_text)
+    # split_list = tag_list.split()
+    # # account for non grouping by grouping consecutive orgs
+    # found_org_list = []
 
-    for word_tuple in split_list:
-        if word_tuple[1] == "ORGANIZATION":
-            found_org_list.append(word_tuple[0])
+    # for word_tuple in split_list:
+    #     if word_tuple[1] == "ORGANIZATION":
+    #         found_org_list.append(word_tuple[0])
 
-    # fuzzy string match words in a csv of stock tickers we track
-    org_score = {}
+    # # fuzzy string match words in a csv of stock tickers we track
+    # org_score = {}
     
-    df = pd.read_csv("stock_ticker_subset.csv")
-    org_names = df.Name
-    org_tickers = df.Ticker
+    # df = pd.read_csv("stock_ticker_subset.csv")
+    # org_names = df.Name
+    # org_tickers = df.Ticker
 
-    for org in found_org_list:
-        org_score[org] = process.extractOne(org, org_names, scorer=fuzz.partial_token_sort_ratio)
+    # for org in found_org_list:
+    #     org_score[org] = process.extractOne(org, org_names, scorer=fuzz.partial_token_sort_ratio)
 
     return None  
 
@@ -273,7 +268,6 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     return False
 
     
-
 #####--------------- Run program -----------------######
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
