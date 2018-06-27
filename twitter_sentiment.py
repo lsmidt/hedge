@@ -96,10 +96,16 @@ def filter_tweet(tweet):
     """
     filter the tweet from the stream if it is not useful
     """
-    text = tweet.text
+    if tweet is dict:
+        text = tweet["text"]
+        friends_count = tweet["user"]["friends_count"]
+    else:
+        text = tweet.text
+        friends_count = tweet.user.friends_count
+
     if hasattr(tweet, "retweeted_status"):
         return False
-    if tweet.user.friends_count < 1000:
+    if friends_count < 1000:
         return False
     if "http" in text:
         return False
@@ -107,6 +113,7 @@ def filter_tweet(tweet):
         return False
 
     return True
+
 
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
@@ -203,7 +210,8 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
-            tweets.append(tweet)
+            if (filter_tweet(tweet)):
+                tweets.append(tweet)
 
         search_result = TWY.search(q=search_terms, max_id=lowest_id-1, count=50, lang="en")
    
