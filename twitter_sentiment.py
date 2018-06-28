@@ -96,21 +96,23 @@ def filter_tweet(tweet):
     """
     filter the tweet from the stream if it is not useful
     """
-    if tweet is dict:
+    if type(tweet) is dict:
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
+        if "retweeted_status" in tweet:
+            return False
     else:
         text = tweet.text
         friends_count = tweet.user.friends_count
+        if hasattr(tweet, "retweeted_status"):
+            return False
 
-    if hasattr(tweet, "retweeted_status"):
-        return False
     if friends_count < 1000:
         return False
     if "http" in text:
         return False
-    if not tweet_shows_purchase_intent(text):
-        return False
+    # if not tweet_shows_purchase_intent(text):
+    #     return False
 
     return True
 
@@ -189,7 +191,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
     # Method 1: Search for tweets matching search_terms
-    if since_id is None:
+    if since_id is None: 
         since_id = 0
     
     search_result = TWY.search(q=search_terms, result_type="mixed", since_id=since_id, count=50, lang="en")
@@ -210,13 +212,12 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
-            if (filter_tweet(tweet)):
-                tweets.append(tweet)
+            tweets.append(tweet)
 
         search_result = TWY.search(q=search_terms, max_id=lowest_id-1, count=50, lang="en")
    
 
-    # Method 2: search timeline and mentions of account of company
+    ### Method 2: search timeline and mentions of account of company
     # user_id = lookup_user_id(screen_name)
     # timeline = get_user_timeline(user_id)
     # mentions = get_recent_mentions(screen_name)
@@ -290,6 +291,9 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
 
 
 def save_to_file(db_name, tweet: dict, polarity_score):
+    """
+    save_tweet_to_file analog for tweets that are dictionaries instead of Status objects
+    """
 
     table = db[db_name]
 
@@ -320,22 +324,22 @@ def search_tweets(ticker_search_dict: dict):
     for id_tuple, search_list in ticker_search_dict.items():
         found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list)
         index_dict[id_tuple]["since_id"] = since_id 
+        c = 0 # counter for number of passed up tweets
+
         for tweet in found_tweets:
-            # save to a database
-            tweets.append(tweet)
-            polarity = SIA.polarity_scores(tweet["text"])["compound"]
-            save_to_file("searched_tweets", tweet, polarity)
+            if (filter_tweet(tweet)):
+                tweets.append(tweet)
+                print (tweet["text"])
+                polarity = SIA.polarity_scores(tweet["text"])["compound"]
+                # save_to_file("searched_tweets", tweet, polarity)
+
+            else:
+                c += 1;
+                print (c);
+        
+        print ("Total Tweets found"  + str( len( found_tweets)))
 
 
-# USER = PT_API.GetUser(screen_name="Snapchat")
-# STATUS = PT_API.GetUserTimeline(get_account_id_from_name("Snapchat"))
-# # response = GET https://api.twitter.com/1.1/statuses/mentions_timeline.json?count=2&since_id=14927799
-
-# TEST = PT_API.GetTrendsCurrent()
-
-# for item in STATUS:
-#     printer.pprint(item.text)
-# #printer.pprint(TEST)
 
 # scan_realtime_tweets('SNAP')
 
