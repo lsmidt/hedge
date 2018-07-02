@@ -6,6 +6,8 @@ PURPOSE:
     Potential upside for social media campaigning; trend identificiation => sudo apt-get free_pr
 
 TODO:
+    Track sentiment in most_common_words; move toward understanding holding companies
+
     How can this be used in the best way possible? *** LET'S TALK ABOUT THIS ***
         1. Social Media
         2. Informing additional search items in another program?
