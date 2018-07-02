@@ -44,7 +44,7 @@ api = tweepy.API(auth)
 
 punctuation = list(string.punctuation)
 stop = stopwords.words('english') + punctuation + \
-        ['rt', 'via', ':', 'https', '@', "'", "''", '...', '’', "'s", "n't"]
+        ['rt', 'via', ':', 'https', '@', "'", "''", '...', '’', "'s", "n't", '"']
 
 
 ''' ----------------------------- CLASSES ----------------------------------'''
@@ -108,7 +108,7 @@ def filter_tweet(tweet):
 
 
 ''' ------------------------------ MAIN -----------------------------------'''
-topics = ["World Cup", "Donald Trump", "iPhone"]
+topics = ["World Cup", "Donald Trump"]
 # topics = [ "snapchat" ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
