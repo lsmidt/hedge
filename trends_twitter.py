@@ -44,7 +44,8 @@ api = tweepy.API(auth)
 
 punctuation = list(string.punctuation)
 stop = stopwords.words('english') + punctuation + \
-        ['rt', 'via', ':', 'https', '@', "'", "''", '...', '’', "'s", "n't", '"']
+        ['rt', 'via', ':', 'https', '@', "'", "''", '...', '’', "'s", "n't", \
+        '“', '”', '``', 'de', 'lol', 'haha']
 
 
 ''' ----------------------------- CLASSES ----------------------------------'''
