@@ -64,7 +64,7 @@ class MyListener(StreamListener):
 
             tweets_collected += 1
             print(tweets_collected)
-            if (tweets_collected >= 60):
+            if (tweets_collected >= 10):
                 return False
 
             return True
@@ -109,7 +109,7 @@ def filter_tweet(tweet):
 
 
 ''' ------------------------------ MAIN -----------------------------------'''
-topics = ["World Cup", "Donald Trump"]
+topics = [ ["World Cup", "Russia"] ]
 # topics = [ "snapchat" ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
@@ -118,12 +118,16 @@ for topic in topics:
     tweets_collected = 0
     j = open('python.json', 'w')
 
-    twitter_stream.filter(track=[topic])
+    for t in topic:
+        twitter_stream.filter(track=[t])
+
     j.close()
 
-    most_common_words.append(tokenize_tweets(word_tokenize(topic.lower())))
+    most_common_words.append(tokenize_tweets())
 
 ''' PARSING '''
 for i in range(len(topics)):
-    print (topics[i] + ":")
+    print ("---------------------------------------------------")
+    for t in topics[i]:
+        print(t)
     print('\t', most_common_words[i])
