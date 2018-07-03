@@ -72,7 +72,7 @@ class MyListener(StreamListener):
                 elapsed_time = time.time() - start_time
                 #print (elapsed_time)
 
-                if (elapsed_time > 20):  #THIS IS 600 SECONDS OF TWEETS
+                if (elapsed_time > 1800):  #THIS IS 'N' SECONDS OF TWEETS
                     return False
 
             return True
@@ -116,7 +116,14 @@ def filter_tweet(tweet):
 
 ''' ------------------------------ MAIN -----------------------------------'''
 # topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
-topics = [ ["World Cup", "Mesi"], ["Lego"] ]
+# topics = [ ["World Cup", "Mesi"], ["Lego"] ]
+
+'''
+TEST FOR National Beverage Holding Co. (FIZZ)
+'''
+topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
+            "Mr. Pure", "Ritz", "Crystal Bay", "Cascadia", "Ohana", "Big Shot", \
+            "St. Nick's", "Double Hit"] ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
@@ -127,8 +134,11 @@ for topic in topics:
 
     start_time = time.time()
 
+    '''
     for t in topic:
         twitter_stream.filter(track=[t])
+    '''
+    twitter_stream.filter(track = topic)
 
     tweets_per_topic.append(tweets_collected)
     j.close()
