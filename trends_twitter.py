@@ -88,11 +88,9 @@ def tokenize_tweets(extra_stop = []):
         tweet = json.loads(line) # load it as Python dict
 
         terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
-                                    (term not in stop and term not in extra_stop)]
+                                (term not in stop and term not in extra_stop)]
         count_all.update(terms_stop)
-        # print(word_tokenize(tweet["text"].lower())) # pretty-print
 
-    # print(count_all.most_common(5)) # print 5 most common words
     return (count_all.most_common(5))
 
 def filter_tweet(tweet):
@@ -111,8 +109,8 @@ def filter_tweet(tweet):
 
 
 ''' ------------------------------ MAIN -----------------------------------'''
-topics = [ ["World Cup", "Russia"] ]
-# topics = [ "snapchat" ]
+# topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
+topics = [ ["World Cup", "Mesi"] ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
 
@@ -125,7 +123,17 @@ for topic in topics:
 
     j.close()
 
-    most_common_words.append(tokenize_tweets())
+    extra_stop = list()
+    for t in topic:
+        temp = word_tokenize(t.lower())
+
+        if len(temp) == 1:
+            extra_stop.append(temp[0])
+        else:
+            for i in range(0, len(temp)):
+                extra_stop.append(temp[i])
+
+    most_common_words.append(tokenize_tweets(extra_stop))
 
 ''' PARSING '''
 for i in range(len(topics)):
