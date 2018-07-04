@@ -52,6 +52,8 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
+global running = False
+
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -100,7 +102,6 @@ def filter_tweet(tweet):
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
         if "retweeted_status" in tweet:
-            print ("retweet")
             return False
     else:
         text = tweet.text
@@ -109,10 +110,8 @@ def filter_tweet(tweet):
             return False
 
     if friends_count < 1000:
-        print ("f")
         return False
     if "http" in text:
-        print ("url")
         return False
     # if not tweet_shows_purchase_intent(text):
     #     return False
@@ -217,7 +216,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, max_id=lowest_id-1, count=50, lang="en")
+        search_result = TWY.search(q=search_terms, max_id=lowest_id-1, since_id=since_id, count=50, lang="en")
    
 
     ### Method 2: search timeline and mentions of account of company
@@ -251,7 +250,7 @@ def get_recent_mentions(screen_name: str) -> list:
 
 def get_user_timeline(account_id: int):
     """
-    find a user's timeline 
+    find a user's timeline
     """
     timeline_tweets = TWY.get_user_timeline(user_id=account_id)
 
@@ -293,7 +292,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
             start_tweet_stream(data[1], follow_user_id=account_id)
 
 
-def save_to_file(db_name, tweet: dict, polarity_score):
+def save_to_file(db_name: str, query: tuple  tweet: dict, polarity_score: float):
     """
     save_tweet_to_file analog for tweets that are dictionaries instead of Status objects
     """
@@ -302,6 +301,8 @@ def save_to_file(db_name, tweet: dict, polarity_score):
 
     tweet_contents = dict(
     text=tweet["text"],
+    ticker=query[0],
+    company_name=query[1],
     user_name=tweet["user"]["screen_name"],
     tweet_date=tweet["created_at"],
     user_followers=tweet["user"]["followers_count"],
@@ -321,32 +322,31 @@ def search_tweets(ticker_search_dict: dict):
     # make dict to keep track of since_id
     index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
 
-    # make list to keep track of tweets
-    tweets = [] 
 
-    for id_tuple, search_list in ticker_search_dict.items():
-        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list)
-        index_dict[id_tuple]["since_id"] = since_id 
-        c = 0 # counter for number of passed up tweets
+    while running == True:
 
-        for tweet in found_tweets:
-            if (filter_tweet(tweet)):
-                tweets.append(tweet)
-                print (tweet["text"])
-                polarity = SIA.polarity_scores(tweet["text"])["compound"]
-                # save_to_file("searched_tweets", tweet, polarity)
+        for id_tuple, search_list in ticker_search_dict.items():
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=index_dict[id_tuple]["since_id"])
+            index_dict[id_tuple["since_id"] = since_id 
+            c = 0 # counter for number of passed up tweets
+    
+            for tweet in found_tweets:
+                if (filter_tweet(tweet)):
+                    print (tweet["text"])
+                    polarity = SIA.polarity_scores(tweet["text"])["compound"]
+                    save_to_file("searched_tweets", id_tuple, tweet, polarity)
 
-            else:
-                c += 1;
-                print (c);
-        
-        print ("Total Tweets found"  + str( len( found_tweets)))
-
+                else:
+                    c += 1;
+                    print (c);
+            
+            print ("Total Tweets found"  + str( len( found_tweets)))
 
 
 # scan_realtime_tweets('SNAP')
 
 search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
-                ("SNAP", "Snap"): "Snap Snapchat"}
+                ("SNAP", "Snap"): "Snap Snapchat",
+                ("FIZZ", "National Beverage"): "LaCroix lacroix"}
 search_tweets(search_dict)
 
