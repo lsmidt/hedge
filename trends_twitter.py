@@ -6,6 +6,8 @@ PURPOSE:
     Potential upside for social media campaigning; trend identificiation => sudo apt-get free_pr
 
 TODO:
+    Track sentiment in most_common_words; move toward understanding holding companies
+
     How can this be used in the best way possible? *** LET'S TALK ABOUT THIS ***
         1. Social Media
         2. Informing additional search items in another program?
@@ -22,6 +24,7 @@ import pprint
 import json
 import string
 import operator
+import time
 
 from tweepy import OAuthHandler
 from tweepy import Stream
@@ -44,7 +47,8 @@ api = tweepy.API(auth)
 
 punctuation = list(string.punctuation)
 stop = stopwords.words('english') + punctuation + \
-        ['rt', 'via', ':', 'https', '@', "'", "''", '...', '’', "'s", "n't"]
+        ['rt', 'via', ':', 'https', '@', "'", "''", '...', '’', "'s", "n't", \
+        '“', '”', '``', 'de', 'lol', 'haha']
 
 
 ''' ----------------------------- CLASSES ----------------------------------'''
@@ -63,8 +67,13 @@ class MyListener(StreamListener):
 
             tweets_collected += 1
             print(tweets_collected)
-            if (tweets_collected >= 60):
-                return False
+
+            if (tweets_collected%20 == 0):
+                elapsed_time = time.time() - start_time
+                #print (elapsed_time)
+
+                if (elapsed_time > 1800):  #THIS IS 'N' SECONDS OF TWEETS
+                    return False
 
             return True
         except BaseException as e:
@@ -85,11 +94,9 @@ def tokenize_tweets(extra_stop = []):
         tweet = json.loads(line) # load it as Python dict
 
         terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
-                                    (term not in stop and term not in extra_stop)]
+                                (term not in stop and term not in extra_stop)]
         count_all.update(terms_stop)
-        # print(word_tokenize(tweet["text"].lower())) # pretty-print
 
-    # print(count_all.most_common(5)) # print 5 most common words
     return (count_all.most_common(5))
 
 def filter_tweet(tweet):
@@ -108,21 +115,51 @@ def filter_tweet(tweet):
 
 
 ''' ------------------------------ MAIN -----------------------------------'''
-topics = ["World Cup", "Donald Trump", "iPhone"]
-# topics = [ "snapchat" ]
+# topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
+# topics = [ ["World Cup", "Mesi"], ["Lego"] ]
+
+'''
+TEST FOR National Beverage Holding Co. (FIZZ)
+'''
+topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
+            "Mr. Pure", "Ritz", "Crystal Bay", "Cascadia", "Ohana", "Big Shot", \
+            "St. Nick's", "Double Hit"] ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
+tweets_per_topic = list()
 
 for topic in topics:
     tweets_collected = 0
     j = open('python.json', 'w')
 
-    twitter_stream.filter(track=[topic])
+    start_time = time.time()
+
+    '''
+    for t in topic:
+        twitter_stream.filter(track=[t])
+    '''
+    twitter_stream.filter(track = topic)
+
+    tweets_per_topic.append(tweets_collected)
     j.close()
 
-    most_common_words.append(tokenize_tweets(word_tokenize(topic.lower())))
+    extra_stop = list()
+    for t in topic:
+        temp = word_tokenize(t.lower())
+
+        if len(temp) == 1:
+            extra_stop.append(temp[0])
+        else:
+            for i in range(0, len(temp)):
+                extra_stop.append(temp[i])
+
+    most_common_words.append(tokenize_tweets(extra_stop))
+
 
 ''' PARSING '''
 for i in range(len(topics)):
-    print (topics[i] + ":")
+    print ("---------------------------------------------------")
+    print ("TWEETS COLLECTED:", tweets_per_topic[i])
+    for t in topics[i]:
+        print(t)
     print('\t', most_common_words[i])
