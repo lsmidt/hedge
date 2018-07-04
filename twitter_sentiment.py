@@ -100,6 +100,7 @@ def filter_tweet(tweet):
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
         if "retweeted_status" in tweet:
+            print ("retweet")
             return False
     else:
         text = tweet.text
@@ -108,8 +109,10 @@ def filter_tweet(tweet):
             return False
 
     if friends_count < 1000:
+        print ("f")
         return False
     if "http" in text:
+        print ("url")
         return False
     # if not tweet_shows_purchase_intent(text):
     #     return False
