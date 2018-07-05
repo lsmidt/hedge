@@ -52,9 +52,9 @@ auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
 # control flow 
-running = False
+running = True
 
-# sentiment output
+# hold sentiment results for each target company
 sentiment = defaultdict(list)
 
 class StreamListener(tweepy.StreamListener):
@@ -105,7 +105,9 @@ def filter_tweet(tweet):
     if type(tweet) is dict:
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
+
         if "retweeted_status" in tweet:
+            print ("REJECT: retweet")
             return False
     else:
         text = tweet.text
@@ -113,10 +115,14 @@ def filter_tweet(tweet):
         if hasattr(tweet, "retweeted_status"):
             return False
 
-    if friends_count < 1000:
+    if friends_count < 500:
+        print ("REJECT: low frineds")
         return False
-    if "http" in text:
-        return False
+
+    # if "http" in text:
+    #     print ("REJECT: URL in text")
+    #     print (text)
+    #    return False
     # if not tweet_shows_purchase_intent(text):
     #     return False
 
@@ -156,7 +162,12 @@ def find_tweet_sentiment(tweet) -> float:
     """
     determine the sentiment of a tweet for a specific company
     """
-    return SIA.polarity_scores(tweet.text)["compound"]
+    if type(tweet) is dict:
+        text = tweet["text"]
+    else:
+        text = tweet.text
+
+    return SIA.polarity_scores(text)["compound"]
 
 def find_tweet_target(tweet_text: str) -> str:
     """
@@ -220,7 +231,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, max_id=lowest_id-1, since_id=since_id, count=50, lang="en")
+        search_result = TWY.search(q=search_terms, result_type="mixed", max_id=lowest_id-1, since_id=since_id, count=50, lang="en")
    
 
     ### Method 2: search timeline and mentions of account of company
@@ -275,6 +286,8 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Look for a noun and a verb in the sentence.
     return true if word is found, false else
     """
+
+    #TODO: fix this shit
     pi_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
     # simple test words before POS tagging implemented
     for word in tweet_text.split():
@@ -345,6 +358,21 @@ def search_tweets(ticker_search_dict: dict):
                 print (c);
         
         print ("Total Tweets found"  + str( len( found_tweets)))
+
+
+####------------ Post Process ------------#####
+## Methods that act on saved data found using the twitter search or stream ##
+
+def get_average_sentiment():
+    """
+    average the sentiment scores in the sentiment defaultdict
+    """
+    avg_sentiment = {}
+    for id_tuple, scores in sentiment.items():
+        avg_sentiment[id_tuple] = sum(scores) / len(scores) if len(scores) != 0 else 0 
+
+    return avg_sentiment
+
 
 
 ####---------- Run Program --------------#####
