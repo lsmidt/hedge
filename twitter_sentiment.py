@@ -26,6 +26,7 @@ import pprint
 import vaderSentiment.vaderSentiment as sia
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
+from collections import defaultdict
 
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
@@ -33,10 +34,8 @@ from fuzzywuzzy import fuzz
 # connect Dataset to Tweetbase
 db = dataset.connect("sqlite:///tweetbase.db")
 
-# make pretty printer
 printer = pprint.PrettyPrinter()
 
-# Vader sentiment object
 SIA = sia.SentimentIntensityAnalyzer()
 
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
@@ -52,7 +51,11 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
-global running = False
+# control flow 
+running = False
+
+# sentiment output
+sentiment = defaultdict(list)
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -70,7 +73,8 @@ class StreamListener(tweepy.StreamListener):
         save_tweet_to_file("live_stream", status, polarity_score)
 
         # find the target of the tweet
-        find_tweet_target(status.text)
+        # target = find_tweet_target(status.text)
+        # sentiment[target] .append(polarity_score)
 
         # print tweet and score
         print(status.text, '(', polarity_score, ')')
@@ -271,7 +275,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Look for a noun and a verb in the sentence.
     return true if word is found, false else
     """
-    pi_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"] 
+    pi_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
     # simple test words before POS tagging implemented
     for word in tweet_text.split():
         if word.lower() in pi_list:
@@ -279,7 +283,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     return False
 
     
-#####--------------- Run program -----------------######
+#####--------------- Main methods -----------------######
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
     """
@@ -292,7 +296,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
             start_tweet_stream(data[1], follow_user_id=account_id)
 
 
-def save_to_file(db_name: str, query: tuple  tweet: dict, polarity_score: float):
+def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float):
     """
     save_tweet_to_file analog for tweets that are dictionaries instead of Status objects
     """
@@ -322,31 +326,43 @@ def search_tweets(ticker_search_dict: dict):
     # make dict to keep track of since_id
     index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
 
+    for id_tuple, search_list in ticker_search_dict.items():
+        
+        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=index_dict[id_tuple]["since_id"])
+        index_dict[id_tuple]["since_id"] = since_id 
+        c = 0 # count passed up tweets
 
-    while running == True:
+        for tweet in found_tweets:
+            if (filter_tweet( tweet)):
+                print ( tweet["text"] )
+                polarity = SIA.polarity_scores( tweet["text"] )["compound"]
+                # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
+                
+                sentiment[id_tuple] .append( polarity)
 
-        for id_tuple, search_list in ticker_search_dict.items():
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=index_dict[id_tuple]["since_id"])
-            index_dict[id_tuple["since_id"] = since_id 
-            c = 0 # counter for number of passed up tweets
-    
-            for tweet in found_tweets:
-                if (filter_tweet(tweet)):
-                    print (tweet["text"])
-                    polarity = SIA.polarity_scores(tweet["text"])["compound"]
-                    save_to_file("searched_tweets", id_tuple, tweet, polarity)
+            else:
+                c += 1;
+                print (c);
+        
+        print ("Total Tweets found"  + str( len( found_tweets)))
 
-                else:
-                    c += 1;
-                    print (c);
-            
-            print ("Total Tweets found"  + str( len( found_tweets)))
 
+####---------- Run Program --------------#####
 
 # scan_realtime_tweets('SNAP')
 
 search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat",
                 ("FIZZ", "National Beverage"): "LaCroix lacroix"}
-search_tweets(search_dict)
 
+count = 0
+
+while running == True:
+    count += 1
+    search_tweets( search_dict)
+    print ( str( count) + "th iteration of search_tweets")
+    
+    printer.pprint( sentiment)
+    
+    if count > 1:
+        running = False
