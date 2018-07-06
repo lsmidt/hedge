@@ -57,6 +57,9 @@ running = True
 # hold sentiment results for each target company
 sentiment = defaultdict(list)
 
+# hold twitter since_ids for each searched company
+index_dict = {}
+
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -115,7 +118,7 @@ def filter_tweet(tweet):
         if hasattr(tweet, "retweeted_status"):
             return False
 
-    if friends_count < 500:
+    if friends_count < 200:
         print ("REJECT: low frineds")
         return False
 
@@ -336,19 +339,27 @@ def search_tweets(ticker_search_dict: dict):
     """
     Begin the tweet search loop with the companies in the ticker_search_dict
     """
-    # make dict to keep track of since_id
-    index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
+    #index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
 
     for id_tuple, search_list in ticker_search_dict.items():
         
-        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=index_dict[id_tuple]["since_id"])
-        index_dict[id_tuple]["since_id"] = since_id 
+        # if a since_id already exists, use it. else use 0 as since_id
+        if id_tuple in index_dict:
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=index_dict[id_tuple])
+        
+            index_dict[id_tuple] = since_id 
+        else:
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=0)
+
+            index_dict[id_tuple] = since_id
+        
         c = 0 # count passed up tweets
 
         for tweet in found_tweets:
-            if (filter_tweet( tweet)):
+            if filter_tweet( tweet):
                 print ( tweet["text"] )
                 polarity = SIA.polarity_scores( tweet["text"] )["compound"]
+                print (polarity)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
                 
                 sentiment[id_tuple] .append( polarity)
@@ -381,7 +392,8 @@ def get_average_sentiment():
 
 search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat",
-                ("FIZZ", "National Beverage"): "LaCroix lacroix"}
+                ("FIZZ", "National Beverage"): "LaCroix lacroix",
+                ("ARNC", "Arconic"): "Arconic"}
 
 count = 0
 
