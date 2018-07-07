@@ -44,7 +44,8 @@ AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
 AXS_TOKEN_SECRET = 'e88p7236E3nrigW1pkvmyA6hUyUWrMDQd2D7ZThbnZvoQ'
 
 # python-witter API Object
-TWY = Twython(app_key=CONSUMER_KEY, app_secret=CONSUMER_SECRET, oauth_token=AXS_TOKEN_KEY, oauth_token_secret=AXS_TOKEN_SECRET)
+TWY = Twython(app_key=CONSUMER_KEY, app_secret=CONSUMER_SECRET, oauth_token=AXS_TOKEN_KEY, \
+oauth_token_secret=AXS_TOKEN_SECRET)
 
 # tweepy object
 auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
@@ -99,26 +100,42 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream = tweepy.Stream(auth, stream_listener)
 
     printer.pprint("NOW STREAMING")
-    stream.filter(track=search_terms, filter_level=filter_level, languages = ["en"])
+    
+    stream.filter(track=search_terms, filter_level=filter_level, \
+    languages = ["en"])
 
 def filter_tweet(tweet):
     """
     filter the tweet from the stream if it is not useful
     """
     if type(tweet) is dict:
-        text = tweet["text"]
-        friends_count = tweet["user"]["friends_count"]
-
         if "retweeted_status" in tweet:
             print ("REJECT: retweet")
             return False
+        
+        text = tweet["text"]
+        friends_count = tweet["user"]["friends_count"]
+        qry_type = tweet["metadata"]["type"] #FIXME
+        rt_count = tweet["retweet_count"]
+
     else:
-        text = tweet.text
-        friends_count = tweet.user.friends_count
         if hasattr(tweet, "retweeted_status"):
             return False
 
-    if friends_count < 200:
+        text = tweet.text
+        friends_count = tweet.user.friends_count
+        qry_type = tweet.metadata.type #FIXME
+        rt_count = tweet.metadata.retweet_count
+
+    for word in text.split():
+        stop_words = ["porn pussy babe nude pornstar sex \
+        naked cock cocks gloryhole tits anal"]
+        if word in stop_words:
+            return False
+
+    # TODO: Add date filtering 
+    # TODO: Add retweet_count filtering
+    if friends_count < 100:
         print ("REJECT: low frineds")
         return False
 
@@ -214,7 +231,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     if since_id is None: 
         since_id = 0
     
-    search_result = TWY.search(q=search_terms, result_type="mixed", since_id=since_id, count=50, lang="en")
+    search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=50, lang="en")
     tweets = []
 
     _max_id = search_result["search_metadata"]["max_id"]
@@ -234,15 +251,19 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, result_type="mixed", max_id=lowest_id-1, since_id=since_id, count=50, lang="en")
-   
-
-    ### Method 2: search timeline and mentions of account of company
-    # user_id = lookup_user_id(screen_name)
-    # timeline = get_user_timeline(user_id)
-    # mentions = get_recent_mentions(screen_name)
+        search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=50, lang="en")
 
     return (tweets, highest_id)
+
+def combine_search_results(screen_name: str):
+    """
+    Combine search, account mentions, and timeline results
+    """
+    user_id = lookup_user_id(screen_name) # assume screen_name is always correct
+    timeline = get_user_timeline(user_id)
+    mentions = get_recent_mentions(screen_name)
+    pass
+
 
 def get_recent_mentions(screen_name: str) -> list:
     """
@@ -272,7 +293,7 @@ def get_user_timeline(account_id: int):
     """
     timeline_tweets = TWY.get_user_timeline(user_id=account_id)
 
-    # TODO: Paginate the timeline results, add results of this to search results
+    # TODO: Paginate the timeline results
 
     return timeline_tweets
 
