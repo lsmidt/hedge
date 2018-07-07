@@ -265,11 +265,11 @@ def combine_search_results(screen_name: str):
     pass
 
 
-def get_recent_mentions(screen_name: str) -> list:
+def get_recent_mentions(screen_name: str, since_id:int) -> list:
     """
     find recent mentions of an account given its screen name by searching "@screen_name"
     """
-    mentions = TWY.search(q="@" + screen_name, count=100, lang="en")
+    mentions = TWY.search(q="@" + screen_name, count=100, since_id=since_id, lang="en")
     tweets = []
 
     _max_id = mentions["search_metadata"]["max_id"]
@@ -288,15 +288,15 @@ def get_recent_mentions(screen_name: str) -> list:
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        mentions = TWY.search(q="@"+screen_name, max_id=lowest_id-1, count=100, lang="en")
+        mentions = TWY.search(q="@"+screen_name, max_id=lowest_id-1, since_id=since_id, count=100, lang="en")
 
-    return mentions
+    return (mentions, highest_id)
 
-def get_user_timeline(account_id: int):
+def get_user_timeline(account_id: int, since_id: int):
     """
     find a user's timeline
     """
-    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
+    timeline_tweets = TWY.get_user_timeline(user_id=account_id, since_id=since_id)
     tweets = []
 
     _max_id = mentions["search_metadata"]["max_id"]
@@ -315,10 +315,9 @@ def get_user_timeline(account_id: int):
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
+    timeline_tweets = TWY.get_user_timeline(user_id=account_id, since_id=since_id)
 
-
-    return timeline_tweets
+    return (timeline_tweets, highest_id)
 
 def lookup_user_id(screen_name: str) -> int:
     """
