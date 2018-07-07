@@ -412,7 +412,7 @@ def search_tweets(ticker_search_dict: dict):
 
         c = 0 # count passed up tweets
 
-        for tweet in found_tweets:
+        for tweet in combined:
             if filter_tweet( tweet):
                 print ( tweet["text"] )
                 polarity = SIA.polarity_scores( tweet["text"] )["compound"]
