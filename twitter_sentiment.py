@@ -273,7 +273,7 @@ def get_recent_mentions(screen_name: str) -> list:
     tweets = []
 
     _max_id = mentions["search_metadata"]["max_id"]
-    _since_id = search_result["search_metadata"]["since_id"]
+    _since_id = mentions["search_metadata"]["since_id"]
 
     lowest_id = _max_id
     highest_id = _since_id
@@ -285,7 +285,7 @@ def get_recent_mentions(screen_name: str) -> list:
        
         for tweet in mentions["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
-            highest_id = max()
+            highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
         mentions = TWY.search(q="@"+screen_name, max_id=lowest_id-1, count=100, lang="en")
@@ -296,6 +296,25 @@ def get_user_timeline(account_id: int):
     """
     find a user's timeline
     """
+    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
+    tweets = []
+
+    _max_id = mentions["search_metadata"]["max_id"]
+    _since_id = search_result["search_metadata"]["since_id"]
+
+    lowest_id = _max_id
+    highest_id = _since_id
+    
+    for i in range(0, 5):
+        if len(timeline_tweets["statuses"]) == 0:
+            break 
+
+       
+        for tweet in timeline_tweets["statuses"]:
+            lowest_id = min(lowest_id, tweet["id"])
+            highest_id = max(highest_id, tweet["id"])
+            tweets.append(tweet)
+
     timeline_tweets = TWY.get_user_timeline(user_id=account_id)
 
 
