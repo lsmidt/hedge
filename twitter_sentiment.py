@@ -255,14 +255,18 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
 
     return (tweets, highest_id)
 
-def combine_search_results(screen_name: str):
+def combine_search_results(first, second, third):
     """
-    Combine search, account mentions, and timeline results
+    Combine search, account mentions, and timeline results. Three lists of tweets
     """
-    user_id = lookup_user_id(screen_name) # assume screen_name is always correct
-    timeline = get_user_timeline(user_id)
-    mentions = get_recent_mentions(screen_name)
-    pass
+    combined = [tweet for tweet in first]
+    a = [tweet for tweet in second]
+    b = [tweet for tweet in third]
+
+    combined.append(a)
+    combined.append(b)
+
+    return combined
 
 
 def get_recent_mentions(screen_name: str, since_id:int) -> list:
@@ -404,7 +408,8 @@ def search_tweets(ticker_search_dict: dict):
         tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
         index_dict[id_tuple]["timeline"] = new_tl_since_id
 
-        
+        combined = combine_search_results(found_tweets, men_tweets, tl_tweets)
+
         c = 0 # count passed up tweets
 
         for tweet in found_tweets:
