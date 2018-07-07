@@ -377,24 +377,33 @@ def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float
     table.insert(tweet_contents)
 
 
-
 def search_tweets(ticker_search_dict: dict): 
     """
     Begin the tweet search loop with the companies in the ticker_search_dict
     """
-    #index_dict = {x : {"since_id" : 0} for x in ticker_search_dict.keys()}
-
     for id_tuple, search_list in ticker_search_dict.items():
-        
+        #TODO: Code below for "search" if-else can be condensed. 
+
         # if a since_id already exists, use it. else use 0 as since_id
-        if id_tuple in index_dict:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=index_dict[id_tuple])
-        
-            index_dict[id_tuple] = since_id 
+        if "search" in index_dict[id_tuple]:
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, \
+                                                        since_id=index_dict[id_tuple]["search"])
+            index_dict[id_tuple]["search"] = since_id
         else:
             found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=0)
+            index_dict[id_tuple]["search"] = since_id
+        
+        screen_name = id_tuple[1]
+        user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
 
-            index_dict[id_tuple] = since_id
+        men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
+        men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
+        index_dict[id_tuple]["mentions"] = new_men_since_id
+
+        tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
+        tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
+        index_dict[id_tuple]["timeline"] = new_tl_since_id
+
         
         c = 0 # count passed up tweets
 
@@ -435,8 +444,9 @@ def get_average_sentiment():
 
 search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat",
-                ("FIZZ", "National Beverage"): "LaCroix lacroix",
-                ("ARNC", "Arconic"): "Arconic"}
+               }
+
+index_dict = {x : {} for x in search_dict.keys}
 
 count = 0
 
