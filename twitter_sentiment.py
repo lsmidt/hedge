@@ -410,7 +410,7 @@ def search_tweets(ticker_search_dict: dict):
 
         combined = combine_search_results(found_tweets, men_tweets, tl_tweets)
 
-        c = 0 # count passed up tweets
+        reject_count = 0 # count passed up tweets
 
         for tweet in combined:
             if filter_tweet( tweet):
@@ -422,10 +422,10 @@ def search_tweets(ticker_search_dict: dict):
                 sentiment[id_tuple] .append( polarity)
 
             else:
-                c += 1;
-                print (c);
+                reject_count += 1;
         
         print ("Total Tweets found"  + str( len( found_tweets)))
+        print ("Rejected: " + str(reject_count))
 
 
 ####------------ Post Process ------------#####
