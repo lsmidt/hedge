@@ -347,11 +347,22 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
 
     text = word_tokenize(tweet_text)
-    pos_list = pos_tag(text)
+    pos_list = pos_tag(text, tagset='universal')
+
+    verb_flag = False
+    pron_flag = False
+    noun_flag = False
 
     for word in pos_list:
-        if word[1] == 'NOUN':
-          pass  
+        if word[1] == 'VERB':
+          verb_flag = True
+        if word[1] == "PRON":
+            pron_flag = True
+        if word[1] == "NOUN" or "@" in tweet_text:
+            noun_flag = True
+
+    return verb_flag and noun_flag and pron_flag 
+    
     # for word in tweet_text.split():
     #     if word.lower() in pi_list:
     #         return True
