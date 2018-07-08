@@ -119,6 +119,8 @@ def filter_tweet(tweet):
         friends_count = tweet["user"]["friends_count"]
         qry_type = tweet["metadata"]["result_type"]
         rt_count = tweet["retweet_count"]
+        is_reply = False if tweet["in_reply_to_status_id"] is None else True
+        num_mentions = len( tweet["entities"]["user_mentions"])
 
     else:
         if hasattr(tweet, "retweeted_status"):
@@ -138,8 +140,14 @@ def filter_tweet(tweet):
     # TODO: Add date filtering 
     # TODO: Add retweet_count filtering
     if friends_count < 100:
-        print ("REJECT: low frineds")
+        #print ("REJECT: low frineds")
         return False
+    if is_reply:
+        #print ("REJECT: tweet is a reply")
+        return False
+    if num_mentions > 3:
+        #print ("REJECT: too many external mentions")
+    
 
     # if "http" in text:
     #     print ("REJECT: URL in text")
@@ -341,6 +349,9 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     text = word_tokenize(tweet_text)
     pos_list = pos_tag(text)
 
+    for word in pos_list:
+        if word[1] == 'NOUN':
+          pass  
     # for word in tweet_text.split():
     #     if word.lower() in pi_list:
     #         return True
