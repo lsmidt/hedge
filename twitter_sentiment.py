@@ -356,12 +356,12 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     for word in pos_list:
         if word[1] == 'VERB':
           verb_flag = True
-        if word[1] == "PRON":
+        if word[1] == "PRON" and not (word[0] in ["We", "we", "you", "You"]):
             pron_flag = True
         if word[1] == "NOUN" or "@" in tweet_text:
             noun_flag = True
 
-    return verb_flag and noun_flag and pron_flag 
+    return (verb_flag and noun_flag and pron_flag) 
     
     # for word in tweet_text.split():
     #     if word.lower() in pi_list:
@@ -441,7 +441,7 @@ def search_tweets(ticker_search_dict: dict):
                # check if it's a copy
                 copy = False
                 for passed_tweet in passed_tweets:
-                    if fuzz.ratio(tweet["text"], passed_tweet) > 90:
+                    if fuzz.ratio(tweet["text"], passed_tweet) > 80:
                         copy = True
                         break
 
@@ -452,7 +452,7 @@ def search_tweets(ticker_search_dict: dict):
                 polarity = SIA.polarity_scores( tweet["text"] )["compound"]
                 print (polarity)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
-                
+                print (tweet_shows_purchase_intent(tweet["text"]))
                 passed_tweets.append(tweet["text"])
                 sentiment[id_tuple].append(polarity)
 
