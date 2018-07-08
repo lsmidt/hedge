@@ -115,7 +115,7 @@ def filter_tweet(tweet):
         
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
-        qry_type = tweet["metadata"]["type"] #FIXME
+        qry_type = tweet["metadata"]["result_type"]
         rt_count = tweet["retweet_count"]
 
     else:
@@ -124,7 +124,7 @@ def filter_tweet(tweet):
 
         text = tweet.text
         friends_count = tweet.user.friends_count
-        qry_type = tweet.metadata.type #FIXME
+        qry_type = tweet.metadata.result_type
         rt_count = tweet.metadata.retweet_count
 
     for word in text.split():
@@ -245,7 +245,6 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
         if len(search_result["statuses"]) == 0:
             break
 
-
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
@@ -263,10 +262,7 @@ def combine_search_results(first, second, third):
     a = [tweet for tweet in second]
     b = [tweet for tweet in third]
 
-    combined.append(a)
-    combined.append(b)
-
-    return combined
+    return combined + a + b
 
 
 def get_recent_mentions(screen_name: str, since_id:int) -> list:
@@ -286,7 +282,6 @@ def get_recent_mentions(screen_name: str, since_id:int) -> list:
         if len(mentions["statuses"]) == 0:
             break 
 
-       
         for tweet in mentions["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
@@ -294,14 +289,18 @@ def get_recent_mentions(screen_name: str, since_id:int) -> list:
 
         mentions = TWY.search(q="@"+screen_name, max_id=lowest_id-1, since_id=since_id, count=100, lang="en")
 
-    return (mentions, highest_id)
+    return (tweets, highest_id)
 
 def get_user_timeline(account_id: int, since_id: int):
     """
-    find a user's timeline
+    RETURN the tweets on a users timeline that have an id greater than since_id
+    RETURN the new highest ID tweet found in the timeline
     """
-    timeline_tweets = TWY.get_user_timeline(user_id=account_id, since_id=since_id)
+    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
     tweets = []
+
+    if len(timeline_tweets) == 0: # user has never tweeted
+        return ([], 0)
 
     _max_id = mentions["search_metadata"]["max_id"]
     _since_id = search_result["search_metadata"]["since_id"]
@@ -313,13 +312,13 @@ def get_user_timeline(account_id: int, since_id: int):
         if len(timeline_tweets["statuses"]) == 0:
             break 
 
-       
         for tweet in timeline_tweets["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
-            tweets.append(tweet)
+            if tweet["id"] > since_id:
+               tweets.append(tweet)
 
-    timeline_tweets = TWY.get_user_timeline(user_id=account_id, since_id=since_id)
+    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
 
     return (timeline_tweets, highest_id)
 
@@ -404,11 +403,11 @@ def search_tweets(ticker_search_dict: dict):
         men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
         index_dict[id_tuple]["mentions"] = new_men_since_id
 
-        tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
-        tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
-        index_dict[id_tuple]["timeline"] = new_tl_since_id
+        # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
+        # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
+        # index_dict[id_tuple]["timeline"] = new_tl_since_id
 
-        combined = combine_search_results(found_tweets, men_tweets, tl_tweets)
+        combined = combine_search_results(found_tweets, men_tweets, [])
 
         reject_count = 0 # count passed up tweets
 
@@ -419,7 +418,7 @@ def search_tweets(ticker_search_dict: dict):
                 print (polarity)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
                 
-                sentiment[id_tuple] .append( polarity)
+                sentiment[id_tuple].append(polarity)
 
             else:
                 reject_count += 1;
@@ -451,7 +450,7 @@ search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
                 ("SNAP", "Snap"): "Snap Snapchat",
                }
 
-index_dict = {x : {} for x in search_dict.keys}
+index_dict = {x : {} for x in search_dict.keys()}
 
 count = 0
 
