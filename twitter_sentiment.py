@@ -131,7 +131,7 @@ def filter_tweet(tweet):
 
     for word in text.split():
         stop_words = ["porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal"]
+        naked cock cocks gloryhole tits anal gay balls"]
         if word in stop_words:
             return False
 
@@ -333,19 +333,18 @@ def lookup_user_id(screen_name: str) -> int:
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
-    Check tweet text for indication that customer purchased or used
-            a product from the target company recently. 
-    Check existance of both a subject and a verb in the sentence.
+    Return true if the tweet text indicates that a customer used or bought 
+        a product
     """
     verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
 
     text = word_tokenize(tweet_text)
     pos_list = pos_tag(text)
 
-    for word in tweet_text.split():
-        if word.lower() in pi_list:
-            return True
-    return False
+    # for word in tweet_text.split():
+    #     if word.lower() in pi_list:
+    #         return True
+    # return False
 
     
 #####--------------- Main methods -----------------######
@@ -411,22 +410,36 @@ def search_tweets(ticker_search_dict: dict):
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
 
         combined = combine_search_results(found_tweets, men_tweets, [])
-
+        passed_tweets = []
         reject_count = 0 # count passed up tweets
 
         for tweet in combined:
-            if filter_tweet( tweet):
+            if filter_tweet(tweet):
+               
+               # check if it's a copy
+                copy = False
+                for passed_tweet in passed_tweets:
+                    if fuzz.ratio(tweet["text"], passed_tweet) > 90:
+                        copy = True
+                        break
+
+                if copy == True:
+                    continue
+
                 print ( tweet["text"] )
                 polarity = SIA.polarity_scores( tweet["text"] )["compound"]
                 print (polarity)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
                 
+                passed_tweets.append(tweet["text"])
                 sentiment[id_tuple].append(polarity)
 
             else:
                 reject_count += 1;
+
+            
         
-        print ("Total Tweets found"  + str( len( found_tweets)))
+        print ("Total Tweets found"  + str( len( combined)))
         print ("Rejected: " + str(reject_count))
 
 
@@ -466,3 +479,5 @@ while running == True:
     
     if count > 1:
         running = False
+
+print (get_average_sentiment(sentiment))
