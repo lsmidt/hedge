@@ -147,7 +147,7 @@ def filter_tweet(tweet):
         return False
     if num_mentions > 3:
         #print ("REJECT: too many external mentions")
-    
+        return False
 
     # if "http" in text:
     #     print ("REJECT: URL in text")
