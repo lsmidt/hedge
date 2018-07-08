@@ -26,6 +26,8 @@ import pprint
 import vaderSentiment.vaderSentiment as sia
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
+from nltk import word_tokenize
+from nltk import pos_tag
 from collections import defaultdict
 
 from fuzzywuzzy import process
@@ -331,14 +333,15 @@ def lookup_user_id(screen_name: str) -> int:
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
-    check tweet text for indication that customer purchased product from the target company.
-    Look for a noun and a verb in the sentence.
-    return true if word is found, false else
+    Check tweet text for indication that customer purchased or used
+            a product from the target company recently. 
+    Check existance of both a subject and a verb in the sentence.
     """
+    verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
 
-    #TODO: fix this shit
-    pi_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
-    # simple test words before POS tagging implemented
+    text = word_tokenize(tweet_text)
+    pos_list = pos_tag(text)
+
     for word in tweet_text.split():
         if word.lower() in pi_list:
             return True
