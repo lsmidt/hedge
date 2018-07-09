@@ -101,14 +101,14 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream_listener = StreamListener()
     stream = tweepy.Stream(auth, stream_listener)
 
-    printer.pprint("NOW STREAMING")
+    printer.pprint("STREAMING TWEETS")
     
     stream.filter(track=search_terms, filter_level=filter_level, \
-    languages = ["en"])
+                    languages = ["en"])
 
 def filter_tweet(tweet):
     """
-    filter the tweet from the stream if it is not useful
+    filter the tweet from the stream if it is not of high quality
     """
     if type(tweet) is dict:
         if "retweeted_status" in tweet:
@@ -130,6 +130,8 @@ def filter_tweet(tweet):
         friends_count = tweet.user.friends_count
         qry_type = tweet.metadata.result_type
         rt_count = tweet.metadata.retweet_count
+        is_reply = False if tweet.in_reply_to_status_id is None else True
+        num_mentions = len(tweet.entities.user_mentions)
 
     for word in text.split():
         stop_words = ["porn pussy babe nude pornstar sex \
@@ -419,9 +421,11 @@ def search_tweets(ticker_search_dict: dict):
         else:
             found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=0)
             index_dict[id_tuple]["search"] = since_id
-        
+
+
         screen_name = id_tuple[1]
         user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
+
 
         men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
         men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
@@ -432,14 +436,16 @@ def search_tweets(ticker_search_dict: dict):
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
 
         combined = combine_search_results(found_tweets, men_tweets, [])
+        
         passed_tweets = []
         reject_count = 0 # count passed up tweets
 
         for tweet in combined:
             if filter_tweet(tweet):
-               
-               # check if it's a copy
+                
+                # check if tweet is a close copy of one already seen
                 copy = False
+                
                 for passed_tweet in passed_tweets:
                     if fuzz.ratio(tweet["text"], passed_tweet) > 80:
                         copy = True
@@ -448,11 +454,15 @@ def search_tweets(ticker_search_dict: dict):
                 if copy == True:
                     continue
 
-                print ( tweet["text"] )
+
                 polarity = SIA.polarity_scores( tweet["text"] )["compound"]
+
+                print ( tweet["text"] )
                 print (polarity)
-                # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
                 print (tweet_shows_purchase_intent(tweet["text"]))
+
+                # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
+
                 passed_tweets.append(tweet["text"])
                 sentiment[id_tuple].append(polarity)
 
