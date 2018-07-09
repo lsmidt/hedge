@@ -68,12 +68,16 @@ class MyListener(StreamListener):
             tweets_collected += 1
             print(tweets_collected)
 
+            '''
             if (tweets_collected%20 == 0):
                 elapsed_time = time.time() - start_time
                 #print (elapsed_time)
 
                 if (elapsed_time > 1800):  #THIS IS 'N' SECONDS OF TWEETS
                     return False
+            '''
+            if (tweets_collected > 10):
+                return False
 
             return True
         except BaseException as e:
@@ -86,6 +90,39 @@ class MyListener(StreamListener):
 
 
 ''' ---------------------------- FUNCTIONS ---------------------------------'''
+def sync(topics):
+    global most_common_words
+    global tweets_per_topic
+    global tweets_collected
+    global j
+
+    for topic in topics:
+        tweets_collected = 0
+        j = open('python.json', 'w')
+
+        # start_time = time.time()
+
+        for t in topic:
+            twitter_stream.filter(track=[t])
+
+        # twitter_stream.filter(track = topic)
+
+        tweets_per_topic.append(tweets_collected)
+        j.close()
+
+        extra_stop = list()
+        for t in topic:
+            temp = word_tokenize(t.lower())
+
+            if len(temp) == 1:
+                extra_stop.append(temp[0])
+            else:
+                for i in range(0, len(temp)):
+                    extra_stop.append(temp[i])
+
+        most_common_words.append(tokenize_tweets(extra_stop))
+
+
 def tokenize_tweets(extra_stop = []):
     f = open('python.json', 'r')
     count_all = Counter()
@@ -120,41 +157,18 @@ def filter_tweet(tweet):
 
 '''
 TEST FOR National Beverage Holding Co. (FIZZ)
-'''
+
 topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
             "Mr. Pure", "Ritz", "Crystal Bay", "Cascadia", "Ohana", "Big Shot", \
             "St. Nick's", "Double Hit"] ]
+'''
+
+topics = [ ["World Cup", "Mesi"] ]
 most_common_words = list()     # list of most common words to match each topic
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
 
-for topic in topics:
-    tweets_collected = 0
-    j = open('python.json', 'w')
-
-    start_time = time.time()
-
-    '''
-    for t in topic:
-        twitter_stream.filter(track=[t])
-    '''
-    twitter_stream.filter(track = topic)
-
-    tweets_per_topic.append(tweets_collected)
-    j.close()
-
-    extra_stop = list()
-    for t in topic:
-        temp = word_tokenize(t.lower())
-
-        if len(temp) == 1:
-            extra_stop.append(temp[0])
-        else:
-            for i in range(0, len(temp)):
-                extra_stop.append(temp[i])
-
-    most_common_words.append(tokenize_tweets(extra_stop))
-
+sync(topics)
 
 ''' PARSING '''
 for i in range(len(topics)):
