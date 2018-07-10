@@ -517,8 +517,8 @@ def search_tweets(ticker_search_dict: dict):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : "Apple Mac iPhone"
-                #("SNAP", "Snap"): "Snap Snapchat",
+search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
+                ("SNAP", "Snap"): "Snap Snapchat",
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
@@ -531,7 +531,7 @@ while running == True:
     (sent, sent_mag, pi) = search_tweets(search_dict)
 
     # generate the score based on the search information
-    score = defaultdict[float]
+    score = defaultdict(float)
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
@@ -554,11 +554,10 @@ while running == True:
                 score[company] -= 1
 
 
-    print ( str( count) + "th iteration of search_tweets")
-    
-    printer.pprint( sentiment)
-    
+    #print ( str( search_count) + "th iteration of search_tweets")
+        
     if search_count > 0:
         running = False
 
-print ("SCORE: " + str(score))
+for company in score:
+    print ("SCORE: " + str(company) + str(score[company]))
