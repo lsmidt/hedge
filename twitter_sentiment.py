@@ -532,7 +532,7 @@ while running == True:
 
     # generate the score based on the search information
     score = 0.0
-    avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0 
+    avg_sent = sum(sent.values()) / len(sent.values()) if len(sent) != 0 else 0 
     
     if score_magnitude(avg_sent, 0.2) == 1:
         score += 10
@@ -540,11 +540,11 @@ while running == True:
         score -= 10
     
 
-    for pi_score in pi:
+    for pi_score in pi.values():
         if pi_score == 1:
             score += 5
 
-    for sent_score in sent_mag:
+    for sent_score in sent_mag.values():
         if sent_score == 1:
             score += 1
         elif sent_score == -1:
