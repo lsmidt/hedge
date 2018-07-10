@@ -537,9 +537,9 @@ while running == True:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
     
         if score_magnitude(avg_sent, 0.2) == 1:
-            score[company] += 10
+            score[company] += 300
         elif score_magnitude(avg_sent, 0.2) == -1:
-            score[company] -= 10
+            score[company] -= 300
     
     for company in pi:
         for pi_score in pi[company]:
@@ -549,9 +549,9 @@ while running == True:
     for company in sent_mag:
         for sent_score in sent_mag[company]:
             if sent_score == 1:
-                score[company] += 1
+                score[company] += 5
             elif sent_score == -1:
-                score[company] -= 1
+                score[company] -= 5
 
 
     #print ( str( search_count) + "th iteration of search_tweets")
