@@ -517,8 +517,8 @@ def search_tweets(ticker_search_dict: dict):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
-                ("SNAP", "Snap"): "Snap Snapchat",
+search_dict = {("AAPL", "Apple") : "Apple Mac iPhone"
+                #("SNAP", "Snap"): "Snap Snapchat",
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
@@ -531,31 +531,34 @@ while running == True:
     (sent, sent_mag, pi) = search_tweets(search_dict)
 
     # generate the score based on the search information
-    score = 0.0
-    avg_sent = sum(sent.values()) / len(sent.values()) if len(sent) != 0 else 0 
-    
-    if score_magnitude(avg_sent, 0.2) == 1:
-        score += 10
-    elif score_magnitude(avg_sent, 0.2) == -1:
-        score -= 10
-    
+    score = defaultdict[float]
 
-    for pi_score in pi.values():
-        if pi_score == 1:
-            score += 5
+    for company in sent:
+        avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
+    
+        if score_magnitude(avg_sent, 0.2) == 1:
+            score[company] += 10
+        elif score_magnitude(avg_sent, 0.2) == -1:
+            score[company] -= 10
+    
+    for company in pi:
+        for pi_score in pi[company]:
+            if pi_score == 1:
+                score[company] += 5
 
-    for sent_score in sent_mag.values():
-        if sent_score == 1:
-            score += 1
-        elif sent_score == -1:
-            score -= 1
+    for company in sent_mag:
+        for sent_score in sent_mag[company]:
+            if sent_score == 1:
+                score[company] += 1
+            elif sent_score == -1:
+                score[company] -= 1
 
 
     print ( str( count) + "th iteration of search_tweets")
     
     printer.pprint( sentiment)
     
-    if search_count > 1:
+    if search_count > 0:
         running = False
 
 print ("SCORE: " + str(score))
