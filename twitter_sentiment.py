@@ -133,20 +133,20 @@ def filter_tweet(tweet):
         is_reply = False if tweet.in_reply_to_status_id is None else True
         num_mentions = len(tweet.entities.user_mentions)
 
-    for word in text.split():
-        stop_words = ["porn pussy babe nude pornstar sex \
+    stop_words = ["porn pussy babe nude pornstar sex \
         naked cock cocks gloryhole tits anal gay balls"]
+
+    for word in text.split():
+
         if word in stop_words:
             return False
 
-    # TODO: Add date filtering 
-    # TODO: Add retweet_count filtering
-    if friends_count < 100:
+    if friends_count < 50:
         #print ("REJECT: low frineds")
         return False
-    if is_reply:
+    #if is_reply:
         #print ("REJECT: tweet is a reply")
-        return False
+    #    return False
     if num_mentions > 3:
         #print ("REJECT: too many external mentions")
         return False
@@ -348,6 +348,9 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
     verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
 
+    fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this"]
+    other_pron = ["you", "your", "their", "they"]
+
     text = word_tokenize(tweet_text)
     pos_list = pos_tag(text, tagset='universal')
 
@@ -356,19 +359,21 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     noun_flag = False
 
     for word in pos_list:
+        lower = word[0].lower()
+        contains_mention = True if tweet_text.find("@") != -1 else False
+
         if word[1] == 'VERB':
           verb_flag = True
-        if word[1] == "PRON" and not (word[0] in ["We", "we", "you", "You"]):
+
+        if (word[1] == "PRON" and lower in fp_pron) \
+            or (contains_mention and not lower in other_pron):
             pron_flag = True
-        if word[1] == "NOUN" or "@" in tweet_text:
+
+        if word[1] == "NOUN" or contains_mention:
             noun_flag = True
 
     return (verb_flag and noun_flag and pron_flag) 
     
-    # for word in tweet_text.split():
-    #     if word.lower() in pi_list:
-    #         return True
-    # return False
 
     
 #####--------------- Main methods -----------------######
@@ -512,4 +517,4 @@ while running == True:
     if count > 1:
         running = False
 
-print (get_average_sentiment(sentiment))
+print (get_average_sentiment())
