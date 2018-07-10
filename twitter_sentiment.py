@@ -54,14 +54,15 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
-# control flow 
+# start and stop search
 running = True
-
-# hold sentiment results for each target company
-sentiment = defaultdict(list)
 
 # hold twitter since_ids for each searched company
 index_dict = {}
+
+# hold sentiment and purchase intent scores for each company
+pi_scores = {}
+sentiment_scores = {}
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -410,11 +411,27 @@ def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float
         
     table.insert(tweet_contents)
 
+def score_magnitude(score: float, threshold: float):
+    """
+    threshold is positive value
+    """
+    if score > threshold:
+        return 1
+    elif score < -1 * threshold:
+        return -1
+    else:
+        return 0
 
 def search_tweets(ticker_search_dict: dict): 
     """
-    Begin the tweet search loop with the companies in the ticker_search_dict
+    Manage the tweet search loop with the companies in the ticker_search_dict
+    RETURN sentiment and purchase intent information for each company
     """
+    # hold sentiment and PI results for each target company
+    sentiment = defaultdict(list)
+    sentiment_magnitude = defaultdict(list)
+    purchase_intent = defaultdict(list)
+
     for id_tuple, search_list in ticker_search_dict.items():
         #TODO: Code below for "search" if-else can be condensed. 
 
@@ -432,9 +449,12 @@ def search_tweets(ticker_search_dict: dict):
         user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
 
 
+        # Mentions
         men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
         men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
         index_dict[id_tuple]["mentions"] = new_men_since_id
+
+        # Timeline
 
         # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
         # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
@@ -457,41 +477,39 @@ def search_tweets(ticker_search_dict: dict):
                         break
 
                 if copy == True:
+                    reject_count += 1
                     continue
 
 
-                polarity = SIA.polarity_scores( tweet["text"] )["compound"]
+                polarity = find_tweet_sentiment(tweet)
 
                 print ( tweet["text"] )
                 print (polarity)
-                print (tweet_shows_purchase_intent(tweet["text"]))
+                shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
+                print (shows_pi)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
+
                 sentiment[id_tuple].append(polarity)
+                sentiment_magnitude[id_tuple].append(score_magnitude(polarity, 0.2))
+                purchase_intent[id_tuple].append(1 if shows_pi else 0)
 
             else:
-                reject_count += 1;
+                reject_count += 1
 
-            
-        
+
         print ("Total Tweets found"  + str( len( combined)))
         print ("Rejected: " + str(reject_count))
+
+    return (sentiment, sentiment_magnitude, purchase_intent)
+
 
 
 ####------------ Post Process ------------#####
 ## Methods that act on saved data found using the twitter search or stream ##
 
-def get_average_sentiment():
-    """
-    average the sentiment scores in the sentiment defaultdict
-    """
-    avg_sentiment = {}
-    for id_tuple, scores in sentiment.items():
-        avg_sentiment[id_tuple] = sum(scores) / len(scores) if len(scores) != 0 else 0 
-
-    return avg_sentiment
 
 
 
@@ -505,16 +523,39 @@ search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
 
 index_dict = {x : {} for x in search_dict.keys()}
 
-count = 0
+search_count = 0 # keep track of number of iterations of loop
 
 while running == True:
-    count += 1
-    search_tweets( search_dict)
+    search_count += 1
+
+    (sent, sent_mag, pi) = search_tweets(search_dict)
+
+    # generate the score based on the search information
+    score = 0.0
+    avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0 
+    
+    if score_magnitude(avg_sent, 0.2) == 1:
+        score += 10
+    elif score_magnitude(avg_sent, 0.2) == -1:
+        score -= 10
+    
+
+    for pi_score in pi:
+        if pi_score == 1:
+            score += 5
+
+    for sent_score in sent_mag:
+        if sent_score == 1:
+            score += 1
+        elif sent_score == -1:
+            score -= 1
+
+
     print ( str( count) + "th iteration of search_tweets")
     
     printer.pprint( sentiment)
     
-    if count > 1:
+    if search_count > 1:
         running = False
 
-print (get_average_sentiment())
+print ("SCORE: " + str(score))
