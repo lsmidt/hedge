@@ -560,4 +560,4 @@ while running == True:
         running = False
 
 for company in score:
-    print ("SCORE: " + str(company) + str(score[company]))
+    print ("SCORE: " + str(company) + ": " + str(score[company]))
