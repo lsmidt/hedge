@@ -32,6 +32,7 @@ from collections import defaultdict
 
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
+import jamspell
 
 # connect Dataset to Tweetbase
 db = dataset.connect("sqlite:///tweetbase.db")
@@ -115,7 +116,6 @@ def filter_tweet(tweet):
     """
     if type(tweet) is dict:
         if "retweeted_status" in tweet:
-            print ("REJECT: retweet")
             return False
         
         text = tweet["text"]
@@ -136,24 +136,20 @@ def filter_tweet(tweet):
         is_reply = False if tweet.in_reply_to_status_id is None else True
         num_mentions = len(tweet.entities.user_mentions)
 
-    stop_words = ["porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal"]
+    stop_words = "porn pussy babe nude pornstar sex \
+        naked cock cocks gloryhole tits anal"
     
-    for word in text.split():
+    for word in stop_words.split():
 
-        if word in stop_words:
+        if word in text:
             return False
 
     if friends_count < 15:
-        print ("REJECT: low frineds")
         return False
-    #if is_reply:
-        #print ("REJECT: tweet is a reply")
-    #    return False
+
     if num_mentions > 3:
-        print (str(counter) + " " + text)
-        counter += 1
-        print ("REJECT: too many external mentions")
+        return False
+    if "$" in text:
         return False
 
     # if "http" in text:
@@ -162,7 +158,7 @@ def filter_tweet(tweet):
     #    return False
     # if not tweet_shows_purchase_intent(text):
     #     return False
-    print ("ACCEPTED")
+
     return True
 
 
@@ -199,12 +195,20 @@ def find_tweet_sentiment(tweet) -> float:
     """
     determine the sentiment of a tweet for a specific company
     """
+    negative_words = ["crash", "crashing", "problems", "not working", "fix", "shutting down"]
+
     if type(tweet) is dict:
         text = tweet["text"]
     else:
         text = tweet.text
 
-    return SIA.polarity_scores(text)["compound"]
+    score = SIA.polarity_scores(text)["compound"]
+
+    for word in negative_words:
+        if fuzz.partial_ratio(word, text) > 90:
+            score = -0.4
+    
+    return score
 
 def find_tweet_target(tweet_text: str) -> str:
     """
@@ -248,7 +252,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     if since_id is None: 
         since_id = 0
     
-    search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=50, lang="en")
+    search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=100, lang="en")
     tweets = []
 
     _max_id = search_result["search_metadata"]["max_id"]
@@ -258,14 +262,14 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0: 
+    while len(search_result["statuses"]) != 0 and len(tweets) < 500: 
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=50, lang="en")
+        search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=100, lang="en")
 
     return (tweets, highest_id)
 
@@ -286,14 +290,14 @@ def get_recent_mentions(screen_name: str, since_id:int) -> list:
     """
     mentions = TWY.search(q="@" + screen_name, count=100, since_id=since_id, lang="en")
     tweets = []
-
+    
     _max_id = mentions["search_metadata"]["max_id"]
     _since_id = mentions["search_metadata"]["since_id"]
 
     lowest_id = _max_id
     highest_id = _since_id
     
-    while len(mentions["statuses"]) != 0:
+    while (len(mentions["statuses"]) != 0) and len(tweets) < 100:
 
         for tweet in mentions["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -458,7 +462,7 @@ def search_tweets(ticker_search_dict: dict):
         # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
 
-        combined = combine_search_results(found_tweets, men_tweets, [])
+        combined = combine_search_results([], men_tweets, [])
         
         passed_tweets = []
         reject_count = 0 # count passed up tweets
@@ -478,11 +482,15 @@ def search_tweets(ticker_search_dict: dict):
                     reject_count += 1
                     continue
 
+                
+                # perform spell checking
+                short_text = reduce_lengthening(tweet["text"])
+
 
                 polarity = find_tweet_sentiment(tweet)
 
-                #print ( tweet["text"] )
-                #print (polarity)
+                print ( tweet["text"] )
+                print (" " + str(polarity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
                 #print (shows_pi)
@@ -503,13 +511,25 @@ def search_tweets(ticker_search_dict: dict):
 
     return (sentiment, sentiment_magnitude, purchase_intent)
 
+def reduce_lengthening(text):
+    """
+    function to shorten words that have been made too long. IE "finallllllly"
+    """
+    pattern = re.compile(r"(.)\1{2,}")
+    new_text = ""
+
+    for word in text.split():
+        new_word = pattern.sub(r"\1\1", text)
+        new_text += new_word
+
+    return new_text
 
 ####---------- Run Program --------------#####
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : "Apple Mac iPhone",
-                ("SNAP", "Snap"): "Snap Snapchat",
+search_dict = {#("AAPL", "Apple") : "iphone OR iPad OR ios or Apple Pencil",
+                ("SNAP", "Snap"): "Snap OR Snapchat"
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
