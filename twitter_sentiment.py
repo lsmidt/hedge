@@ -258,9 +258,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    for i in range(0, 5): 
-        if len(search_result["statuses"]) == 0:
-            break
+    while len(search_result["statuses"]) != 0: 
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -295,9 +293,7 @@ def get_recent_mentions(screen_name: str, since_id:int) -> list:
     lowest_id = _max_id
     highest_id = _since_id
     
-    for i in range(0, 5):
-        if len(mentions["statuses"]) == 0:
-            break 
+    while len(mentions["statuses"]) != 0:
 
         for tweet in mentions["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -325,9 +321,7 @@ def get_user_timeline(account_id: int, since_id: int):
     lowest_id = _max_id
     highest_id = _since_id
     
-    for i in range(0, 5):
-        if len(timeline_tweets["statuses"]) == 0:
-            break 
+    while len(timeline_tweets["statuses"]) != 0:
 
         for tweet in timeline_tweets["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
