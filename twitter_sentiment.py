@@ -32,7 +32,8 @@ from collections import defaultdict
 
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
-import jamspell
+from textblob import TextBlob
+
 
 # connect Dataset to Tweetbase
 db = dataset.connect("sqlite:///tweetbase.db")
@@ -343,6 +344,12 @@ def lookup_user_id(screen_name: str) -> int:
     """
     user = TWY.show_user(screen_name=screen_name)
     return user["id"]
+
+def get_subjectivity(text):
+    """
+    RETURN subjectivity of sentence
+    """
+    return TextBlob(text)
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
