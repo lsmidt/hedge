@@ -64,6 +64,8 @@ index_dict = {}
 pi_scores = {}
 sentiment_scores = {}
 
+counter = 0
+
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -135,21 +137,23 @@ def filter_tweet(tweet):
         num_mentions = len(tweet.entities.user_mentions)
 
     stop_words = ["porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal gay balls"]
-
+        naked cock cocks gloryhole tits anal"]
+    
     for word in text.split():
 
         if word in stop_words:
             return False
 
-    if friends_count < 50:
-        #print ("REJECT: low frineds")
+    if friends_count < 15:
+        print ("REJECT: low frineds")
         return False
     #if is_reply:
         #print ("REJECT: tweet is a reply")
     #    return False
     if num_mentions > 3:
-        #print ("REJECT: too many external mentions")
+        print (str(counter) + " " + text)
+        counter += 1
+        print ("REJECT: too many external mentions")
         return False
 
     # if "http" in text:
@@ -158,7 +162,7 @@ def filter_tweet(tweet):
     #    return False
     # if not tweet_shows_purchase_intent(text):
     #     return False
-
+    print ("ACCEPTED")
     return True
 
 
@@ -483,11 +487,11 @@ def search_tweets(ticker_search_dict: dict):
 
                 polarity = find_tweet_sentiment(tweet)
 
-                print ( tweet["text"] )
-                print (polarity)
+                #print ( tweet["text"] )
+                #print (polarity)
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-                print (shows_pi)
+                #print (shows_pi)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
@@ -504,13 +508,6 @@ def search_tweets(ticker_search_dict: dict):
         print ("Rejected: " + str(reject_count))
 
     return (sentiment, sentiment_magnitude, purchase_intent)
-
-
-
-####------------ Post Process ------------#####
-## Methods that act on saved data found using the twitter search or stream ##
-
-
 
 
 ####---------- Run Program --------------#####
@@ -531,6 +528,8 @@ while running == True:
     (sent, sent_mag, pi) = search_tweets(search_dict)
 
     # generate the score based on the search information
+    sentiment_score = defaultdict(float)
+    pi_count = defaultdict(float)
     score = defaultdict(float)
 
     for company in sent:
