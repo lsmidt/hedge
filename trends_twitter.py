@@ -6,13 +6,8 @@ PURPOSE:
     Potential upside for social media campaigning; trend identificiation => sudo apt-get free_pr
 
 TODO:
-    Track sentiment in most_common_words; move toward understanding holding companies
-
-    How can this be used in the best way possible? *** LET'S TALK ABOUT THIS ***
-        1. Social Media
-        2. Informing additional search items in another program?
-        3. Figure out a way to identify trends for a specific company?
-
+    POSITIVE, NEGATIVE, HASHTAG most common words
+    Sentiment scores for each
 
 Max Gillespie
 6/15/2018
@@ -130,8 +125,6 @@ def sync(topics):
         tok = tokenize_tweets(extra_stop)
         most_common_words.append(tok[0])
         avg_sentiment.append(float(tok[1]/tweets_collected))
-        print (tok[1], tweets_collected)
-
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -174,7 +167,6 @@ def filter_tweet(tweet):
     return True
 
 
-
 ''' ------------------------------ MAIN -----------------------------------'''
 # topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
 # topics = [ ["World Cup", "Mesi"], ["Lego"] ]
@@ -187,16 +179,11 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
             "St. Nick's", "Double Hit"] ]
 '''
 
-topics = [ ["World Cup", "Mesi"] ]
+topics = [ ["World Cup", "Mesi"], ["apple"] ]
 most_common_words = list()     # list of most common words to match each topic
 avg_sentiment = list()
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
-
-#x = dict()
-#x['text'] = "This is negative sentiment. I am unhappy."
-#print (find_tweet_sentiment(x))
-
 
 sync(topics)
 
