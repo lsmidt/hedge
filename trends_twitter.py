@@ -79,6 +79,7 @@ class MyListener(StreamListener):
                 if (elapsed_time > 1800):  #THIS IS 'N' SECONDS OF TWEETS
                     return False
             '''
+
             if (tweets_collected > 10):
                 return False
 
@@ -113,6 +114,7 @@ def sync(topics):
         # twitter_stream.filter(track = topic)
 
         tweets_per_topic.append(tweets_collected)
+
         j.close()
 
         extra_stop = list()
@@ -125,8 +127,11 @@ def sync(topics):
                 for i in range(0, len(temp)):
                     extra_stop.append(temp[i])
 
-        avg_sentiment.append(float(total_sentiment/tweets_collected))
-        most_common_words.append(tokenize_tweets(extra_stop))
+        tok = tokenize_tweets(extra_stop)
+        most_common_words.append(tok[0])
+        avg_sentiment.append(float(tok[1]/tweets_collected))
+        print (tok[1], tweets_collected)
+
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -140,6 +145,7 @@ def find_tweet_sentiment(tweet) -> float:
     return SIA.polarity_scores(text)["compound"]
 
 def tokenize_tweets(extra_stop = []):
+    total_sentiment = 0
     f = open('python.json', 'r')
     count_all = Counter()
 
@@ -149,8 +155,9 @@ def tokenize_tweets(extra_stop = []):
         terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
                                 (term not in stop and term not in extra_stop)]
         count_all.update(terms_stop)
+        total_sentiment += find_tweet_sentiment(tweet)
 
-    return (count_all.most_common(5))
+    return ([count_all.most_common(5), total_sentiment])
 
 def filter_tweet(tweet):
     """
