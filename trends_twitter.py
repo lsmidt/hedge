@@ -32,6 +32,7 @@ from collections import Counter
 from tweepy.streaming import StreamListener
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+import vaderSentiment.vaderSentiment as sia
 
 
 ''' -------------------------- INSTANTIATIONS -------------------------------'''
@@ -44,6 +45,8 @@ auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
+
+SIA = sia.SentimentIntensityAnalyzer()
 
 punctuation = list(string.punctuation)
 stop = stopwords.words('english') + punctuation + \
@@ -94,9 +97,11 @@ def sync(topics):
     global most_common_words
     global tweets_per_topic
     global tweets_collected
+    global avg_sentiment
     global j
 
     for topic in topics:
+        total_sentiment = 0
         tweets_collected = 0
         j = open('python.json', 'w')
 
@@ -120,8 +125,19 @@ def sync(topics):
                 for i in range(0, len(temp)):
                     extra_stop.append(temp[i])
 
+        avg_sentiment.append(float(total_sentiment/tweets_collected))
         most_common_words.append(tokenize_tweets(extra_stop))
 
+def find_tweet_sentiment(tweet) -> float:
+    """
+    determine the sentiment of a tweet for a specific company
+    """
+    if type(tweet) is dict:
+        text = tweet["text"]
+    else:
+        text = tweet.text
+
+    return SIA.polarity_scores(text)["compound"]
 
 def tokenize_tweets(extra_stop = []):
     f = open('python.json', 'r')
@@ -151,6 +167,7 @@ def filter_tweet(tweet):
     return True
 
 
+
 ''' ------------------------------ MAIN -----------------------------------'''
 # topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
 # topics = [ ["World Cup", "Mesi"], ["Lego"] ]
@@ -165,15 +182,22 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
 
 topics = [ ["World Cup", "Mesi"] ]
 most_common_words = list()     # list of most common words to match each topic
+avg_sentiment = list()
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
 
+#x = dict()
+#x['text'] = "This is negative sentiment. I am unhappy."
+#print (find_tweet_sentiment(x))
+
+
 sync(topics)
 
-''' PARSING '''
+# PARSING
 for i in range(len(topics)):
     print ("---------------------------------------------------")
     print ("TWEETS COLLECTED:", tweets_per_topic[i])
     for t in topics[i]:
         print(t)
+    print("AVG SENTIMENT: ", avg_sentiment[i])
     print('\t', most_common_words[i])
