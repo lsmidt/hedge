@@ -6,13 +6,8 @@ PURPOSE:
     Potential upside for social media campaigning; trend identificiation => sudo apt-get free_pr
 
 TODO:
-    Track sentiment in most_common_words; move toward understanding holding companies
-
-    How can this be used in the best way possible? *** LET'S TALK ABOUT THIS ***
-        1. Social Media
-        2. Informing additional search items in another program?
-        3. Figure out a way to identify trends for a specific company?
-
+    POSITIVE, NEGATIVE, HASHTAG most common words
+    Sentiment scores for each
 
 Max Gillespie
 6/15/2018
@@ -32,6 +27,7 @@ from collections import Counter
 from tweepy.streaming import StreamListener
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+import vaderSentiment.vaderSentiment as sia
 
 
 ''' -------------------------- INSTANTIATIONS -------------------------------'''
@@ -44,6 +40,8 @@ auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
+
+SIA = sia.SentimentIntensityAnalyzer()
 
 punctuation = list(string.punctuation)
 stop = stopwords.words('english') + punctuation + \
@@ -76,6 +74,7 @@ class MyListener(StreamListener):
                 if (elapsed_time > 1800):  #THIS IS 'N' SECONDS OF TWEETS
                     return False
             '''
+
             if (tweets_collected > 10):
                 return False
 
@@ -94,9 +93,11 @@ def sync(topics):
     global most_common_words
     global tweets_per_topic
     global tweets_collected
+    global avg_sentiment
     global j
 
     for topic in topics:
+        total_sentiment = 0
         tweets_collected = 0
         j = open('python.json', 'w')
 
@@ -108,6 +109,7 @@ def sync(topics):
         # twitter_stream.filter(track = topic)
 
         tweets_per_topic.append(tweets_collected)
+
         j.close()
 
         extra_stop = list()
@@ -120,10 +122,23 @@ def sync(topics):
                 for i in range(0, len(temp)):
                     extra_stop.append(temp[i])
 
-        most_common_words.append(tokenize_tweets(extra_stop))
+        tok = tokenize_tweets(extra_stop)
+        most_common_words.append(tok[0])
+        avg_sentiment.append(float(tok[1]/tweets_collected))
 
+def find_tweet_sentiment(tweet) -> float:
+    """
+    determine the sentiment of a tweet for a specific company
+    """
+    if type(tweet) is dict:
+        text = tweet["text"]
+    else:
+        text = tweet.text
+
+    return SIA.polarity_scores(text)["compound"]
 
 def tokenize_tweets(extra_stop = []):
+    total_sentiment = 0
     f = open('python.json', 'r')
     count_all = Counter()
 
@@ -133,8 +148,9 @@ def tokenize_tweets(extra_stop = []):
         terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
                                 (term not in stop and term not in extra_stop)]
         count_all.update(terms_stop)
+        total_sentiment += find_tweet_sentiment(tweet)
 
-    return (count_all.most_common(5))
+    return ([count_all.most_common(5), total_sentiment])
 
 def filter_tweet(tweet):
     """
@@ -163,17 +179,19 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
             "St. Nick's", "Double Hit"] ]
 '''
 
-topics = [ ["World Cup", "Mesi"] ]
+topics = [ ["World Cup", "Mesi"], ["apple"] ]
 most_common_words = list()     # list of most common words to match each topic
+avg_sentiment = list()
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
 
 sync(topics)
 
-''' PARSING '''
+# PARSING
 for i in range(len(topics)):
     print ("---------------------------------------------------")
     print ("TWEETS COLLECTED:", tweets_per_topic[i])
     for t in topics[i]:
         print(t)
+    print("AVG SENTIMENT: ", avg_sentiment[i])
     print('\t', most_common_words[i])
