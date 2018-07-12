@@ -35,14 +35,13 @@ from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 from textblob import TextBlob
 
+db = dataset.connect("sqlite:///tweetbase.db") # connect Dataset to Tweetbase
 
-# connect Dataset to Tweetbase
-db = dataset.connect("sqlite:///tweetbase.db")
+printer = pprint.PrettyPrinter() # printer object
 
-printer = pprint.PrettyPrinter()
+SIA = sia.SentimentIntensityAnalyzer() # VADER Senitiment object
 
-SIA = sia.SentimentIntensityAnalyzer()
-
+# Twitter Keys
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
 CONSUMER_SECRET = 'OBMTSJfy4UHuCDSslKzZdcgcm33NChTh1m3dJLX5OhRVY5EhUc'
 AXS_TOKEN_KEY = '1005588267297853441-aYFOthzthNUwgHUvMJNDCcAMn0IfsC'
@@ -57,17 +56,13 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth)
 
-# start and stop search
-running = True
+running = True # start and stop search
 
-# hold twitter since_ids for each searched company
-index_dict = {}
+index_dict = {} # hold twitter since_ids for each searched company
 
 # hold sentiment and purchase intent scores for each company
 pi_scores = {}
 sentiment_scores = {}
-
-counter = 0
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -98,7 +93,7 @@ class StreamListener(tweepy.StreamListener):
             return False
 
 
-######----------------- Company Score (Live Stream Sentiment) -------------------######
+######----------------- Live Stream Processing -------------------######
 
 def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="low"):
     """
@@ -111,77 +106,6 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
-
-def filter_tweet(tweet, search_terms=None):
-    """
-    filter the tweet from the stream if it is not of high quality
-    """
-    if type(tweet) is dict:
-        if "retweeted_status" in tweet:
-            return False
-        
-        text = tweet["text"]
-        friends_count = tweet["user"]["friends_count"]
-        qry_type = tweet["metadata"]["result_type"]
-        rt_count = tweet["retweet_count"]
-        is_reply = False if tweet["in_reply_to_status_id"] is None else True
-        num_mentions = len( tweet["entities"]["user_mentions"])
-
-    else:
-        if hasattr(tweet, "retweeted_status"):
-            return False
-
-        text = tweet.text
-        friends_count = tweet.user.friends_count
-        qry_type = tweet.metadata.result_type
-        rt_count = tweet.metadata.retweet_count
-        is_reply = False if tweet.in_reply_to_status_id is None else True
-        num_mentions = len(tweet.entities.user_mentions)
-
-    stop_words = "porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal horny"
-    
-    for word in stop_words.split():
-
-        if word in text:
-            return False
-
-    if friends_count < 15:
-        return False
-
-    if num_mentions > 3:
-        return False
-    if "$" in text:
-        return False
-
-    text_tok = word_tokenize(text)
-    pos_list = pos_tag(text_tok, tagset='universal')
-
-    # at least one search term should be pronoun if search term is a product
-    flag = True
-    for term in search_terms.split():
-        for word in pos_list:
-            if term == "OR":
-                continue
-
-            ratio = fuzz.ratio(term, word[0])
-            if ratio > 85:
-                if word[1] == "NOUN" or word[1] == "PRON": 
-                    flag == False
-    
-    if flag and (not search_terms is None):
-        return False
-
-    # TODO: Filter (or weight value) by "Snap" being used as PRON not VERB
-
-    # if "http" in text:
-    #     print ("REJECT: URL in text")
-    #     print (text)
-    #    return False
-    # if not tweet_shows_purchase_intent(text):
-    #     return False
-
-    return True
 
 
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
@@ -232,27 +156,7 @@ def find_tweet_target(tweet_text: str) -> str:
     perform Named Entity Resolution to determine what company a tweet is most likely talking about.
     RETURN str representing company ticker symbol
     """
-    # FIXME: tagger.tag crashes with a tokenizer error.
-    # tag_list = tagger.tag( tweet_text)
-    # split_list = tag_list.split()
-    # # account for non grouping by grouping consecutive orgs
-    # found_org_list = []
-
-    # for word_tuple in split_list:
-    #     if word_tuple[1] == "ORGANIZATION":
-    #         found_org_list.append(word_tuple[0])
-
-    # # fuzzy string match words in a csv of stock tickers we track
-    # org_score = {}
-    
-    # df = pd.read_csv("stock_ticker_subset.csv")
-    # org_names = df.Name
-    # org_tickers = df.Ticker
-
-    # for org in found_org_list:
-    #     org_score[org] = process.extractOne(org, org_names, scorer=fuzz.partial_token_sort_ratio)
-
-    return None  
+    pass
 
 ######----------------- Mentions (Moving Average Sentiment)----------------#######
 # Iterate over a list of company and product names, for each, produce a search search_terms, load a page of 100 tweets 
@@ -393,7 +297,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
         if lower in fp_pron:
             num_fp_pron += 1
 
-    return True if (subj > 0.3) or (num_fp_pron > 0) else False
+    return True if (subj > 0.3) or (num_fp_pron > 1) else False
 
     #     contains_mention = True if tweet_text.find("@") != -1 else False
 
@@ -420,6 +324,79 @@ def filter_text(text):
     no_mentions = re.sub(mention_expression, short)
     pass
     
+def filter_tweet(tweet, search_terms=None):
+    """
+    filter the tweet from the stream if it is not of high quality
+    """
+    if type(tweet) is dict:
+        if "retweeted_status" in tweet:
+            return False
+        
+        text = tweet["text"]
+        friends_count = tweet["user"]["friends_count"]
+        qry_type = tweet["metadata"]["result_type"]
+        rt_count = tweet["retweet_count"]
+        is_reply = False if tweet["in_reply_to_status_id"] is None else True
+        num_mentions = len( tweet["entities"]["user_mentions"])
+
+    else:
+        if hasattr(tweet, "retweeted_status"):
+            return False
+
+        text = tweet.text
+        friends_count = tweet.user.friends_count
+        qry_type = tweet.metadata.result_type
+        rt_count = tweet.metadata.retweet_count
+        is_reply = False if tweet.in_reply_to_status_id is None else True
+        num_mentions = len(tweet.entities.user_mentions)
+
+    stop_words = "porn pussy babe nude pornstar sex \
+        naked cock cocks gloryhole tits anal horny"
+    
+    for word in stop_words.split():
+
+        if word in text:
+            return False
+
+    if friends_count < 15:
+        return False
+
+    if num_mentions > 3:
+        return False
+    if "$" in text:
+        return False
+
+    text_tok = word_tokenize(text)
+    pos_list = pos_tag(text_tok, tagset='universal')
+
+    # at least one search term should be pronoun if search term is a product
+    flag = True
+    count_occ = 0
+    for term in search_terms.split():
+        for word in pos_list:
+            if term == "OR":
+                continue
+
+            ratio = fuzz.token_set_ratio(term, word[0])
+            if ratio > 85:
+                count_occ += 1
+                if (word[1] == "NOUN" or word[1] == "PRON") or count_occ > 1: 
+                    flag = False
+    
+    if flag and (not search_terms is None):
+        print ("REJECTED")
+
+    # TODO: Filter (or weight value) by "Snap" being used as NOUN/PRON 
+
+    # if "http" in text:
+    #     print ("REJECT: URL in text")
+    #     print (text)
+    #    return False
+    # if not tweet_shows_purchase_intent(text):
+    #     return False
+
+    return True
+
 #####--------------- Main methods -----------------######
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
@@ -477,6 +454,8 @@ def search_tweets(ticker_search_dict: dict):
     for id_tuple, search_list in ticker_search_dict.items():
         #TODO: Code below for "search" if-else can be condensed. 
 
+        ### Search Tweets
+
         # if a since_id already exists, use it. else use 0 as since_id
         if "search" in index_dict[id_tuple]:
             found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, \
@@ -491,13 +470,12 @@ def search_tweets(ticker_search_dict: dict):
         user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
 
 
-        # Mentions
+        ### Mentions
         men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
         men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
         index_dict[id_tuple]["mentions"] = new_men_since_id
 
-        # Timeline
-
+        ### Timeline
         # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
         # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
@@ -534,7 +512,7 @@ def search_tweets(ticker_search_dict: dict):
                 print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-                print ("Purchase Intent: " + str(shows_pi))
+                print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
@@ -565,7 +543,7 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {#("AAPL", "Apple") : "iphone OR iPad OR ios or Apple Pencil",
+search_dict = {("AAPL", "Apple") : "iphone OR iPad OR ios or Apple Pencil",
                 ("SNAP", "Snap"): "Snap OR Snapchat"
                }
 

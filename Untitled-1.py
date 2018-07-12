@@ -12,4 +12,4 @@ text = "@snap @snapchat fuck all of yall"
 
 # print (new)
 
-print (fuzz.ratio("snap", 'Snap'))
+print (fuzz.token_set_ratio("or", "for"))
