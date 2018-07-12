@@ -340,7 +340,7 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
         num_mentions = len(tweet.entities.user_mentions)
 
     stop_words = "porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal horny"
+        naked cock cocks gloryhole tits anal horny cum penis"
     
     for word_tup in stop_words.split():
 
@@ -378,6 +378,8 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
                 if (word_tup[1] == "NOUN" or word_tup[1] == "PRON") or count_occ > 1: 
                     flag = False
                     break
+                else:
+                    print (word_tup[0] + " is a " + word_tup[1])
     
     if flag and (not search_terms is None):
         print ("REJECTED")
