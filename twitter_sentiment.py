@@ -154,6 +154,8 @@ def filter_tweet(tweet):
     if "$" in text:
         return False
 
+    # TODO: Filter (or weight value) by "Snap" being used as PRON not VERB
+
     # if "http" in text:
     #     print ("REJECT: URL in text")
     #     print (text)
@@ -204,7 +206,7 @@ def find_text_sentiment(text) -> float:
     for word in negative_words:
         if fuzz.partial_ratio(word, text) > 90:
             score = -0.4
-    
+
     return score
 
 def find_tweet_target(tweet_text: str) -> str:
@@ -380,6 +382,17 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
 
     return (verb_flag and noun_flag and pron_flag) 
     
+def filter_text(text):
+    """
+    spell check, remove @mentions
+    """
+    # FIXME: This shit doesn't work
+    mention_expression = re.compile(r"\s([@#][\w_-]+)")
+
+    short = reduce_lengthening(text)
+    no_mentions = re.sub(mention_expression, short)
+    pass
+
 
     
 #####--------------- Main methods -----------------######
@@ -393,7 +406,6 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
         data = line.split(',')
         if data[0] == stock_symbol:
             start_tweet_stream(data[1], follow_user_id=account_id)
-
 
 def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float):
     """
@@ -465,7 +477,7 @@ def search_tweets(ticker_search_dict: dict):
         # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
 
-        combined = combine_search_results([], men_tweets, [])
+        combined = combine_search_results(found_tweets, [], [])
         
         passed_tweets = []
         reject_count = 0 # count passed up tweets
@@ -494,8 +506,8 @@ def search_tweets(ticker_search_dict: dict):
 
                 print ( tweet["text"] )
                 print ("Polarity: " + str(polarity))
-                print ("Subjectivity: " + str( ))
-                #shows_pi = tweet_shows_purchase_intent(tweet["text"])
+                print ("Subjectivity: " + str( subjectivity))
+                shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
                 #print (shows_pi)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
