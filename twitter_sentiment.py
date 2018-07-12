@@ -112,7 +112,7 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
-def filter_tweet(tweet, search_terms: str):
+def filter_tweet(tweet, search_terms=None):
     """
     filter the tweet from the stream if it is not of high quality
     """
@@ -165,7 +165,7 @@ def filter_tweet(tweet, search_terms: str):
                 if word[1] == "PRON": 
                     flag == False
     
-    if flag:
+    if flag and (not search_terms is None):
         return False
 
     # TODO: Filter (or weight value) by "Snap" being used as PRON not VERB
@@ -504,7 +504,7 @@ def search_tweets(ticker_search_dict: dict):
         reject_count = 0 # count passed up tweets
 
         for tweet in combined:
-            if filter_tweet(tweet):
+            if filter_tweet(tweet, search_list):
                 
                 # check if tweet is a close copy of one already seen
                 copy = False
