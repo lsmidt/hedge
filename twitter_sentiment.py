@@ -275,7 +275,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Return true if the tweet text indicates that a customer used or bought 
         a product
     """
-    # verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
+    fp_verb_list = ["bought", "used", "got", "had", "flew", "ate", "use", "carrying"]
 
     fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this"]
     other_pron = ["you", "your", "their", "they"]
