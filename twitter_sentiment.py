@@ -376,7 +376,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
         if lower in fp_pron:
             num_fp_pron += 1
 
-    return True if (subj > 0.25) or (num_fp_pron > 0) else False
+    return True if (subj > 0.3) or (num_fp_pron > 0) else False
 
     #     contains_mention = True if tweet_text.find("@") != -1 else False
 
@@ -402,8 +402,6 @@ def filter_text(text):
     short = reduce_lengthening(text)
     no_mentions = re.sub(mention_expression, short)
     pass
-
-
     
 #####--------------- Main methods -----------------######
 
