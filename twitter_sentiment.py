@@ -275,7 +275,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Return true if the tweet text indicates that a customer used or bought 
         a product
     """
-    fp_verb_list = ["bought", "used", "got", "had", "flew", "ate", "use", "carrying"]
+    fp_verb_list = ["bought", "used", "got", "had", "flew", "ate", "use", "carry", "have"]
 
     fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this"]
     other_pron = ["you", "your", "their", "they"]
@@ -297,7 +297,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
         if lower in fp_pron:
             num_fp_pron += 1
 
-    return True if (subj > 0.3) or (num_fp_pron > 1) else False
+    return True if (subj > 0.3) or (num_fp_pron > 0) else False
 
     #     contains_mention = True if tweet_text.find("@") != -1 else False
 
