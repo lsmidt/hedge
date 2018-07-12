@@ -354,7 +354,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     Return true if the tweet text indicates that a customer used or bought 
         a product
     """
-    verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
+    # verb_list = ["bought", "used", "new", "my", "got", "had", "flew", "ate", "use"]
 
     fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this"]
     other_pron = ["you", "your", "their", "they"]
@@ -362,28 +362,35 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     text = word_tokenize(tweet_text)
     pos_list = pos_tag(text, tagset='universal')
 
-    verb_flag = False
-    pron_flag = False
-    noun_flag = False
+    # verb_flag = False
+    # pron_flag = False
+    # noun_flag = False
 
-    # TODO: This shit is fucked up. 
-    # Replace with checks for subjectivity AND if (contains fp_pron) 
+    # TODO: work in the filter_text method here to make subjectivity more reliable
+    subj = get_subjectivity(tweet_text)
+    
+    num_fp_pron = 0
 
     for word in pos_list:
         lower = word[0].lower()
-        contains_mention = True if tweet_text.find("@") != -1 else False
+        if lower in fp_pron:
+            num_fp_pron += 1
 
-        if word[1] == 'VERB':
-          verb_flag = True
+    return True if (subj > 0.25) or (num_fp_pron > 0) else False
 
-        if (word[1] == "PRON" and lower in fp_pron) \
-            or (contains_mention and not lower in other_pron):
-            pron_flag = True
+    #     contains_mention = True if tweet_text.find("@") != -1 else False
 
-        if word[1] == "NOUN" or contains_mention:
-            noun_flag = True
+    #     if word[1] == 'VERB':
+    #       verb_flag = True
 
-    return (verb_flag and noun_flag and pron_flag) 
+    #     if (word[1] == "PRON" and lower in fp_pron) \
+    #         or (contains_mention and not lower in other_pron):
+    #         pron_flag = True
+
+    #     if word[1] == "NOUN" or contains_mention:
+    #         noun_flag = True
+
+    # return (verb_flag and noun_flag and pron_flag) 
     
 def filter_text(text):
     """
@@ -565,7 +572,7 @@ while running == True:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
     
     # TODO: This scoring system is uniquely retarded
-    
+
         if score_magnitude(avg_sent, 0.2) == 1:
             score[company] += 300
         elif score_magnitude(avg_sent, 0.2) == -1:
