@@ -372,7 +372,6 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
                 count_occ += 1
                 
                 if fuzz.partial_token_sort_ratio(word_tup[0], accept_terms) > 85:
-                    print ("FUZZED")
                     flag = False
                     break
 
