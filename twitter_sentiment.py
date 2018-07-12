@@ -145,8 +145,8 @@ def find_text_sentiment(text) -> float:
 
     score = SIA.polarity_scores(text)["compound"]
 
-    for word in negative_words:
-        if fuzz.partial_ratio(word, text) > 90:
+    for word_tup in negative_words:
+        if fuzz.partial_ratio(word_tup, text) > 90:
             score = -0.4
 
     return score
@@ -283,35 +283,24 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     text = word_tokenize(tweet_text)
     pos_list = pos_tag(text, tagset='universal')
 
-    # verb_flag = False
-    # pron_flag = False
-    # noun_flag = False
-
     # TODO: work in the filter_text method here to make subjectivity more reliable
     subj = get_subjectivity(tweet_text)
-    
-    num_fp_pron = 0
+    net_score = subj
 
-    for word in pos_list:
-        lower = word[0].lower()
+    fp_pron_used = []
+
+    for word_tup in pos_list:
+        lower = word_tup[0].lower()
         if lower in fp_pron:
-            num_fp_pron += 1
+            fp_pron_used.append(lower)
 
-    return True if (subj > 0.3) or (num_fp_pron > 0) else False
+    if len(fp_pron_used) == 0:
+        net_score -= 0.1
+    else:
+        net_score += 0.2 * len(fp_pron_used)
 
-    #     contains_mention = True if tweet_text.find("@") != -1 else False
+    return True if net_score > 0.2 else False
 
-    #     if word[1] == 'VERB':
-    #       verb_flag = True
-
-    #     if (word[1] == "PRON" and lower in fp_pron) \
-    #         or (contains_mention and not lower in other_pron):
-    #         pron_flag = True
-
-    #     if word[1] == "NOUN" or contains_mention:
-    #         noun_flag = True
-
-    # return (verb_flag and noun_flag and pron_flag) 
     
 def filter_text(text):
     """
@@ -324,7 +313,7 @@ def filter_text(text):
     no_mentions = re.sub(mention_expression, short)
     pass
     
-def filter_tweet(tweet, search_terms=None):
+def filter_tweet(tweet, search_terms=[], accept_terms=""):
     """
     filter the tweet from the stream if it is not of high quality
     """
@@ -353,9 +342,9 @@ def filter_tweet(tweet, search_terms=None):
     stop_words = "porn pussy babe nude pornstar sex \
         naked cock cocks gloryhole tits anal horny"
     
-    for word in stop_words.split():
+    for word_tup in stop_words.split():
 
-        if word in text:
+        if word_tup in text:
             return False
 
     if friends_count < 15:
@@ -373,15 +362,22 @@ def filter_tweet(tweet, search_terms=None):
     flag = True
     count_occ = 0
     for term in search_terms.split():
-        for word in pos_list:
-            if term == "OR":
+        if term == "OR":
                 continue
 
-            ratio = fuzz.token_set_ratio(term, word[0])
+        for word_tup in pos_list:
+
+            ratio = fuzz.token_set_ratio(term, word_tup[0])
             if ratio > 85:
                 count_occ += 1
-                if (word[1] == "NOUN" or word[1] == "PRON") or count_occ > 1: 
+                
+                if word_tup[0].lower() in [x for x in accept_terms.lower().split()]:
                     flag = False
+                    break
+
+                if (word_tup[1] == "NOUN" or word_tup[1] == "PRON") or count_occ > 1: 
+                    flag = False
+                    break
     
     if flag and (not search_terms is None):
         print ("REJECTED")
@@ -451,18 +447,18 @@ def search_tweets(ticker_search_dict: dict):
     sentiment_magnitude = defaultdict(list)
     purchase_intent = defaultdict(list)
 
-    for id_tuple, search_list in ticker_search_dict.items():
+    for id_tuple, search_dict in ticker_search_dict.items():
         #TODO: Code below for "search" if-else can be condensed. 
 
         ### Search Tweets
 
         # if a since_id already exists, use it. else use 0 as since_id
         if "search" in index_dict[id_tuple]:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, \
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_dict["search"], \
                                                         since_id=index_dict[id_tuple]["search"])
             index_dict[id_tuple]["search"] = since_id
         else:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_list, since_id=0)
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_dict["search"], since_id=0)
             index_dict[id_tuple]["search"] = since_id
 
 
@@ -486,7 +482,7 @@ def search_tweets(ticker_search_dict: dict):
         reject_count = 0 # count passed up tweets
 
         for tweet in combined:
-            if filter_tweet(tweet, search_list):
+            if filter_tweet(tweet, search_dict["search"], search_dict["accept"]):
                 
                 # check if tweet is a close copy of one already seen
                 copy = False
@@ -543,8 +539,10 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : "iphone OR iPad OR ios or Apple Pencil",
-                ("SNAP", "Snap"): "Snap OR Snapchat"
+search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios OR Apple Pencil", \
+                                    "accept" : "iPad iPhone"},
+                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                                    "accept" : "Snapchat"}
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
