@@ -366,6 +366,9 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     pron_flag = False
     noun_flag = False
 
+    # TODO: This shit is fucked up. 
+    # Replace with checks for subjectivity AND if (contains fp_pron) 
+
     for word in pos_list:
         lower = word[0].lower()
         contains_mention = True if tweet_text.find("@") != -1 else False
@@ -498,7 +501,7 @@ def search_tweets(ticker_search_dict: dict):
                     continue
 
                 
-                # perform spell checking
+                # TODO: perform spell checking
                 short_text = reduce_lengthening(tweet["text"])
 
                 polarity = find_text_sentiment(short_text)
@@ -560,6 +563,8 @@ while running == True:
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
+    
+    # TODO: This scoring system is uniquely retarded
     
         if score_magnitude(avg_sent, 0.2) == 1:
             score[company] += 300
