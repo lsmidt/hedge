@@ -154,15 +154,19 @@ def filter_tweet(tweet, search_terms=None):
     if "$" in text:
         return False
 
-    text = word_tokenize(tweet_text)
-    pos_list = pos_tag(text, tagset='universal')
+    text_tok = word_tokenize(text)
+    pos_list = pos_tag(text_tok, tagset='universal')
 
     # at least one search term should be pronoun if search term is a product
     flag = True
     for term in search_terms.split():
         for word in pos_list:
-            if fuzz.ratio(term, word[0]) > 95:
-                if word[1] == "PRON": 
+            if term == "OR":
+                continue
+
+            ratio = fuzz.ratio(term, word[0])
+            if ratio > 85:
+                if word[1] == "NOUN" or word[1] == "PRON": 
                     flag == False
     
     if flag and (not search_terms is None):
