@@ -112,7 +112,7 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
-def filter_tweet(tweet):
+def filter_tweet(tweet, search_terms: str):
     """
     filter the tweet from the stream if it is not of high quality
     """
@@ -152,6 +152,20 @@ def filter_tweet(tweet):
     if num_mentions > 3:
         return False
     if "$" in text:
+        return False
+
+    text = word_tokenize(tweet_text)
+    pos_list = pos_tag(text, tagset='universal')
+
+    # at least one search term should be pronoun if search term is a product
+    flag = True
+    for term in search_terms.split():
+        for word in pos_list:
+            if fuzz.ratio(term, word[0]) > 95:
+                if word[1] == "PRON": 
+                    flag == False
+    
+    if flag:
         return False
 
     # TODO: Filter (or weight value) by "Snap" being used as PRON not VERB
@@ -281,7 +295,6 @@ def combine_search_results(first, second, third):
     b = [tweet for tweet in third]
 
     return combined + a + b
-
 
 def get_recent_mentions(screen_name: str, since_id:int) -> list:
     """
@@ -506,7 +519,7 @@ def search_tweets(ticker_search_dict: dict):
                     continue
 
                 
-                # TODO: perform spell checking
+                # TODO: perform spell correcting
                 short_text = reduce_lengthening(tweet["text"])
 
                 polarity = find_text_sentiment(short_text)
@@ -517,7 +530,7 @@ def search_tweets(ticker_search_dict: dict):
                 print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-                #print (shows_pi)
+                print ("Purchase Intent: " + str(shows_pi))
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
