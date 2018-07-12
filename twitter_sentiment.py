@@ -370,7 +370,7 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
             ratio = fuzz.token_set_ratio(term, word_tup[0])
             if ratio > 85:
                 count_occ += 1
-                
+                # FIXME: This may reinclude non-nouns. Use a tokenizer or avoid ambiguous cases in accept_terms
                 if fuzz.partial_token_sort_ratio(word_tup[0], accept_terms) > 85:
                     flag = False
                     break
@@ -383,8 +383,6 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
     
     if flag and (not search_terms is None):
         print ("REJECTED")
-
-    # TODO: Filter (or weight value) by "Snap" being used as NOUN/PRON 
 
     # if "http" in text:
     #     print ("REJECT: URL in text")
@@ -544,7 +542,7 @@ def reduce_lengthening(text):
 search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios OR Apple Pencil", \
                                     "accept" : "iPad iPhone"},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat snap story"}
+                                    "accept" : "Snapchat story"}
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
