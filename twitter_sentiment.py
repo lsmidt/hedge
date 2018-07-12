@@ -371,7 +371,8 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
             if ratio > 85:
                 count_occ += 1
                 
-                if word_tup[0].lower() in [x for x in accept_terms.lower().split()]:
+                if fuzz.partial_token_sort_ratio(word_tup[0], accept_terms) > 85:
+                    print ("FUZZED")
                     flag = False
                     break
 
@@ -544,7 +545,7 @@ def reduce_lengthening(text):
 search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios OR Apple Pencil", \
                                     "accept" : "iPad iPhone"},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat"}
+                                    "accept" : "Snapchat snap story"}
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
