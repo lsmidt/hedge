@@ -20,6 +20,7 @@ import tweepy # used for streaming
 import dataset
 import urllib.parse
 import copy
+import re
 from datetime import date
 import pandas as pd
 import pprint
@@ -138,7 +139,7 @@ def filter_tweet(tweet):
         num_mentions = len(tweet.entities.user_mentions)
 
     stop_words = "porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal"
+        naked cock cocks gloryhole tits anal horny"
     
     for word in stop_words.split():
 
@@ -192,16 +193,11 @@ def save_stream_from_user(user_id: int):
     printer.pprint( "NOW STREAMING FROM" + str( lookup_user_id( user_id)))
     stream.filter(follow=user_id, languages=["en"])
 
-def find_tweet_sentiment(tweet) -> float:
+def find_text_sentiment(text) -> float:
     """
     determine the sentiment of a tweet for a specific company
     """
     negative_words = ["crash", "crashing", "problems", "not working", "fix", "shutting down"]
-
-    if type(tweet) is dict:
-        text = tweet["text"]
-    else:
-        text = tweet.text
 
     score = SIA.polarity_scores(text)["compound"]
 
@@ -349,7 +345,7 @@ def get_subjectivity(text):
     """
     RETURN subjectivity of sentence
     """
-    return TextBlob(text)
+    return TextBlob(text).subjectivity
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
@@ -493,12 +489,13 @@ def search_tweets(ticker_search_dict: dict):
                 # perform spell checking
                 short_text = reduce_lengthening(tweet["text"])
 
-
-                polarity = find_tweet_sentiment(tweet)
+                polarity = find_text_sentiment(short_text)
+                subjectivity = get_subjectivity(short_text)
 
                 print ( tweet["text"] )
-                print (" " + str(polarity))
-                shows_pi = tweet_shows_purchase_intent(tweet["text"])
+                print ("Polarity: " + str(polarity))
+                print ("Subjectivity: " + str( ))
+                #shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
                 #print (shows_pi)
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
@@ -523,11 +520,7 @@ def reduce_lengthening(text):
     function to shorten words that have been made too long. IE "finallllllly"
     """
     pattern = re.compile(r"(.)\1{2,}")
-    new_text = ""
-
-    for word in text.split():
-        new_word = pattern.sub(r"\1\1", text)
-        new_text += new_word
+    new_text = pattern.sub(r"\1\1", text)
 
     return new_text
 
