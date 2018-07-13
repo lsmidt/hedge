@@ -340,7 +340,7 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
         num_mentions = len(tweet.entities.user_mentions)
 
     stop_words = "porn pussy babe nude pornstar sex \
-        naked cock cocks gloryhole tits anal horny cum penis"
+        naked cock cocks dick gloryhole tits anal horny cum penis"
     
     for word_tup in stop_words.split():
 
@@ -360,33 +360,38 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
 
     # at least one search term should be pronoun if search term is a product
     flag = True
+    search_passed = False
     count_occ = 0
+    pos_count = 0
+    neg_count = 0
     for term in search_terms.split():
         if term == "OR":
                 continue
 
         for word_tup in pos_list:
-
-            ratio = fuzz.token_set_ratio(term, word_tup[0])
-            if ratio > 85:
+            
+            if fuzz.token_set_ratio(term, word_tup[0]) > 85:
                 count_occ += 1
-                # FIXME: This may reinclude non-nouns present in the accept list. 
-                # Use a tokenizer or avoid ambiguous cases in accept_terms
-                if string_word_ratio(word_tup[0], reject_terms) >= 90:
-                    return False
-                
-                if string_word_ratio(word_tup[0], accept_terms) > 85:
-                    flag = False
-                    break
+                pos_count += 1
 
                 if (word_tup[1] == "NOUN" or word_tup[1] == "PRON") or count_occ > 1: 
                     flag = False
                     break
                 else:
                     print (word_tup[0] + " is a " + word_tup[1])
+
+            if string_word_ratio(word_tup[0], reject_terms) >= 95:
+                neg_count += 1
+                
+            if string_word_ratio(word_tup[0], accept_terms) > 95:
+                pos_count += 1
+
+    if pos_count > neg_count:
+        flag = False
     
     if flag and (not search_terms is None):
-        print ("REJECTED")
+        print ("REJECTED") 
+    print("pos {} neg {}".format(pos_count, neg_count))
 
     # if "http" in text:
     #     print ("REJECT: URL in text")
@@ -404,7 +409,7 @@ def string_word_ratio(a_word, b_string):
     """
     max_ratio = 0
     for b_word in b_string.split():
-        ratio = fuzz.partial_ratio(b_word, a_word)
+        ratio = fuzz.ratio(b_word, a_word)
         max_ratio = max(ratio, max_ratio)
 
     return max_ratio
@@ -553,11 +558,11 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios OR Apple Pencil", \
-                                    "accept" : "iPad iPhone",
+search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
+                                    "accept" : "apple",
                                     "reject" : "pie"},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat story",
+                                    "accept" : "Snapchat snap-story",
                                     "reject" : ""}
                }
 
