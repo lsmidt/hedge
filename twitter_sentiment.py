@@ -338,13 +338,12 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
         naked cock cocks dick gloryhole tits anal horny cum penis"
     
     for word_tup in stop_words.split():
-
+        
         if word_tup in text:
             return False
 
     if friends_count < 15:
         return False
-
     if num_mentions > 3:
         return False
     if "$" in text:
@@ -353,10 +352,8 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
     text_tok = word_tokenize(text)
     pos_list = pos_tag(text_tok, tagset='universal')
 
-    # at least one search term should be pronoun if search term is a product
     flag = True
     search_passed = False
-    count_occ = 0
     pos_count = 0
     neg_count = 0
     for term in search_terms.split():
@@ -366,20 +363,17 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
         for word_tup in pos_list:
             
             if fuzz.token_set_ratio(term, word_tup[0]) > 85:
-                count_occ += 1
                 pos_count += 1
 
-                if (word_tup[1] == "NOUN" or word_tup[1] == "PRON") or count_occ > 1: 
-                    flag = False
-                    break
-                else:
-                    neg_count += 1
-                    print (word_tup[0] + " is a " + word_tup[1])
-
+                if (word_tup[1] == "NOUN" or word_tup[1] == "PRON"): 
+                    pos_count += 2
+                    #flag = False
+            
             if string_word_ratio(word_tup[0], reject_terms) >= 95:
                 neg_count += 1
                 
             if string_word_ratio(word_tup[0], accept_terms) > 95:
+                print ("ACCEPT TERM: " + word_tup[0])
                 pos_count += 1
 
     if pos_count > neg_count:
@@ -497,7 +491,7 @@ def search_tweets(ticker_search_dict: dict):
         reject_count = 0 # count passed up tweets
 
         for tweet in combined:
-            if filter_tweet(tweet, search_dict["search"], search_dict["accept"]):
+            if filter_tweet(tweet, search_dict["search"], search_dict["accept"], search_dict["reject"]):
                 
                 # check if tweet is a close copy of one already seen
                 copy = False
@@ -554,11 +548,11 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
-                                    "accept" : "apple",
-                                    "reject" : "pie"},
+search_dict = {#("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
+               #                     "accept" : "apple",
+               #                     "reject" : "pie"},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat snap-story on-snap our-snap",
+                                    "accept" : "Snapchat snap-story on-snap our-snap snap-me",
                                     "reject" : ""}
                }
 
