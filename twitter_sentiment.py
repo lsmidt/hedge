@@ -378,6 +378,7 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
                     flag = False
                     break
                 else:
+                    neg_count += 1
                     print (word_tup[0] + " is a " + word_tup[1])
 
             if string_word_ratio(word_tup[0], reject_terms) >= 95:
