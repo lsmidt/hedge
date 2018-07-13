@@ -158,12 +158,7 @@ def find_tweet_target(tweet_text: str) -> str:
     """
     pass
 
-######----------------- Mentions (Moving Average Sentiment)----------------#######
-# Iterate over a list of company and product names, for each, produce a search search_terms, load a page of 100 tweets 
-# save the highest id per page, use that to advance pages. Save the lowest id encountered, then close the connection
-# and advance to the next symbol. Use the max_id and since parameters to keep track of back logged tweets when reconnecting. 
-# Experiment with number of tweets you can fetch to produce a strictly quantized dataset. 
-# Generate the moving average. 
+######-----------------Moving Average Sentiment and PI Scores----------------#######
 
 def get_search_results(screen_name: str, ticker: str, search_terms: str, since_id: int=None) -> list:
     """
@@ -295,11 +290,11 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
             fp_pron_used.append(lower)
 
     if len(fp_pron_used) == 0:
-        net_score -= 0.2
+        net_score -= 0.3
     else:
-        net_score += 0.2 * len(fp_pron_used)
+        net_score += 0.25 * len(fp_pron_used)
 
-    return True if net_score > 0.3 else False
+    return True if net_score >= 0.25 else False
 
     
 def filter_text(text):
@@ -563,7 +558,7 @@ search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                                     "accept" : "apple",
                                     "reject" : "pie"},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat snap-story",
+                                    "accept" : "Snapchat snap-story on-snap our-snap",
                                     "reject" : ""}
                }
 
