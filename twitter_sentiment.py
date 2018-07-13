@@ -277,7 +277,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
     fp_verb_list = ["bought", "used", "got", "had", "flew", "ate", "use", "carry", "have"]
 
-    fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this"]
+    fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this", "anyone"]
     other_pron = ["you", "your", "their", "they"]
 
     text = word_tokenize(tweet_text)
@@ -295,11 +295,11 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
             fp_pron_used.append(lower)
 
     if len(fp_pron_used) == 0:
-        net_score -= 0.1
+        net_score -= 0.2
     else:
         net_score += 0.2 * len(fp_pron_used)
 
-    return True if net_score > 0.2 else False
+    return True if net_score > 0.3 else False
 
     
 def filter_text(text):
@@ -313,7 +313,7 @@ def filter_text(text):
     no_mentions = re.sub(mention_expression, short)
     pass
     
-def filter_tweet(tweet, search_terms=[], accept_terms=""):
+def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
     """
     filter the tweet from the stream if it is not of high quality
     """
@@ -370,8 +370,12 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
             ratio = fuzz.token_set_ratio(term, word_tup[0])
             if ratio > 85:
                 count_occ += 1
-                # FIXME: This may reinclude non-nouns. Use a tokenizer or avoid ambiguous cases in accept_terms
-                if fuzz.partial_token_sort_ratio(word_tup[0], accept_terms) > 85:
+                # FIXME: This may reinclude non-nouns present in the accept list. 
+                # Use a tokenizer or avoid ambiguous cases in accept_terms
+                if string_word_ratio(word_tup[0], reject_terms) >= 90:
+                    return False
+                
+                if string_word_ratio(word_tup[0], accept_terms) > 85:
                     flag = False
                     break
 
@@ -394,6 +398,16 @@ def filter_tweet(tweet, search_terms=[], accept_terms=""):
     return True
 
 #####--------------- Main methods -----------------######
+def string_word_ratio(a_word, b_string):
+    """
+    RETURN max ratio of word match in substring of b_string
+    """
+    max_ratio = 0
+    for b_word in b_string.split():
+        ratio = fuzz.partial_ratio(b_word, a_word)
+        max_ratio = max(ratio, max_ratio)
+
+    return max_ratio
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
     """
@@ -540,9 +554,11 @@ def reduce_lengthening(text):
 # scan_realtime_tweets('SNAP')
 
 search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios OR Apple Pencil", \
-                                    "accept" : "iPad iPhone"},
+                                    "accept" : "iPad iPhone",
+                                    "reject" : "pie"},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat story"}
+                                    "accept" : "Snapchat story",
+                                    "reject" : ""}
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
