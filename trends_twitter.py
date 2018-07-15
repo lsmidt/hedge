@@ -81,7 +81,7 @@ class MyListener(StreamListener):
                     return False
             '''
 
-            if (tweets_collected > 10):
+            if (tweets_collected > 20):
                 return False
 
             return True
@@ -134,8 +134,8 @@ def sync(topics):
 
         tok = tokenize_tweets(extra_stop)
         most_common_words.append(tok[0])
-        pos_sentiment.append(float(tok[1][0]/tweets_collected))
-        neg_sentiment.append(float(tok[1][1]/tweets_collected))
+        pos_sentiment.append(float(tok[1][0]/len(tok[0][0])))
+        neg_sentiment.append(float(tok[1][1]/len(tok[0][1])))
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -199,6 +199,7 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
             "St. Nick's", "Double Hit"] ]
 '''
 
+# topics = [ ["World Cup", "Mesi"], [ "crypto", "cryptocurrency", "bitcoin", "coinbase"]]
 topics = [ ["World Cup", "Mesi"] ]
 most_common_words = list()     # list of most common words to match each topic
 pos_sentiment = list()
