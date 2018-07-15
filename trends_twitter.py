@@ -99,7 +99,6 @@ def sync(topics):
     global most_common_words
     global tweets_per_topic
     global tweets_collected
-    # global avg_sentiment
     global j_pos
     global j_neg
     global pos_sentiment
@@ -135,7 +134,6 @@ def sync(topics):
 
         tok = tokenize_tweets(extra_stop)
         most_common_words.append(tok[0])
-        # avg_sentiment.append(float(tok[1]/tweets_collected))
         pos_sentiment.append(float(tok[1][0]/tweets_collected))
         neg_sentiment.append(float(tok[1][1]/tweets_collected))
 
@@ -203,9 +201,9 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
 
 topics = [ ["World Cup", "Mesi"] ]
 most_common_words = list()     # list of most common words to match each topic
-avg_sentiment = list()         # [ POSITIVE, NEGATIVE, HASHTAG ]
 pos_sentiment = list()
 neg_sentiment = list()
+hash_sentiment = list()
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
 
@@ -217,9 +215,7 @@ for i in range(len(topics)):
     print ("TWEETS COLLECTED:", tweets_per_topic[i])
     for t in topics[i]:
         print(t)
-    print("POS SENTIMENT: ")
+    print("POS SENTIMENT: ({})".format(pos_sentiment[i]))
     print(most_common_words[i][0])
-    print("NEG SENTIMENT: ")
+    print("NEG SENTIMENT: ({})".format(neg_sentiment[i]))
     print(most_common_words[i][1])
-    # print("AVG SENTIMENT: ", avg_sentiment[i])
-    # print('\t', most_common_words[i])
