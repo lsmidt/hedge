@@ -54,14 +54,20 @@ class MyListener(StreamListener):
 
     def on_data(self, data):
         global tweets_collected
-        global j
+        global j_pos
+        global j_neg
 
         t = json.loads(data)
         if not filter_tweet(t):
             return
 
         try:
-            j.write(data)
+            # if positive sentiment, write to j_pos
+            # else, write to j_neg
+            if (find_tweet_sentiment(t) > 0):
+                j_pos.write(data)
+            else:
+                j_neg.write(data)
 
             tweets_collected += 1
             print(tweets_collected)
@@ -93,13 +99,17 @@ def sync(topics):
     global most_common_words
     global tweets_per_topic
     global tweets_collected
-    global avg_sentiment
-    global j
+    # global avg_sentiment
+    global j_pos
+    global j_neg
+    global pos_sentiment
+    global neg_sentiment
 
     for topic in topics:
         total_sentiment = 0
         tweets_collected = 0
-        j = open('python.json', 'w')
+        j_pos = open('positive.json', 'w')
+        j_neg = open('negative.json', 'w')
 
         # start_time = time.time()
 
@@ -110,7 +120,8 @@ def sync(topics):
 
         tweets_per_topic.append(tweets_collected)
 
-        j.close()
+        j_pos.close()
+        j_neg.close()
 
         extra_stop = list()
         for t in topic:
@@ -124,7 +135,9 @@ def sync(topics):
 
         tok = tokenize_tweets(extra_stop)
         most_common_words.append(tok[0])
-        avg_sentiment.append(float(tok[1]/tweets_collected))
+        # avg_sentiment.append(float(tok[1]/tweets_collected))
+        pos_sentiment.append(float(tok[1][0]/tweets_collected))
+        neg_sentiment.append(float(tok[1][1]/tweets_collected))
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -138,19 +151,28 @@ def find_tweet_sentiment(tweet) -> float:
     return SIA.polarity_scores(text)["compound"]
 
 def tokenize_tweets(extra_stop = []):
-    total_sentiment = 0
-    f = open('python.json', 'r')
-    count_all = Counter()
+    total_sentiment = [ 0, 0 ]
+    f_pos = open('positive.json', 'r')
+    f_neg = open('negative.json', 'r')
+    files = [ f_pos, f_neg ]
+    file_counter = 0
+    count = list()
 
-    for line in f:
-        tweet = json.loads(line) # load it as Python dict
+    for f in files:
+        count_all = Counter()
 
-        terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
-                                (term not in stop and term not in extra_stop)]
-        count_all.update(terms_stop)
-        total_sentiment += find_tweet_sentiment(tweet)
+        for line in f:
+            tweet = json.loads(line) # load it as Python dict
 
-    return ([count_all.most_common(5), total_sentiment])
+            terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
+                                    (term not in stop and term not in extra_stop)]
+            count_all.update(terms_stop)
+            total_sentiment[file_counter] += find_tweet_sentiment(tweet)
+
+        count.append(count_all.most_common(5))
+        file_counter += 1
+
+    return ([count, total_sentiment])
 
 def filter_tweet(tweet):
     """
@@ -179,9 +201,11 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
             "St. Nick's", "Double Hit"] ]
 '''
 
-topics = [ ["World Cup", "Mesi"], ["apple"] ]
+topics = [ ["World Cup", "Mesi"] ]
 most_common_words = list()     # list of most common words to match each topic
-avg_sentiment = list()
+avg_sentiment = list()         # [ POSITIVE, NEGATIVE, HASHTAG ]
+pos_sentiment = list()
+neg_sentiment = list()
 twitter_stream = Stream(auth, MyListener())
 tweets_per_topic = list()
 
@@ -193,5 +217,9 @@ for i in range(len(topics)):
     print ("TWEETS COLLECTED:", tweets_per_topic[i])
     for t in topics[i]:
         print(t)
-    print("AVG SENTIMENT: ", avg_sentiment[i])
-    print('\t', most_common_words[i])
+    print("POS SENTIMENT: ")
+    print(most_common_words[i][0])
+    print("NEG SENTIMENT: ")
+    print(most_common_words[i][1])
+    # print("AVG SENTIMENT: ", avg_sentiment[i])
+    # print('\t', most_common_words[i])
