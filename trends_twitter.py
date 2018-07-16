@@ -134,8 +134,8 @@ def sync(topics):
 
         tok = tokenize_tweets(extra_stop)
         most_common_words.append(tok[0])
-        pos_sentiment.append(float(tok[1][0]/len(tok[0][0])))
-        neg_sentiment.append(float(tok[1][1]/len(tok[0][1])))
+        pos_sentiment.append( float(tok[1][0]/tok[2][0]) )
+        neg_sentiment.append( float(tok[1][1]/tok[2][1]) )
 
 def find_tweet_sentiment(tweet) -> float:
     """
@@ -149,28 +149,32 @@ def find_tweet_sentiment(tweet) -> float:
     return SIA.polarity_scores(text)["compound"]
 
 def tokenize_tweets(extra_stop = []):
-    total_sentiment = [ 0, 0 ]
     f_pos = open('positive.json', 'r')
     f_neg = open('negative.json', 'r')
     files = [ f_pos, f_neg ]
     file_counter = 0
     count = list()
+    num_collected = list()
+    total_sentiment = [ 0, 0 ]
 
     for f in files:
         count_all = Counter()
+        tweets_collected = 0
 
         for line in f:
             tweet = json.loads(line) # load it as Python dict
+            tweets_collected += 1
 
             terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
                                     (term not in stop and term not in extra_stop)]
             count_all.update(terms_stop)
             total_sentiment[file_counter] += find_tweet_sentiment(tweet)
 
+        num_collected.append(tweets_collected)
         count.append(count_all.most_common(5))
         file_counter += 1
 
-    return ([count, total_sentiment])
+    return ([count, total_sentiment, num_collected])
 
 def filter_tweet(tweet):
     """
