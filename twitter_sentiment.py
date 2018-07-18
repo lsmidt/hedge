@@ -178,7 +178,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) < 500: 
+    while len(search_result["statuses"]) != 0 and len(tweets) < 900: 
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -387,8 +387,9 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         flag = False
     
     if flag and (not search_terms is None):
-        print ("REJECTED") 
-    print("pos {} neg {}".format(pos_count, neg_count))
+        #print ("REJECTED") 
+        return False
+    #print("pos {} neg {}".format(pos_count, neg_count))
 
     # if not tweet_shows_purchase_intent(text):
     #     return False
@@ -491,13 +492,14 @@ def search_tweets(ticker_search_dict: dict):
         # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
         # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
-
-        combined = combine_search_results(found_tweets, [], [])
         
+        
+        combined = combine_search_results(found_tweets, [], [])
+
         passed_tweets = []
         reject_count = 0 # count passed up tweets
 
-        for tweet in combined:
+        for tweet in found_tweets:
             if filter_tweet(tweet, search_dict["search"], search_dict["accept"], search_dict["reject"]):
                 
                 # check if tweet is a close copy of one already seen
@@ -519,12 +521,12 @@ def search_tweets(ticker_search_dict: dict):
                 polarity = find_text_sentiment(short_text)
                 subjectivity = get_subjectivity(short_text)
 
-                print ( tweet["text"] )
-                print ("Polarity: " + str(polarity))
-                print ("Subjectivity: " + str( subjectivity))
+                #print ( tweet["text"] )
+                #print ("Polarity: " + str(polarity))
+                #print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-                print ("Purchase Intent: " + str(shows_pi) + "\n")
+                #print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
@@ -558,9 +560,12 @@ def reduce_lengthening(text):
 search_dict = {#("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                #                     "accept" : ["apple"],
                #                     "reject" : ["pie"]},
-                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                    "reject" : ["oh snap", "snap out"]}
+                #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                #                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
+                #                    "reject" : ["oh snap", "snap out"]}
+               ("ARNC", "Arconic"): {"search" : "arconic", \
+                                    "accept": [],  
+                                    "reject": [] }
                }
 
 index_dict = {x : {} for x in search_dict.keys()}

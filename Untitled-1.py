@@ -18,4 +18,4 @@ def string_word_ratio(a_string, b_list):
         max_ratio = max(ratio, max_ratio)
     return max_ratio
 
-print (string_word_ratio("snap", ["oh snap"])) 
+print (string_word_ratio("iPhone", ["phone"])) 
