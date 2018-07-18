@@ -273,7 +273,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     fp_verb_list = ["bought", "used", "got", "had", "flew", "ate", "use", "carry", "have"]
 
     fp_pron = ["i", "we", "me", "my", "our", "ours", "us", "mine", "myself", "this", "anyone"]
-    other_pron = ["you", "your", "their", "they"]
+    other_pron = ["you", "your", "their", "they", "u"]
 
     text = word_tokenize(tweet_text)
     pos_list = pos_tag(text, tagset='universal')
@@ -283,16 +283,23 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
     net_score = subj
 
     fp_pron_used = []
+    other_pron_used = []
 
     for word_tup in pos_list:
         lower = word_tup[0].lower()
         if lower in fp_pron:
             fp_pron_used.append(lower)
+        if lower in other_pron:
+            other_pron_used.append(lower)
+
 
     if len(fp_pron_used) == 0:
         net_score -= 0.3
     else:
         net_score += 0.25 * len(fp_pron_used)
+
+    if len(other_pron_used) > 0:
+        net_score += 0.1 * len(other_pron_used)
 
     return True if net_score >= 0.25 else False
 
@@ -308,7 +315,7 @@ def filter_text(text):
     no_mentions = re.sub(mention_expression, short)
     pass
     
-def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
+def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
     """
     filter the tweet from the stream if it is not of high quality
     """
@@ -366,15 +373,15 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
                 pos_count += 1
 
                 if (word_tup[1] == "NOUN" or word_tup[1] == "PRON"): 
-                    pos_count += 2
-                    #flag = False
+                    pos_count += 1
             
-            if string_word_ratio(word_tup[0], reject_terms) >= 95:
-                neg_count += 1
-                
-            if string_word_ratio(word_tup[0], accept_terms) > 95:
-                print ("ACCEPT TERM: " + word_tup[0])
-                pos_count += 1
+    if string_word_ratio(text, reject_terms) >= 90:
+        neg_count += 1
+        
+    if string_word_ratio(text, accept_terms) > 85:
+        pos_count += 1
+    else:
+        neg_count += 1
 
     if pos_count > neg_count:
         flag = False
@@ -383,25 +390,25 @@ def filter_tweet(tweet, search_terms="", accept_terms="", reject_terms=""):
         print ("REJECTED") 
     print("pos {} neg {}".format(pos_count, neg_count))
 
-    # if "http" in text:
-    #     print ("REJECT: URL in text")
-    #     print (text)
-    #    return False
     # if not tweet_shows_purchase_intent(text):
     #     return False
 
     return True
 
 #####--------------- Main methods -----------------######
-def string_word_ratio(a_word, b_string):
+def string_word_ratio(a_string, b_list):
     """
     RETURN max ratio of word match in substring of b_string
     """
+    a_string = a_string.lower()
     max_ratio = 0
-    for b_word in b_string.split():
-        ratio = fuzz.ratio(b_word, a_word)
+    for b_word in b_list:
+        b_word = b_word.lower()
+        if b_word in a_string:
+            max_ratio = 100
+            break
+        ratio = fuzz.token_sort_ratio(b_word, a_string)
         max_ratio = max(ratio, max_ratio)
-
     return max_ratio
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
@@ -549,11 +556,11 @@ def reduce_lengthening(text):
 # scan_realtime_tweets('SNAP')
 
 search_dict = {#("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
-               #                     "accept" : "apple",
-               #                     "reject" : "pie"},
+               #                     "accept" : ["apple"],
+               #                     "reject" : ["pie"]},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : "Snapchat snap-story on-snap our-snap snap-me",
-                                    "reject" : ""}
+                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
+                                    "reject" : ["oh snap", "snap out"]}
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
