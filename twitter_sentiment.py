@@ -132,6 +132,11 @@ def get_company(tweet_text):
     for company, brand_dict in companies_db.items():
         for brand, tag_list in brand_dict.items():
             for tag in tag_list:
+                if tag in tweet_text:
+                    h_company = company
+                    h_brand = brand
+                    break
+                    
                 for tweet_word in split:
                     score = fuzz.ratio(tag, tweet_word)
                     if score > highest_score:
@@ -139,9 +144,11 @@ def get_company(tweet_text):
                         h_company = company
                         h_brand = brand
 
-    company_matches[h_company][h_brand] += 1
-    return (h_company, h_brand)
+    if highest_score > 90:
+        company_matches[h_company][h_brand] += 1
+        return (h_company, h_brand)
 
+    return None
                         
     
 
