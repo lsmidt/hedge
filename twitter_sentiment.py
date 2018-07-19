@@ -315,6 +315,15 @@ def filter_text(text):
     no_mentions = re.sub(mention_expression, short)
     pass
     
+def get_datetime(text):
+    """
+    return datetime object
+    ['created_at']:'Wed Jul 18 21:24:32 +0000 2018'
+
+    """
+    time = datetime.datetime.strptime()
+    pass
+
 def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
     """
     filter the tweet from the stream if it is not of high quality
