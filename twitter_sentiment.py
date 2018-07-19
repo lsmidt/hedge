@@ -1,19 +1,17 @@
-# Hedge
+'''
+HEDGE CAPITAL LLC.
 
-# GOAL: To return a confidence index of specific company stock price longevity based on major macroeconomic changes noted by 'influential' twitter users (1,000,000+ followers)
-#
-# Max Gillespie & Louis Smidt
-# 6/09/18
+PURPOSE:
 
-# Action Items:
-#
-# 2 Functions:
-##     Mentions: Analyze sentiment of a standard person @ing a company account
-# #    Company Score: Analyze macroeconomic factors from influential individuals
-#
-# Analyze Tweets from speficic list of individuals
-# Quantify value of tweet content based on number of followers
 
+TODO:
+    IEX moving 'n' day average and standard deviation
+    
+
+Louis Smidt & Max Gillespie
+FIRST COMMIT ----------------> 6/09/2018
+MOST RECENT COMMIT ----------> 7/18/2018
+'''
 
 from twython import Twython # used for mentions
 import tweepy # used for streaming
@@ -103,7 +101,7 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream = tweepy.Stream(auth, stream_listener)
 
     printer.pprint("STREAMING TWEETS")
-    
+
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
@@ -165,9 +163,9 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
     # Method 1: Search for tweets matching search_terms
-    if since_id is None: 
+    if since_id is None:
         since_id = 0
-    
+
     search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=100, lang="en")
     tweets = []
 
@@ -178,7 +176,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) < 900: 
+    while len(search_result["statuses"]) != 0 and len(tweets) < 1500:
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -205,13 +203,13 @@ def get_recent_mentions(screen_name: str, since_id:int) -> list:
     """
     mentions = TWY.search(q="@" + screen_name, count=100, since_id=since_id, lang="en")
     tweets = []
-    
+
     _max_id = mentions["search_metadata"]["max_id"]
     _since_id = mentions["search_metadata"]["since_id"]
 
     lowest_id = _max_id
     highest_id = _since_id
-    
+
     while (len(mentions["statuses"]) != 0) and len(tweets) < 100:
 
         for tweet in mentions["statuses"]:
@@ -239,7 +237,7 @@ def get_user_timeline(account_id: int, since_id: int):
 
     lowest_id = _max_id
     highest_id = _since_id
-    
+
     while len(timeline_tweets["statuses"]) != 0:
 
         for tweet in timeline_tweets["statuses"]:
@@ -267,7 +265,7 @@ def get_subjectivity(text):
 
 def tweet_shows_purchase_intent(tweet_text) -> bool:
     """
-    Return true if the tweet text indicates that a customer used or bought 
+    Return true if the tweet text indicates that a customer used or bought
         a product
     """
     fp_verb_list = ["bought", "used", "got", "had", "flew", "ate", "use", "carry", "have"]
@@ -303,7 +301,7 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
 
     return True if net_score >= 0.25 else False
 
-    
+
 def filter_text(text):
     """
     spell check, remove @mentions
@@ -314,7 +312,7 @@ def filter_text(text):
     short = reduce_lengthening(text)
     no_mentions = re.sub(mention_expression, short)
     pass
-    
+
 def get_datetime(text):
     """
     return datetime object
@@ -331,7 +329,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
     if type(tweet) is dict:
         if "retweeted_status" in tweet:
             return False
-        
+
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
         qry_type = tweet["metadata"]["result_type"]
@@ -352,9 +350,9 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
 
     stop_words = "porn pussy babe nude pornstar sex \
         naked cock cocks dick gloryhole tits anal horny cum penis"
-    
+
     for word_tup in stop_words.split():
-        
+
         if word_tup in text:
             return False
 
@@ -377,16 +375,16 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
                 continue
 
         for word_tup in pos_list:
-            
+
             if fuzz.token_set_ratio(term, word_tup[0]) > 85:
                 pos_count += 1
 
-                if (word_tup[1] == "NOUN" or word_tup[1] == "PRON"): 
+                if (word_tup[1] == "NOUN" or word_tup[1] == "PRON"):
                     pos_count += 1
-            
+
     if string_word_ratio(text, reject_terms) >= 90:
         neg_count += 1
-        
+
     if string_word_ratio(text, accept_terms) > 85:
         pos_count += 1
     else:
@@ -394,9 +392,9 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
 
     if pos_count > neg_count:
         flag = False
-    
+
     if flag and (not search_terms is None):
-        #print ("REJECTED") 
+        #print ("REJECTED")
         return False
     #print("pos {} neg {}".format(pos_count, neg_count))
 
@@ -423,7 +421,7 @@ def string_word_ratio(a_string, b_list):
 
 def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
     """
-    Begin streaming tweets matching the stock symbol or from the account in real time. 
+    Begin streaming tweets matching the stock symbol or from the account in real time.
     """
     file = open('stock_ticker_subset.csv')
     for line in file:
@@ -449,7 +447,7 @@ def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float
     retweet_count=tweet["retweet_count"],
     polarity=polarity_score
     )
-        
+
     table.insert(tweet_contents)
 
 def score_magnitude(score: float, threshold: float):
@@ -463,7 +461,7 @@ def score_magnitude(score: float, threshold: float):
     else:
         return 0
 
-def search_tweets(ticker_search_dict: dict): 
+def search_tweets(ticker_search_dict: dict):
     """
     Manage the tweet search loop with the companies in the ticker_search_dict
     RETURN sentiment and purchase intent information for each company
@@ -474,7 +472,7 @@ def search_tweets(ticker_search_dict: dict):
     purchase_intent = defaultdict(list)
 
     for id_tuple, search_dict in ticker_search_dict.items():
-        #TODO: Code below for "search" if-else can be condensed. 
+        #TODO: Code below for "search" if-else can be condensed.
 
         ### Search Tweets
 
@@ -501,8 +499,8 @@ def search_tweets(ticker_search_dict: dict):
         # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
         # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
         # index_dict[id_tuple]["timeline"] = new_tl_since_id
-        
-        
+
+
         combined = combine_search_results(found_tweets, [], [])
 
         passed_tweets = []
@@ -510,10 +508,10 @@ def search_tweets(ticker_search_dict: dict):
 
         for tweet in found_tweets:
             if filter_tweet(tweet, search_dict["search"], search_dict["accept"], search_dict["reject"]):
-                
+
                 # check if tweet is a close copy of one already seen
                 copy = False
-                
+
                 for passed_tweet in passed_tweets:
                     if fuzz.ratio(tweet["text"], passed_tweet) > 80:
                         copy = True
@@ -523,16 +521,16 @@ def search_tweets(ticker_search_dict: dict):
                     reject_count += 1
                     continue
 
-                
+
                 # TODO: perform spell correcting
                 short_text = reduce_lengthening(tweet["text"])
 
                 polarity = find_text_sentiment(short_text)
                 subjectivity = get_subjectivity(short_text)
 
-                #print ( tweet["text"] )
-                #print ("Polarity: " + str(polarity))
-                #print ("Subjectivity: " + str( subjectivity))
+                print ( tweet["text"] )
+                print ("Polarity: " + str(polarity))
+                print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
                 #print ("Purchase Intent: " + str(shows_pi) + "\n")
@@ -566,15 +564,19 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {#("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
-               #                     "accept" : ["apple"],
-               #                     "reject" : ["pie"]},
-                #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                #                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                #                    "reject" : ["oh snap", "snap out"]}
-               ("ARNC", "Arconic"): {"search" : "arconic", \
-                                    "accept": [],  
-                                    "reject": [] }
+search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
+                                    "accept" : ["apple"],
+                                    "reject" : ["pie"]},
+                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
+                                   "reject" : ["oh snap", "snap out"]}
+                ("AMZN", "Amazon"): {"search" : "Amazon", \
+                                     "accept" : [ "amazon" ],
+                                     "reject" : ["rain forest", "river"]}
+
+                #("ARNC", "Arconic"): {"search" : "arconic", \
+                #                    "accept": [],
+                #                    "reject": [] }
                }
 
 index_dict = {x : {} for x in search_dict.keys()}
@@ -592,15 +594,15 @@ while running == True:
     score = defaultdict(float)
 
     for company in sent:
-        avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
-    
+        avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
+
     # TODO: This scoring system is uniquely retarded
 
         if score_magnitude(avg_sent, 0.2) == 1:
             score[company] += 300
         elif score_magnitude(avg_sent, 0.2) == -1:
             score[company] -= 300
-    
+
     for company in pi:
         for pi_score in pi[company]:
             if pi_score == 1:
@@ -615,7 +617,7 @@ while running == True:
 
 
     #print ( str( search_count) + "th iteration of search_tweets")
-        
+
     if search_count > 0:
         running = False
 
