@@ -585,15 +585,17 @@ index_dict = {x : {} for x in search_dict.keys()}
 
 search_count = 0 # keep track of number of iterations of loop
 
+# generate the score based on the search information
+sentiment_score = defaultdict(float)
+pi_count = defaultdict(float)
+score = defaultdict(float)
+
 while running == True:
     search_count += 1
 
     (sent, sent_mag, pi) = search_tweets(search_dict)
 
-    # generate the score based on the search information
-    sentiment_score = defaultdict(float)
-    pi_count = defaultdict(float)
-    score = defaultdict(float)
+
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
