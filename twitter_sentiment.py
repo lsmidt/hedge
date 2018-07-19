@@ -8,7 +8,7 @@ TODO:
     (max) IEX moving 'n' day average and standard deviation
     (max) read tweetbase.db to plot connection between scores and price
     maximum score for any specific sample
-
+    
 
 Louis Smidt & Max Gillespie
 FIRST COMMIT ----------------> 6/09/2018
@@ -338,6 +338,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         rt_count = tweet["retweet_count"]
         is_reply = False if tweet["in_reply_to_status_id"] is None else True
         num_mentions = len( tweet["entities"]["user_mentions"])
+        url_list = tweet["entities"]["urls"]
 
     else:
         if hasattr(tweet, "retweeted_status"):
@@ -349,6 +350,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         rt_count = tweet.metadata.retweet_count
         is_reply = False if tweet.in_reply_to_status_id is None else True
         num_mentions = len(tweet.entities.user_mentions)
+        url_list = tweet.entities.urls
 
     stop_words = "porn pussy babe nude pornstar sex \
         naked cock cocks dick gloryhole tits anal horny cum penis"
@@ -364,12 +366,14 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         return False
     if "$" in text:
         return False
+    for url in url_list:
+        if "amzn" in url["expanded_url"] or "amazon" in url["expanded_url"]:
+            return False 
 
     text_tok = word_tokenize(text)
     pos_list = pos_tag(text_tok, tagset='universal')
 
     flag = True
-    search_passed = False
     pos_count = 0
     neg_count = 0
     for term in search_terms.split():
@@ -396,9 +400,9 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         flag = False
 
     if flag and (not search_terms is None):
-        print ("REJECTED")
-
-    print("pos {} neg {}".format(pos_count, neg_count))
+        #print ("REJECTED")
+        return False
+    #print("pos {} neg {}".format(pos_count, neg_count))
 
     # if not tweet_shows_purchase_intent(text):
     #     return False
@@ -535,7 +539,7 @@ def search_tweets(ticker_search_dict: dict):
                 print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-                print ("Purchase Intent: " + str(shows_pi) + "\n")
+                #print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
@@ -569,7 +573,7 @@ def reduce_lengthening(text):
 search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                                     "accept" : ["apple"],
                                     "reject" : ["pie"]},
-                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                                     "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
                                    "reject" : ["oh snap", "snap out"]},
                 ("AMZN", "Amazon"): {"search" : "Amazon", \
