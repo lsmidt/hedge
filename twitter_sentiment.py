@@ -71,7 +71,7 @@ with open("companies.json", "r") as in_file:
 
 company_matches = {}
 for company, brand_dict in companies_db.items():
-    company_matches[company] = brand_dict
+    company_matches[company] = copy.copy(brand_dict)
     for brand in brand_dict.keys():
         company_matches[company][brand] = 0
 
@@ -125,14 +125,22 @@ def get_company(tweet_text):
     run tweet text through a database, return the company it associates to. 
     """
     split = tweet_text.split()
-    
+    highest_score = 0
+    h_company = None
+    h_brand = None
+
     for company, brand_dict in companies_db.items():
         for brand, tag_list in brand_dict.items():
             for tag in tag_list:
                 for tweet_word in split:
-                    if fuzz.ratio(tag, tweet_word) > 94:
-                        company_matches[company][brand] += 1
-                        return (company, brand)
+                    score = fuzz.ratio(tag, tweet_word)
+                    if score > highest_score:
+                        highest_score = score
+                        h_company = company
+                        h_brand = brand
+
+    company_matches[h_company][h_brand] += 1
+    return (h_company, h_brand)
 
                         
     
@@ -207,7 +215,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) < 1500:
+    while len(search_result["statuses"]) != 0 and len(tweets) < 100:
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -571,7 +579,7 @@ def search_tweets(ticker_search_dict: dict):
                 
                 print (get_company(tweet["text"]))
 
-                #print ("Purchase Intent: " + str(shows_pi) + "\n")
+                print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
@@ -630,8 +638,6 @@ while running == True:
     search_count += 1
 
     (sent, sent_mag, pi) = search_tweets(search_dict)
-
-
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
