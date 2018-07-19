@@ -21,6 +21,7 @@ import dataset
 import urllib.parse
 import copy
 import re
+import json
 from datetime import date
 import pandas as pd
 import pprint
@@ -63,6 +64,17 @@ index_dict = {} # hold twitter since_ids for each searched company
 # hold sentiment and purchase intent scores for each company
 pi_scores = {}
 sentiment_scores = {}
+
+# open the companies JSON database
+with open("companies.json", "r") as in_file:
+    companies_db = json.load(in_file)
+
+company_matches = {}
+for company, brand_dict in companies_db.items():
+    company_matches[company] = brand_dict
+    for brand in brand_dict.keys():
+        company_matches[company][brand] = 0
+
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -107,6 +119,21 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
+
+def get_company(tweet_text):
+    """
+    run tweet text through a database, return the company it associates to. 
+    """
+    split = tweet_text.split()
+    
+    for company, brand_dict in companies_db.items():
+        for brand, tag_list in brand_dict.items():
+            for tag in tag_list:
+                for tweet_word in split:
+                    if fuzz.ratio(tag, tweet_word) > 94:
+                        company_matches[company][brand] += 1
+                        
+    
 
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
