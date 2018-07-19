@@ -132,6 +132,8 @@ def get_company(tweet_text):
                 for tweet_word in split:
                     if fuzz.ratio(tag, tweet_word) > 94:
                         company_matches[company][brand] += 1
+                        return (company, brand)
+
                         
     
 
@@ -561,10 +563,13 @@ def search_tweets(ticker_search_dict: dict):
                 polarity = find_text_sentiment(short_text)
                 subjectivity = get_subjectivity(short_text)
 
+
                 print ( tweet["text"] )
                 print ("Polarity: " + str(polarity))
                 print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
+                
+                print (get_company(tweet["text"]))
 
                 #print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
