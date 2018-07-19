@@ -135,8 +135,8 @@ def get_company(tweet_text):
                 if tag in tweet_text:
                     h_company = company
                     h_brand = brand
-                    break
-                    
+                    return (h_company, h_brand)
+
                 for tweet_word in split:
                     score = fuzz.ratio(tag, tweet_word)
                     if score > highest_score:
