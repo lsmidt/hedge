@@ -1,4 +1,18 @@
 import dataset
 
 
-db = dataset.connect("sqlite:///tweetbase.db")
+db = dataset.connect("sqlite:///companies.db")
+table = db["brand_to_company"]
+
+apple = ["Apple Watch", "macOS", "OS X", "Xcode", "iPod", "Mac", "iPhone", "AirPods" \
+        "iPad", "iOS", "iTunes", "iWork", "Siri", "CarPlay"]
+
+apple_watch = ["Apple watch", "#AppleHermesWatch", "Apple Exercise Ring","WatchOS","#AppleWatchEdition","Apple Move Ring","#applewatch","apple series 1","Apple Stand Ring","apple smartwatch","apple watch 2","Apples Close your rings","#AppleiWatch","apple watch 3","Apple's Close your rings","iwatch","iwatch 2","Apples Exercise Ring","#iwatch","iwatch 3","Apple's Exercise Ring","#applesmartwatch","watchOS 3","Apples Move Ring","apple watches","watchOS 4","Apple's Move Ring","#applewatches","#AppleWatch4", "Apples Stand Ring", "#applewatchfans", "#AppleWatchOS4", "Apple's Stand Ring", "#applewatchsport", "apple watch LTE", "close all Three rings", "apple sport watch", "apple watch series 3", "closed all Three rings", "apple sports watch", "LTE apple watch", "closes all Three rings", "apple sportswatch", "watchOS4", "closing all Three rings", "apple sportwatch", "#applewatch3", "Exercise ring on my","#AppleSportWatch","#applewatch3series","Move ring on my","#AppleSportsWatch","#applewatchLTE","Stand ring on my","apple nike watch", "#applewatchseries3", "Three rings goal", "apple nike+ watch", "#LTEAppleWatch", "Three rings on Apple" "#applenikewatch" "#watchOS4" "apple hermes watch" "Close your rings"]
+
+apple_dict = {}
+for key in apple:
+    apple_dict[key] = []
+
+apple_dict["Apple Watch"] = apple_watch
+
+table.insert(apple_dict)
