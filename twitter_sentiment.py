@@ -123,6 +123,7 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
 def get_company(tweet_text):
     """
     run tweet text through a database, return the company it associates to. 
+    TODO: make it catch more cases
     """
     split = tweet_text.split()
     highest_score = 0
