@@ -5,8 +5,10 @@ PURPOSE:
 
 
 TODO:
-    IEX moving 'n' day average and standard deviation
-    
+    (max) IEX moving 'n' day average and standard deviation
+    (max) read tweetbase.db to plot connection between scores and price
+    maximum score for any specific sample
+
 
 Louis Smidt & Max Gillespie
 FIRST COMMIT ----------------> 6/09/2018
@@ -394,9 +396,9 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         flag = False
 
     if flag and (not search_terms is None):
-        #print ("REJECTED")
-        return False
-    #print("pos {} neg {}".format(pos_count, neg_count))
+        print ("REJECTED")
+
+    print("pos {} neg {}".format(pos_count, neg_count))
 
     # if not tweet_shows_purchase_intent(text):
     #     return False
@@ -533,7 +535,7 @@ def search_tweets(ticker_search_dict: dict):
                 print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-                #print ("Purchase Intent: " + str(shows_pi) + "\n")
+                print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
@@ -567,12 +569,12 @@ def reduce_lengthening(text):
 search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                                     "accept" : ["apple"],
                                     "reject" : ["pie"]},
-                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                                     "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                   "reject" : ["oh snap", "snap out"]}
+                                   "reject" : ["oh snap", "snap out"]},
                 ("AMZN", "Amazon"): {"search" : "Amazon", \
                                      "accept" : [ "amazon" ],
-                                     "reject" : ["rain forest", "river"]}
+                                     "reject" : ["rain forest", "river", "ad", "seller"]}
 
                 #("ARNC", "Arconic"): {"search" : "arconic", \
                 #                    "accept": [],
