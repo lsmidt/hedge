@@ -107,6 +107,7 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
+
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
     save the tweet to a SQLite DB using Dataset
@@ -565,12 +566,12 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = {("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
-                                    "accept" : ["apple"],
-                                    "reject" : ["pie"]},
-                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                    "reject" : ["oh snap", "snap out"]},
+search_dict = {#("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
+               #                     "accept" : ["apple"],
+               #                     "reject" : ["pie"]},
+                #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                #                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
+                #                    "reject" : ["oh snap", "snap out"]}
                ("ARNC", "Arconic"): {"search" : "arconic", \
                                     "accept": [],  
                                     "reject": [] }
@@ -580,15 +581,15 @@ index_dict = {x : {} for x in search_dict.keys()}
 
 search_count = 0 # keep track of number of iterations of loop
 
-# generate the score based on the search information
-sentiment_score = defaultdict(float)
-pi_count = defaultdict(float)
-score = defaultdict(float)
-
 while running == True:
     search_count += 1
 
     (sent, sent_mag, pi) = search_tweets(search_dict)
+
+    # generate the score based on the search information
+    sentiment_score = defaultdict(float)
+    pi_count = defaultdict(float)
+    score = defaultdict(float)
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0 
