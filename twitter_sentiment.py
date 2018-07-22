@@ -89,10 +89,10 @@ class StreamListener(tweepy.StreamListener):
         polarity_score = find_tweet_sentiment(status)
 
         # save tweet contents and polarity score to file
-        save_tweet_to_file("live_stream", status, polarity_score)
+        # save_tweet_to_file("live_stream", status, polarity_score)
 
         # find the target of the tweet
-        # target = find_tweet_target(status.text)
+        target = find_tweet_target(status.text)
         # sentiment[target] .append(polarity_score)
 
         # print tweet and score
@@ -107,7 +107,7 @@ class StreamListener(tweepy.StreamListener):
 
 ######----------------- Live Stream Processing -------------------######
 
-def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="low"):
+def start_tweet_stream(search_terms: list = None, follow_user_id=None, filter_level="low"):
     """
     begin the streaming process. This method blocks the thread until the connection is closed by default
     """
@@ -120,36 +120,37 @@ def start_tweet_stream(search_terms: list, follow_user_id=None, filter_level="lo
                     languages = ["en"])
 
 
-def get_company(tweet_text):
+def find_tweet_target(tweet_text: str) -> str: 
     """
-    run tweet text through a database, return the company it associates to. 
-    TODO: make it catch more cases
+    run tweet text through a database, return the companies it associates to.
     """
     split = tweet_text.split()
     highest_score = 0
-    h_company = None
-    h_brand = None
+    h_company = []
+    h_brand = []
 
     for company, brand_dict in companies_db.items():
         for brand, tag_list in brand_dict.items():
             for tag in tag_list:
-                if tag in tweet_text:
-                    h_company = company
-                    h_brand = brand
-                    return (h_company, h_brand)
+                score = fuzz.partial_token_sort_ratio(tag, tweet_text)
+                if score > 90:
+                    highest_score = score
+                    h_company.append(company)
+                    h_brand.append(brand)
+                    company_matches[h_company][h_brand] += 1
+                # if tag in tweet_text:
+                #     h_company = company
+                #     h_brand = brand
+                #     return (h_company, h_brand)
 
-                for tweet_word in split:
-                    score = fuzz.ratio(tag, tweet_word)
-                    if score > highest_score:
-                        highest_score = score
-                        h_company = company
-                        h_brand = brand
+                # for tweet_word in split:
+                #     score = fuzz.ratio(tag, tweet_word)
+                #     if score > highest_score:
+                #         highest_score = score
+                #         h_company = company
+                #         h_brand = brand
 
-    if highest_score > 90:
-        company_matches[h_company][h_brand] += 1
-        return (h_company, h_brand)
-
-    return None
+    return zip(h_company, h_brand)
                         
     
 
@@ -196,12 +197,6 @@ def find_text_sentiment(text) -> float:
 
     return score
 
-def find_tweet_target(tweet_text: str) -> str:
-    """
-    perform Named Entity Resolution to determine what company a tweet is most likely talking about.
-    RETURN str representing company ticker symbol
-    """
-    pass
 
 ######-----------------Moving Average Sentiment and PI Scores----------------#######
 
@@ -585,7 +580,7 @@ def search_tweets(ticker_search_dict: dict):
                 print ("Subjectivity: " + str( subjectivity))
                 shows_pi = tweet_shows_purchase_intent(tweet["text"])
                 
-                print (get_company(tweet["text"]))
+                print (find_tweet_target(tweet["text"]))
 
                 print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
@@ -633,6 +628,10 @@ search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                 #                    "reject": [] }
                }
 
+
+start_tweet_stream(["car"])
+
+
 index_dict = {x : {} for x in search_dict.keys()}
 
 search_count = 0 # keep track of number of iterations of loop
@@ -642,38 +641,38 @@ sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
 
-while running == True:
-    search_count += 1
+# while running == True:
+#     search_count += 1
 
-    (sent, sent_mag, pi) = search_tweets(search_dict)
+#     (sent, sent_mag, pi) = search_tweets(search_dict)
 
-    for company in sent:
-        avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
+#     for company in sent:
+#         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
 
-    # TODO: This scoring system is uniquely retarded
+#     # TODO: This scoring system is uniquely retarded
 
-        if score_magnitude(avg_sent, 0.2) == 1:
-            score[company] += 300
-        elif score_magnitude(avg_sent, 0.2) == -1:
-            score[company] -= 300
+#         if score_magnitude(avg_sent, 0.2) == 1:
+#             score[company] += 300
+#         elif score_magnitude(avg_sent, 0.2) == -1:
+#             score[company] -= 300
 
-    for company in pi:
-        for pi_score in pi[company]:
-            if pi_score == 1:
-                score[company] += 5
+#     for company in pi:
+#         for pi_score in pi[company]:
+#             if pi_score == 1:
+#                 score[company] += 5
 
-    for company in sent_mag:
-        for sent_score in sent_mag[company]:
-            if sent_score == 1:
-                score[company] += 5
-            elif sent_score == -1:
-                score[company] -= 5
+#     for company in sent_mag:
+#         for sent_score in sent_mag[company]:
+#             if sent_score == 1:
+#                 score[company] += 5
+#             elif sent_score == -1:
+#                 score[company] -= 5
 
 
-    #print ( str( search_count) + "th iteration of search_tweets")
+#     #print ( str( search_count) + "th iteration of search_tweets")
 
-    if search_count > 0:
-        running = False
+#     if search_count > 0:
+#         running = False
 
-for company in score:
-    print ("SCORE: " + str(company) + ": " + str(score[company]))
+# for company in score:
+#     print ("SCORE: " + str(company) + ": " + str(score[company]))
