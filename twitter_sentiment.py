@@ -208,6 +208,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     if since_id is None:
         since_id = 0
 
+    print ("Grabbing Tweets for query {}".format(search_terms))
     search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=200, lang="en")
     tweets = []
 
@@ -219,13 +220,14 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
 
     # paginate results by updating max_id variable
     while len(search_result["statuses"]) != 0 and len(tweets) < 15000:
+        print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=100, lang="en")
+        search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=200, lang="en")
 
     return (tweets, highest_id)
 
