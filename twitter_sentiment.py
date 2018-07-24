@@ -53,9 +53,9 @@ TWY = Twython(app_key=CONSUMER_KEY, app_secret=CONSUMER_SECRET, oauth_token=AXS_
 oauth_token_secret=AXS_TOKEN_SECRET)
 
 # tweepy object
-auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
-auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
-TWEEPY_API = tweepy.API(auth)
+auth = tweepy.AppAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+#auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
+TWEEPY_API = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 running = True # start and stop search
 
@@ -137,7 +137,7 @@ def find_tweet_target(tweet_text: str) -> str:
                     highest_score = score
                     h_company.append(company)
                     h_brand.append(brand)
-                    company_matches[h_company][h_brand] += 1
+                    #company_matches[h_company][h_brand] += 1
                 # if tag in tweet_text:
                 #     h_company = company
                 #     h_brand = brand
@@ -208,7 +208,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     if since_id is None:
         since_id = 0
 
-    search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=100, lang="en")
+    search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=200, lang="en")
     tweets = []
 
     _max_id = search_result["search_metadata"]["max_id"]
@@ -218,7 +218,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) < 100:
+    while len(search_result["statuses"]) != 0 and len(tweets) < 15000:
 
         for tweet in search_result["statuses"]:
             lowest_id = min(lowest_id, tweet["id"])
@@ -342,7 +342,6 @@ def tweet_shows_purchase_intent(tweet_text) -> bool:
         net_score += 0.1 * len(other_pron_used)
 
     return True if net_score >= 0.25 else False
-
 
 def filter_text(text):
     """
@@ -569,7 +568,7 @@ def search_tweets(ticker_search_dict: dict):
 
 
                 # TODO: perform spell correcting
-                short_text = reduce_lengthening(tweet["text"])
+                #short_text = reduce_lengthening(tweet["text"])
 
                 polarity = find_text_sentiment(short_text)
                 subjectivity = get_subjectivity(short_text)
@@ -578,18 +577,18 @@ def search_tweets(ticker_search_dict: dict):
                 print ( tweet["text"] )
                 print ("Polarity: " + str(polarity))
                 print ("Subjectivity: " + str( subjectivity))
-                shows_pi = tweet_shows_purchase_intent(tweet["text"])
+                #shows_pi = tweet_shows_purchase_intent(tweet["text"])
                 
-                print (find_tweet_target(tweet["text"]))
+                #print (find_tweet_target(tweet["text"]))
 
-                print ("Purchase Intent: " + str(shows_pi) + "\n")
+                #print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
 
                 sentiment[id_tuple].append(polarity)
                 sentiment_magnitude[id_tuple].append(score_magnitude(polarity, 0.2))
-                purchase_intent[id_tuple].append(1 if shows_pi else 0)
+                #purchase_intent[id_tuple].append(1 if shows_pi else 0)
 
             else:
                 reject_count += 1
@@ -615,21 +614,17 @@ def reduce_lengthening(text):
 
 search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                                     "accept" : ["apple"],
-                                    "reject" : ["pie"]},
-                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                   "reject" : ["oh snap", "snap out"]},
-                ("AMZN", "Amazon"): {"search" : "Amazon", \
-                                     "accept" : [ "amazon" ],
-                                     "reject" : ["rain forest", "river", "ad", "seller"]}
-
+                                    "reject" : ["pie"]}
+                #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                #                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
+                #                   "reject" : ["oh snap", "snap out"]},
+                #("AMZN", "Amazon"): {"search" : "Amazon", \
+                #                     "accept" : [ "amazon" ],
+                #                     "reject" : ["rain forest", "river", "ad", "seller"]}
                 #("ARNC", "Arconic"): {"search" : "arconic", \
                 #                    "accept": [],
                 #                    "reject": [] }
                }
-
-
-start_tweet_stream(["car"])
 
 
 index_dict = {x : {} for x in search_dict.keys()}
@@ -641,38 +636,38 @@ sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
 
-# while running == True:
-#     search_count += 1
+while running == True:
+    search_count += 1
 
-#     (sent, sent_mag, pi) = search_tweets(search_dict)
+    (sent, sent_mag, pi) = search_tweets(search_dict)
 
-#     for company in sent:
-#         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
+    for company in sent:
+        avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
 
-#     # TODO: This scoring system is uniquely retarded
+    # TODO: This scoring system is uniquely retarded
 
-#         if score_magnitude(avg_sent, 0.2) == 1:
-#             score[company] += 300
-#         elif score_magnitude(avg_sent, 0.2) == -1:
-#             score[company] -= 300
+        if score_magnitude(avg_sent, 0.2) == 1:
+            score[company] += 300
+        elif score_magnitude(avg_sent, 0.2) == -1:
+            score[company] -= 300
 
-#     for company in pi:
-#         for pi_score in pi[company]:
-#             if pi_score == 1:
-#                 score[company] += 5
+    for company in pi:
+        for pi_score in pi[company]:
+            if pi_score == 1:
+                score[company] += 5
 
-#     for company in sent_mag:
-#         for sent_score in sent_mag[company]:
-#             if sent_score == 1:
-#                 score[company] += 5
-#             elif sent_score == -1:
-#                 score[company] -= 5
+    for company in sent_mag:
+        for sent_score in sent_mag[company]:
+            if sent_score == 1:
+                score[company] += 5
+            elif sent_score == -1:
+                score[company] -= 5
 
 
-#     #print ( str( search_count) + "th iteration of search_tweets")
+    #print ( str( search_count) + "th iteration of search_tweets")
 
-#     if search_count > 0:
-#         running = False
+    if search_count > 0:
+        running = False
 
-# for company in score:
-#     print ("SCORE: " + str(company) + ": " + str(score[company]))
+for company in score:
+    print ("SCORE: " + str(company) + ": " + str(score[company]))
