@@ -26,6 +26,7 @@ from datetime import date
 import pandas as pd
 import pprint
 import vaderSentiment.vaderSentiment as sia
+import time
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
 from nltk import word_tokenize
@@ -75,6 +76,15 @@ for company, brand_dict in companies_db.items():
     for brand in brand_dict.keys():
         company_matches[company][brand] = 0
 
+# save settings for tweet filter
+search_tms = []
+accept_tms = []
+reject_tms = []
+search_tms_list = []
+
+# timer
+tweet_counter = 0
+set_time = time.time()
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -82,12 +92,23 @@ class StreamListener(tweepy.StreamListener):
     """
 
     def on_status(self, status):
+        global tweet_counter, set_time 
+        tweet_counter += 1
+
+        if tweet_counter == 10:
+            time_diff = time.time() - set_time
+            print ("\n TIMER: {} \n".format(tweet_counter / time_diff))
+            set_time = time.time()
+            tweet_counter = 0
+
+
         if not filter_tweet( status):
             return
 
         # get polarity score of tweet contents
-        polarity_score = find_tweet_sentiment(status)
-
+        polarity_score = find_text_sentiment(status.text)
+        subj = get_subjectivity(status.text)
+        
         # save tweet contents and polarity score to file
         # save_tweet_to_file("live_stream", status, polarity_score)
 
@@ -96,12 +117,14 @@ class StreamListener(tweepy.StreamListener):
         # sentiment[target] .append(polarity_score)
 
         # print tweet and score
-        print(status.text, '(', polarity_score, ')')
+        print("TEXT: {} \n (Polarity: {}) \n (Subjectivity: {}) \n (Target: {}) \n" \
+        .format(status.text, polarity_score, subj, target))
 
 
     def on_error(self, error_code):
         print("Error" + str( error_code))
         if error_code == 420:
+            print("420: Rate Limit Error")
             return False
 
 
@@ -116,7 +139,7 @@ def start_tweet_stream(search_terms: list = None, follow_user_id=None, filter_le
 
     printer.pprint("STREAMING TWEETS")
 
-    stream.filter(track=["hello"], filter_level=filter_level, \
+    stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
 
@@ -150,7 +173,7 @@ def find_tweet_target(tweet_text: str) -> str:
                 #         h_company = company
                 #         h_brand = brand
 
-    return zip(h_company, h_brand)
+    return str(zip(h_company, h_brand))
                         
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
@@ -390,11 +413,14 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         is_reply = False if tweet.in_reply_to_status_id is None else True
         num_mentions = len(tweet.entities['user_mentions'])
         url_list = tweet.entities['urls']
+        search_terms = search_tms
+        accept_terms = accept_tms
+        reject_terms = reject_tms
 
     bad_words = "porn pussy babe nude pornstar sex \
         naked cock cocks dick gloryhole tits anal horny cum penis"
 
-    for word_tup in stop_words.split():
+    for word_tup in bad_words.split():
 
         if word_tup in text:
             return False
@@ -439,9 +465,8 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         flag = False
 
     if flag and (not search_terms is None):
-        #print ("REJECTED")
         return False
-    #print("pos {} neg {}".format(pos_count, neg_count))
+    print("pos {} neg {}".format(pos_count, neg_count))
 
     # if not tweet_shows_purchase_intent(text):
     #     return False
@@ -612,9 +637,10 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR (iphone OR iPad OR ios OR Mac) ", \
-                                    "accept" : ["apple", "iPhone", "Mac"],
-                                    "reject" : ["pie"]}
+ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Mac ", \
+                                    "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
+                                    "accept" : ["apple", "my iPhone", "macOS"],
+                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", ""]}
                 #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                 #                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
                 #                   "reject" : ["oh snap", "snap out"]},
@@ -629,7 +655,11 @@ ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR (iphone OR iPad
 
 for id_tuple, search_terms_dict in ticker_keyword_dic.items():
 
-    start_tweet_stream(search_terms_dict["search"])
+    search_tms = search_terms_dict["search"]
+    search_tms_list = search_terms_dict["search_list"]
+    reject_tms = search_terms_dict["reject"]
+    accept_tms = search_terms_dict["accept"]
+    start_tweet_stream(search_tms_list)
 
 index_dict = {x : {} for x in ticker_keyword_dic.keys()}
 
