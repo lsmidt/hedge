@@ -53,8 +53,8 @@ TWY = Twython(app_key=CONSUMER_KEY, app_secret=CONSUMER_SECRET, oauth_token=AXS_
 oauth_token_secret=AXS_TOKEN_SECRET)
 
 # tweepy object
-auth = tweepy.AppAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
-#auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
+auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 running = True # start and stop search
@@ -116,7 +116,7 @@ def start_tweet_stream(search_terms: list = None, follow_user_id=None, filter_le
 
     printer.pprint("STREAMING TWEETS")
 
-    stream.filter(track=search_terms, filter_level=filter_level, \
+    stream.filter(track=["hello"], filter_level=filter_level, \
                     languages = ["en"])
 
 
@@ -152,8 +152,6 @@ def find_tweet_target(tweet_text: str) -> str:
 
     return zip(h_company, h_brand)
                         
-    
-
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
     save the tweet to a SQLite DB using Dataset
@@ -375,7 +373,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
 
         text = tweet["text"]
         friends_count = tweet["user"]["friends_count"]
-        qry_type = tweet["metadata"]["result_type"]
+        #qry_type = tweet["metadata"]["result_type"]
         rt_count = tweet["retweet_count"]
         is_reply = False if tweet["in_reply_to_status_id"] is None else True
         num_mentions = len( tweet["entities"]["user_mentions"])
@@ -387,13 +385,13 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
 
         text = tweet.text
         friends_count = tweet.user.friends_count
-        qry_type = tweet.metadata.result_type
-        rt_count = tweet.metadata.retweet_count
+        #qry_type = tweet.metadata.result_type
+        rt_count = tweet.retweet_count
         is_reply = False if tweet.in_reply_to_status_id is None else True
-        num_mentions = len(tweet.entities.user_mentions)
-        url_list = tweet.entities.urls
+        num_mentions = len(tweet.entities['user_mentions'])
+        url_list = tweet.entities['urls']
 
-    stop_words = "porn pussy babe nude pornstar sex \
+    bad_words = "porn pussy babe nude pornstar sex \
         naked cock cocks dick gloryhole tits anal horny cum penis"
 
     for word_tup in stop_words.split():
@@ -518,18 +516,18 @@ def search_tweets(ticker_search_dict: dict):
     sentiment_magnitude = defaultdict(list)
     purchase_intent = defaultdict(list)
 
-    for id_tuple, search_dict in ticker_search_dict.items():
+    for id_tuple, ticker_keyword_dic in ticker_search_dict.items():
         #TODO: Code below for "search" if-else can be condensed.
 
         ### Search Tweets
 
         # if a since_id already exists, use it. else use 0 as since_id
         if "search" in index_dict[id_tuple]:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_dict["search"], \
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], ticker_keyword_dic["search"], \
                                                         since_id=index_dict[id_tuple]["search"])
             index_dict[id_tuple]["search"] = since_id
         else:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_dict["search"], since_id=0)
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], ticker_keyword_dic["search"], since_id=0)
             index_dict[id_tuple]["search"] = since_id
 
 
@@ -554,7 +552,7 @@ def search_tweets(ticker_search_dict: dict):
         reject_count = 0 # count passed up tweets
 
         for tweet in found_tweets:
-            if filter_tweet(tweet, search_dict["search"], search_dict["accept"], search_dict["reject"]):
+            if filter_tweet(tweet, ticker_keyword_dic["search"], ticker_keyword_dic["accept"], ticker_keyword_dic["reject"]):
 
                 # check if tweet is a close copy of one already seen
                 copy = False
@@ -614,8 +612,8 @@ def reduce_lengthening(text):
 
 # scan_realtime_tweets('SNAP')
 
-search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
-                                    "accept" : ["apple"],
+ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR (iphone OR iPad OR ios OR Mac) ", \
+                                    "accept" : ["apple", "iPhone", "Mac"],
                                     "reject" : ["pie"]}
                 #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                 #                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
@@ -629,7 +627,11 @@ search_dict = { ("AAPL", "Apple") : {"search" : "iphone OR iPad OR ios", \
                }
 
 
-index_dict = {x : {} for x in search_dict.keys()}
+for id_tuple, search_terms_dict in ticker_keyword_dic.items():
+
+    start_tweet_stream(search_terms_dict["search"])
+
+index_dict = {x : {} for x in ticker_keyword_dic.keys()}
 
 search_count = 0 # keep track of number of iterations of loop
 
@@ -641,7 +643,7 @@ score = defaultdict(float)
 while running == True:
     search_count += 1
 
-    (sent, sent_mag, pi) = search_tweets(search_dict)
+    (sent, sent_mag, pi) = search_tweets(ticker_keyword_dic)
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
