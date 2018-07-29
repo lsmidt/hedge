@@ -240,7 +240,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) < 15000:
+    while len(search_result["statuses"]) != 0 and len(tweets) < 5000:
         print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
@@ -593,27 +593,25 @@ def search_tweets(ticker_search_dict: dict):
 
 
                 # TODO: perform spell correcting
-                #short_text = reduce_lengthening(tweet["text"])
 
-                polarity = find_text_sentiment(short_text)
-                subjectivity = get_subjectivity(short_text)
+                polarity = find_text_sentiment(tweet["text"])
+                subjectivity = get_subjectivity(tweet["text"])
 
 
                 print ( tweet["text"] )
                 print ("Polarity: " + str(polarity))
                 print ("Subjectivity: " + str( subjectivity))
-                #shows_pi = tweet_shows_purchase_intent(tweet["text"])
                 
-                #print (find_tweet_target(tweet["text"]))
-
-                #print ("Purchase Intent: " + str(shows_pi) + "\n")
+                shows_pi = tweet_shows_purchase_intent(tweet["text"])
+                
+                print (find_tweet_target(tweet["text"]))
+                print ("Purchase Intent: " + str(shows_pi) + "\n")
                 # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
                 passed_tweets.append(tweet["text"])
-
                 sentiment[id_tuple].append(polarity)
                 sentiment_magnitude[id_tuple].append(score_magnitude(polarity, 0.2))
-                #purchase_intent[id_tuple].append(1 if shows_pi else 0)
+                purchase_intent[id_tuple].append(1 if shows_pi else 0)
 
             else:
                 reject_count += 1
@@ -642,25 +640,30 @@ ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad 
                                     "accept" : ["apple", "my iPhone", "macOS"],
                                     "reject" : ["pie", "on iOS", "for iOS", "big mac", ""]}
                 #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                #                    "search_list": ["Snap", "Snapchat"]
                 #                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
                 #                   "reject" : ["oh snap", "snap out"]},
                 #("AMZN", "Amazon"): {"search" : "Amazon", \
+                #                     "search_list" : ["Amazon"]
                 #                     "accept" : [ "amazon" ],
                 #                     "reject" : ["rain forest", "river", "ad", "seller"]}
                 #("ARNC", "Arconic"): {"search" : "arconic", \
+                #                       "search_list" : ["Arconic"]
                 #                    "accept": [],
                 #                    "reject": [] }
                }
 
+# ------ STREAM ----- #
+# for id_tuple, search_terms_dict in ticker_keyword_dic.items():
 
-for id_tuple, search_terms_dict in ticker_keyword_dic.items():
+#     search_tms = search_terms_dict["search"]
+#     search_tms_list = search_terms_dict["search_list"]
+#     reject_tms = search_terms_dict["reject"]
+#     accept_tms = search_terms_dict["accept"]
+#     start_tweet_stream(search_tms_list)
 
-    search_tms = search_terms_dict["search"]
-    search_tms_list = search_terms_dict["search_list"]
-    reject_tms = search_terms_dict["reject"]
-    accept_tms = search_terms_dict["accept"]
-    start_tweet_stream(search_tms_list)
 
+# -------- SEARCH ------- #
 index_dict = {x : {} for x in ticker_keyword_dic.keys()}
 
 search_count = 0 # keep track of number of iterations of loop
