@@ -90,7 +90,6 @@ set_time = time.time()
 MINUTE_DELAY = 5
 
 
-
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -146,7 +145,6 @@ def start_tweet_stream(search_terms: list = None, follow_user_id=None, filter_le
 
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
-
 
 def find_tweet_target(tweet_text: str) -> str: 
     """
@@ -430,15 +428,17 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         if word_tup in text:
             return False
 
-    if friends_count < 15:
+    if friends_count < 5:
         return False
-    if num_mentions > 3:
+    if num_mentions > 4:
         return False
-    if "$" in text:
-        return False
-    for url in url_list:
-        if "amzn" in url["expanded_url"] or "amazon" in url["expanded_url"]:
-            return False 
+
+    #if "$" in text:
+    #    return False
+    
+    #for url in url_list:
+    #    if "amzn" in url["expanded_url"] or "amazon" in url["expanded_url"]:
+    #        return False 
 
     text_tok = word_tokenize(text)
     pos_list = pos_tag(text_tok, tagset='universal')
