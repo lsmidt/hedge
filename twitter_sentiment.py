@@ -62,11 +62,11 @@ running = True # start and stop search
 
 index_dict = {} # hold twitter since_ids for each searched company
 
-# hold sentiment and purchase intent scores for each company
+# hold sentiment and PI scores for each company
 pi_scores = {}
 sentiment_scores = {}
 
-# open the companies JSON database
+# open the companies JSON database -> Streaming
 with open("companies.json", "r") as in_file:
     companies_db = json.load(in_file)
 
@@ -76,13 +76,13 @@ for company, brand_dict in companies_db.items():
     for brand in brand_dict.keys():
         company_matches[company][brand] = 0
 
-# save settings for tweet filter
+# save settings for tweet filter -> Streaming
 search_tms = []
 accept_tms = []
 reject_tms = []
 search_tms_list = []
 
-# timer
+# timer -> Streaming
 tweet_counter = 0
 set_time = time.time()
 
@@ -240,7 +240,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) < 5000:
+    while len(search_result["statuses"]) != 0 and len(tweets) <1000:
         print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
@@ -540,8 +540,12 @@ def search_tweets(ticker_search_dict: dict):
     sentiment = defaultdict(list)
     sentiment_magnitude = defaultdict(list)
     purchase_intent = defaultdict(list)
+    
 
     for id_tuple, ticker_keyword_dic in ticker_search_dict.items():
+
+        set_time = time.time()
+
         #TODO: Code below for "search" if-else can be condensed.
 
         ### Search Tweets
@@ -620,6 +624,13 @@ def search_tweets(ticker_search_dict: dict):
         print ("Total Tweets found"  + str( len( combined)))
         print ("Rejected: " + str(reject_count))
 
+
+        # pause time of loop execution until 15 minutes pass between each search request
+        time_diff = time.time() - set_time
+        if time_diff < (15 * 60 * 60):
+            time.sleep( (15 * 60 * 60) - time_diff)  
+            
+
     return (sentiment, sentiment_magnitude, purchase_intent)
 
 def reduce_lengthening(text):
@@ -637,8 +648,8 @@ def reduce_lengthening(text):
 
 ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Mac ", \
                                     "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
-                                    "accept" : ["apple", "my iPhone", "macOS"],
-                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", ""]}
+                                    "accept" : ["my iPhone", "macOS"],
+                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", "apple juice"]}
                 #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                 #                    "search_list": ["Snap", "Snapchat"]
                 #                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
