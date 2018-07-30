@@ -86,6 +86,11 @@ search_tms_list = []
 tweet_counter = 0
 set_time = time.time()
 
+# Constants
+MINUTE_DELAY = 15
+
+
+
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -627,8 +632,8 @@ def search_tweets(ticker_search_dict: dict):
 
         # pause time of loop execution until 15 minutes pass between each search request
         time_diff = time.time() - set_time
-        if time_diff < (15 * 60 * 60):
-            time.sleep( (15 * 60 * 60) - time_diff)  
+        if time_diff < (MINUTE_DELAY * 3600):
+            time.sleep( MINUTE_DELAY * 3600 - time_diff)  
             
 
     return (sentiment, sentiment_magnitude, purchase_intent)
