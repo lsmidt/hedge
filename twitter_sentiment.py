@@ -87,7 +87,7 @@ tweet_counter = 0
 set_time = time.time()
 
 # Constants
-MINUTE_DELAY = 15
+MINUTE_DELAY = 5
 
 
 
@@ -632,8 +632,8 @@ def search_tweets(ticker_search_dict: dict):
 
         # pause time of loop execution until 15 minutes pass between each search request
         time_diff = time.time() - set_time
-        if time_diff < (MINUTE_DELAY * 3600):
-            time.sleep( MINUTE_DELAY * 3600 - time_diff)  
+        if time_diff < (MINUTE_DELAY * 60):
+            time.sleep( MINUTE_DELAY * 60 - time_diff)  
             
 
     return (sentiment, sentiment_magnitude, purchase_intent)
@@ -649,16 +649,14 @@ def reduce_lengthening(text):
 
 ####---------- Run Program --------------#####
 
-# scan_realtime_tweets('SNAP')
-
 ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Mac ", \
                                     "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
                                     "accept" : ["my iPhone", "macOS"],
-                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", "apple juice"]}
-                #("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                #                    "search_list": ["Snap", "Snapchat"]
-                #                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                #                   "reject" : ["oh snap", "snap out"]},
+                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", "apple juice"]},
+                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
+                                    "search_list": ["Snap", "Snapchat"],
+                                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
+                                   "reject" : ["oh snap", "snap out"]},
                 #("AMZN", "Amazon"): {"search" : "Amazon", \
                 #                     "search_list" : ["Amazon"]
                 #                     "accept" : [ "amazon" ],
