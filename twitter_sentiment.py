@@ -601,7 +601,7 @@ def search_tweets(ticker_search_dict: dict):
                     continue
 
 
-                # TODO: perform spell correcting
+                # TODO: perform spell correcting before passing into polarity/subjecitivty
 
                 polarity = find_text_sentiment(tweet["text"])
                 subjectivity = get_subjectivity(tweet["text"])
@@ -651,8 +651,8 @@ def reduce_lengthening(text):
 
 ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Mac ", \
                                     "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
-                                    "accept" : ["my iPhone", "macOS"],
-                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", "apple juice"]},
+                                    "accept" : [],
+                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", "juice", "miller", "makeup", "fleetwood", "macaroni"]},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                                     "search_list": ["Snap", "Snapchat"],
                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
@@ -661,10 +661,11 @@ ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad 
                 #                     "search_list" : ["Amazon"]
                 #                     "accept" : [ "amazon" ],
                 #                     "reject" : ["rain forest", "river", "ad", "seller"]}
-                #("ARNC", "Arconic"): {"search" : "arconic", \
-                #                       "search_list" : ["Arconic"]
-                #                    "accept": [],
-                #                    "reject": [] }
+                #("SBUX", "Starbucks") : {"search": "Starbucks OR Starbs" 
+                #                          "search_list" : ["Starbucks", "starbs"]
+                #                          "accept" : ["coffee"]
+                #                           "reject" : [""] 
+                # }
                }
 
 # ------ STREAM ----- #
@@ -695,12 +696,7 @@ while running == True:
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
 
-    # TODO: This scoring system is uniquely retarded
-
-        if score_magnitude(avg_sent, 0.2) == 1:
-            score[company] += 300
-        elif score_magnitude(avg_sent, 0.2) == -1:
-            score[company] -= 300
+    score[company] += 500 * avg_sent
 
     for company in pi:
         for pi_score in pi[company]:
