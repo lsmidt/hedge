@@ -87,7 +87,7 @@ tweet_counter = 0
 set_time = time.time()
 
 # Constants
-MINUTE_DELAY = 5
+MINUTE_DELAY = 2
 
 
 class StreamListener(tweepy.StreamListener):
@@ -638,15 +638,15 @@ ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad
                                     "search_list": ["Snap", "Snapchat", "snap chat"],
                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
                                    "reject" : ["oh snap", "snap out", "snap on", "low-income"]},
-                #("AMZN", "Amazon"): {"search" : "Amazon OR Amazon Basics OR AMZN OR",  \
-                #                     "search_list" : ["Amazon"]
-                #                     "accept" : [ "amazon" ],
-                #                     "reject" : ["rain forest", "river"]}
-                #("SBUX", "Starbucks") : {"search": "Starbucks OR Starbs" 
-                #                          "search_list" : ["Starbucks", "starbs"]
-                #                          "accept" : ["coffee"]
-                #                           "reject" : [""] 
-                # }
+                ("AMZN", "Amazon"): {"search" : "Amazon OR Amazon Basics OR Audible OR Zappos",  \
+                                    "search_list" : ["Amazon", "Amazon Basics", "Audible", "Zappos"],
+                                    "accept" : [ "amazon" ],
+                                    "reject" : ["rain forest", "river"]},
+                ("SBUX", "Starbucks") : {"search": "Starbucks OR Starbs",
+                                         "search_list" : ["Starbucks", "starbs"],
+                                         "accept" : ["coffee"],
+                                          "reject" : [""] 
+                }
                }
 
 # ------ STREAM ----- #
@@ -669,14 +669,14 @@ sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
 
+while running:
 
-for id_tuple, search_terms_dict in ticker_keyword_dict.items():
+    search_count += 1
 
-    set_time = time.time()
+    for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
-    if running:
+        set_time = time.time()
 
-        search_count += 1
 
         (sent, sent_mag, pi) = search_tweets(id_tuple, search_terms_dict)
 
@@ -696,18 +696,20 @@ for id_tuple, search_terms_dict in ticker_keyword_dict.items():
             elif sent_score == -1:
                 score[id_tuple] -= 5
 
-
         #print ( str( search_count) + "th iteration of search_tweets")
         print ("{}: {}".format(id_tuple, score[id_tuple]))
-        
-        if search_count > 5:
-            running = False
-            break
         
         # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
         time_diff = time.time() - set_time
         if time_diff < (MINUTE_DELAY * 60):
             time.sleep( MINUTE_DELAY * 60 - time_diff) 
 
+    if search_count > 360:
+                running = False
+                break
+
     for company in score:
         print ("SCORE: " + str(company) + ": " + str(score[company]))
+
+
+# save scores to a file
