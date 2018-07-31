@@ -529,106 +529,96 @@ def score_magnitude(score: float, threshold: float):
     else:
         return 0
 
-def search_tweets(ticker_keyword_dic: dict):
+def search_tweets(id_tuple, search_terms_dic: dict):
     """
-    Manage the tweet search loop with the companies in the ticker_search_dict
+    Manage the tweet search for each company 
     RETURN sentiment and purchase intent information for each company
     """
     # hold sentiment and PI results for each target company
-    sentiment = defaultdict(list)
-    sentiment_magnitude = defaultdict(list)
-    purchase_intent = defaultdict(list)
+    sentiment = []
+    sentiment_magnitude = []
+    purchase_intent = []
     
+    set_time = time.time()
 
-    for id_tuple, search_terms_dic in ticker_keyword_dic.items():
+    #TODO: Code below for "search" if-else can be condensed.
 
-        set_time = time.time()
+    ### Search Tweets
 
-        #TODO: Code below for "search" if-else can be condensed.
-
-        ### Search Tweets
-
-        # if a since_id already exists, use it. else use 0 as since_id
-        if "search" in index_dict[id_tuple]:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], \
-                                                        since_id=index_dict[id_tuple]["search"])
-            index_dict[id_tuple]["search"] = since_id
-        else:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], since_id=0)
-            index_dict[id_tuple]["search"] = since_id
+    # if a since_id already exists, use it. else use 0 as since_id
+    if "search" in index_dict[id_tuple]:
+        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], \
+                                                    since_id=index_dict[id_tuple]["search"])
+        index_dict[id_tuple]["search"] = since_id
+    else:
+        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], since_id=0)
+        index_dict[id_tuple]["search"] = since_id
 
 
-        screen_name = id_tuple[1]
-        user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
+    screen_name = id_tuple[1]
+    user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
 
 
-        ### Mentions
-        men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
-        men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
-        index_dict[id_tuple]["mentions"] = new_men_since_id
+    ### Mentions
+    men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
+    men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
+    index_dict[id_tuple]["mentions"] = new_men_since_id
 
-        ### Timeline
-        # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
-        # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
-        # index_dict[id_tuple]["timeline"] = new_tl_since_id
-
-
-        combined = combine_search_results(found_tweets, [], [])
-
-        passed_tweets = []
-        reject_count = 0 # count passed up tweets
-
-        for tweet in found_tweets:
-
-            if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
-
-                # check if tweet is a close copy of one already seen
-                copy = False
-                for passed_tweet in passed_tweets:
-                    if fuzz.ratio(tweet["text"], passed_tweet) > 80:
-                        copy = True
-                        break
-
-                if copy == True:
-                    reject_count += 1
-                    continue
+    ### Timeline
+    # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
+    # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
+    # index_dict[id_tuple]["timeline"] = new_tl_since_id
 
 
-                # TODO: perform spell correcting before passing into polarity/subjecitivty
+    combined = combine_search_results(found_tweets, [], [])
 
-                polarity = find_text_sentiment(tweet["text"])
-                subjectivity = get_subjectivity(tweet["text"])
+    passed_tweets = []
+    reject_count = 0 # count passed up tweets
 
+    for tweet in combined:
 
-                print ( tweet["text"] )
-                print ("Polarity: " + str(polarity))
-                print ("Subjectivity: " + str( subjectivity))
-                
-                shows_pi = tweet_shows_purchase_intent(tweet["text"])
-                
-                print (find_tweet_target(tweet["text"]))
-                print ("Purchase Intent: " + str(shows_pi) + "\n")
-                # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
+        if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
 
-                passed_tweets.append(tweet["text"])
-                sentiment[id_tuple].append(polarity)
-                sentiment_magnitude[id_tuple].append(score_magnitude(polarity, 0.2))
-                purchase_intent[id_tuple].append(1 if shows_pi else 0)
+            # check if tweet is a close copy of one already seen
+            copy = False
+            for passed_tweet in passed_tweets:
+                if fuzz.ratio(tweet["text"], passed_tweet) > 80:
+                    copy = True
+                    break
 
-            else:
+            if copy == True:
                 reject_count += 1
+                continue
 
 
-        print ("Total Tweets found"  + str( len( combined)))
-        print ("Rejected: " + str(reject_count))
+            # TODO: perform spell correcting before passing into polarity/subjecitivty
+
+            polarity = find_text_sentiment(tweet["text"])
+            subjectivity = get_subjectivity(tweet["text"])
 
 
-        # pause time of loop execution until 15 minutes pass between each search request
-        time_diff = time.time() - set_time
-        if time_diff < (MINUTE_DELAY * 60):
-            time.sleep( MINUTE_DELAY * 60 - time_diff)  
+            print ( tweet["text"] )
+            print ("Polarity: " + str(polarity))
+            print ("Subjectivity: " + str( subjectivity))
             
+            shows_pi = tweet_shows_purchase_intent(tweet["text"])
+            
+            print (find_tweet_target(tweet["text"]))
+            print ("Purchase Intent: " + str(shows_pi) + "\n")
+            # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
+            passed_tweets.append(tweet["text"])
+            sentiment.append(polarity)
+            sentiment_magnitude.append(score_magnitude(polarity, 0.2))
+            purchase_intent.append(1 if shows_pi else 0)
+
+        else:
+            reject_count += 1
+
+
+    print ("Total Tweets found"  + str( len( combined)))
+    print ("Rejected: " + str(reject_count))
+ 
     return (sentiment, sentiment_magnitude, purchase_intent)
 
 def reduce_lengthening(text):
@@ -682,36 +672,41 @@ pi_count = defaultdict(float)
 score = defaultdict(float)
 
 
-#for id_tuple, search_terms_dict in ticker_keyword_dict.items():
+for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
-while running == True:
+    while running == True:
 
-    search_count += 1
+        # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
+        time_diff = time.time() - set_time
+        if time_diff < (MINUTE_DELAY * 60):
+            time.sleep( MINUTE_DELAY * 60 - time_diff) 
 
-    (sent, sent_mag, pi) = search_tweets(ticker_keyword_dict)
+        search_count += 1
 
-    for company in sent:
-        avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
+        (sent, sent_mag, pi) = search_tweets(id_tuple, search_terms_dict)
 
-    score[company] += 500 * avg_sent
+        avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
 
-    for company in pi:
-        for pi_score in pi[company]:
+        score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
+
+        for pi_score in pi:
             if pi_score == 1:
-                score[company] += 5
+                pi_count[id_tuple] += 1
 
-    for company in sent_mag:
-        for sent_score in sent_mag[company]:
+        score[id_tuple] += pi_count[id_tuple] / len(pi) * 500 #greater score for larger percent PI
+
+        for sent_score in sent_mag:
             if sent_score == 1:
-                score[company] += 5
+                score[id_tuple] += 5
             elif sent_score == -1:
-                score[company] -= 5
+                score[id_tuple] -= 5
 
 
-    #print ( str( search_count) + "th iteration of search_tweets")
+        #print ( str( search_count) + "th iteration of search_tweets")
+        print ("{}: {}".format(id_tuple, score[id_tuple]))
+        
+        if search_count > 5:
+            running = False
 
-    if search_count > 0:
-        running = False
-
-for company in score:
-    print ("SCORE: " + str(company) + ": " + str(score[company]))
+    for company in score:
+        print ("SCORE: " + str(company) + ": " + str(score[company]))
