@@ -433,13 +433,6 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
     if num_mentions > 4:
         return False
 
-    #if "$" in text:
-    #    return False
-    
-    #for url in url_list:
-    #    if "amzn" in url["expanded_url"] or "amazon" in url["expanded_url"]:
-    #        return False 
-
     text_tok = word_tokenize(text)
     pos_list = pos_tag(text_tok, tagset='universal')
 
@@ -536,7 +529,7 @@ def score_magnitude(score: float, threshold: float):
     else:
         return 0
 
-def search_tweets(ticker_search_dict: dict):
+def search_tweets(ticker_keyword_dic: dict):
     """
     Manage the tweet search loop with the companies in the ticker_search_dict
     RETURN sentiment and purchase intent information for each company
@@ -547,7 +540,7 @@ def search_tweets(ticker_search_dict: dict):
     purchase_intent = defaultdict(list)
     
 
-    for id_tuple, ticker_keyword_dic in ticker_search_dict.items():
+    for id_tuple, search_terms_dic in ticker_keyword_dic.items():
 
         set_time = time.time()
 
@@ -557,11 +550,11 @@ def search_tweets(ticker_search_dict: dict):
 
         # if a since_id already exists, use it. else use 0 as since_id
         if "search" in index_dict[id_tuple]:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], ticker_keyword_dic["search"], \
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], \
                                                         since_id=index_dict[id_tuple]["search"])
             index_dict[id_tuple]["search"] = since_id
         else:
-            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], ticker_keyword_dic["search"], since_id=0)
+            found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], since_id=0)
             index_dict[id_tuple]["search"] = since_id
 
 
@@ -586,11 +579,11 @@ def search_tweets(ticker_search_dict: dict):
         reject_count = 0 # count passed up tweets
 
         for tweet in found_tweets:
-            if filter_tweet(tweet, ticker_keyword_dic["search"], ticker_keyword_dic["accept"], ticker_keyword_dic["reject"]):
+
+            if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
 
                 # check if tweet is a close copy of one already seen
                 copy = False
-
                 for passed_tweet in passed_tweets:
                     if fuzz.ratio(tweet["text"], passed_tweet) > 80:
                         copy = True
@@ -649,18 +642,18 @@ def reduce_lengthening(text):
 
 ####---------- Run Program --------------#####
 
-ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Mac ", \
+ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Macbook OR iMac OR apple watch OR airpods", \
                                     "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
-                                    "accept" : [],
-                                    "reject" : ["pie", "on iOS", "for iOS", "big mac", "juice", "miller", "makeup", "fleetwood", "macaroni"]},
+                                    "accept" : ["airpods"],
+                                    "reject" : ["pie", "big mac", "juice", "miller", "makeup", "fleetwood", "macaroni", "cheese"]},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "search_list": ["Snap", "Snapchat"],
+                                    "search_list": ["Snap", "Snapchat", "snap chat"],
                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                   "reject" : ["oh snap", "snap out"]},
-                #("AMZN", "Amazon"): {"search" : "Amazon", \
+                                   "reject" : ["oh snap", "snap out", "snap on", "low-income"]},
+                #("AMZN", "Amazon"): {"search" : "Amazon OR Amazon Basics OR AMZN OR",  \
                 #                     "search_list" : ["Amazon"]
                 #                     "accept" : [ "amazon" ],
-                #                     "reject" : ["rain forest", "river", "ad", "seller"]}
+                #                     "reject" : ["rain forest", "river"]}
                 #("SBUX", "Starbucks") : {"search": "Starbucks OR Starbs" 
                 #                          "search_list" : ["Starbucks", "starbs"]
                 #                          "accept" : ["coffee"]
@@ -679,7 +672,7 @@ ticker_keyword_dic = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad 
 
 
 # -------- SEARCH ------- #
-index_dict = {x : {} for x in ticker_keyword_dic.keys()}
+index_dict = {x : {} for x in ticker_keyword_dict.keys()}
 
 search_count = 0 # keep track of number of iterations of loop
 
@@ -688,10 +681,14 @@ sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
 
+
+#for id_tuple, search_terms_dict in ticker_keyword_dict.items():
+
 while running == True:
+
     search_count += 1
 
-    (sent, sent_mag, pi) = search_tweets(ticker_keyword_dic)
+    (sent, sent_mag, pi) = search_tweets(ticker_keyword_dict)
 
     for company in sent:
         avg_sent = sum(sent[company]) / len(sent[company]) if len(sent[company]) != 0 else 0
