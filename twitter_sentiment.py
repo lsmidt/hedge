@@ -674,7 +674,7 @@ for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
     set_time = time.time()
 
-    while running == True:
+    if running:
 
         search_count += 1
 
