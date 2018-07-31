@@ -539,8 +539,6 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     sentiment_magnitude = []
     purchase_intent = []
     
-    set_time = time.time()
-
     #TODO: Code below for "search" if-else can be condensed.
 
     ### Search Tweets
@@ -674,12 +672,9 @@ score = defaultdict(float)
 
 for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
-    while running == True:
+    set_time = time.time()
 
-        # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
-        time_diff = time.time() - set_time
-        if time_diff < (MINUTE_DELAY * 60):
-            time.sleep( MINUTE_DELAY * 60 - time_diff) 
+    while running == True:
 
         search_count += 1
 
@@ -707,6 +702,12 @@ for id_tuple, search_terms_dict in ticker_keyword_dict.items():
         
         if search_count > 5:
             running = False
+            break
+        
+        # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
+        time_diff = time.time() - set_time
+        if time_diff < (MINUTE_DELAY * 60):
+            time.sleep( MINUTE_DELAY * 60 - time_diff) 
 
     for company in score:
         print ("SCORE: " + str(company) + ": " + str(score[company]))
