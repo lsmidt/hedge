@@ -135,6 +135,14 @@ class StreamListener(tweepy.StreamListener):
 
 ######----------------- Live Stream Processing -------------------######
 
+def get_tweet_date(date_str: str):
+    """
+    ['created_at']:'Wed Aug 01 01:11:10 +0000 2018'
+    """
+    dt = datetime.datetime.strptime(date_str, "%a %b %d %I:%M:%S %z %Y")
+
+    return dt
+
 def start_tweet_stream(search_terms: list = None, follow_user_id=None, filter_level="low"):
     """
     begin the streaming process. This method blocks the thread until the connection is closed by default
@@ -405,6 +413,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         is_reply = False if tweet["in_reply_to_status_id"] is None else True
         num_mentions = len( tweet["entities"]["user_mentions"])
         url_list = tweet["entities"]["urls"]
+        timestamp = get_tweet_date(tweet["created_at"])
 
     else:
         if hasattr(tweet, "retweeted_status"):
@@ -420,6 +429,9 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         search_terms = search_tms
         accept_terms = accept_tms
         reject_terms = reject_tms
+
+    if timestamp.date() != datetime.date.today():
+        return False 
 
     bad_words = "porn pussy babe nude pornstar sex \
         naked cock cocks dick gloryhole tits anal horny cum penis"
@@ -465,10 +477,6 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
 
     if flag and (not search_terms is None):
         return False
-    print("pos {} neg {}".format(pos_count, neg_count))
-
-    # if not tweet_shows_purchase_intent(text):
-    #     return False
 
     return True
 
