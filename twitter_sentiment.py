@@ -670,6 +670,7 @@ search_count = 0 # keep track of number of iterations of loop
 sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
+table = db2["Time_Series_Scores"]
 
 while running:
 
@@ -693,29 +694,11 @@ while running:
 
         score[id_tuple] += pi_count[id_tuple] / len(pi) * 500 #greater score for larger percent PI
 
-
         sentiment_score[id_tuple] = sum(sent_mag)
 
-        #print ( str( search_count) + "th iteration of search_tweets")
         print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
                                         , pi_count[id_tuple], score[id_tuple]))
         
-        # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
-        time_diff = time.time() - set_time
-        if time_diff < (MINUTE_DELAY * 60):
-            time.sleep( MINUTE_DELAY * 60 - time_diff) 
-
-    if search_count > 360:
-                running = False
-                break
-
-    # after every complete iteration, print scores and save to file
-    for company_tuple in score:
-        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
-                                        , pi_count[id_tuple], score[id_tuple]))
-
-        table = db2["Time_Series_Scores"]
-
         save_data = dict (
             timestamp=datetime.datetime.now(),
             score=score[company_tuple],
@@ -725,6 +708,22 @@ while running:
             number_records=len()
         )
         table.insert(save_data)
+
+        # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
+        time_diff = time.time() - set_time
+        if time_diff < (MINUTE_DELAY * 60):
+            time.sleep( MINUTE_DELAY * 60 - time_diff) 
+
+    if search_count > 360:
+        running = False
+        break
+
+    # after every complete iteration, print scores and save to file
+    for company_tuple in score:
+        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
+                                        , pi_count[id_tuple], score[id_tuple]))
+
+        
     
 
 
