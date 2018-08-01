@@ -139,7 +139,7 @@ def get_tweet_date(date_str: str):
     """
     ['created_at']:'Wed Aug 01 01:11:10 +0000 2018'
     """
-    dt = datetime.datetime.strptime(date_str, "%a %b %d %I:%M:%S %z %Y")
+    dt = datetime.datetime.strptime(date_str, "%a %b %d %H:%M:%S %z %Y")
 
     return dt
 
