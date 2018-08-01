@@ -697,7 +697,7 @@ while running:
         print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
         .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
         
-        table = db2[id_tuple]
+        table = db2[id_tuple[0]]
 
         save_data = dict (
             timestamp=datetime.datetime.now(),
