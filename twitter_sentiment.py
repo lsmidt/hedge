@@ -225,7 +225,7 @@ def find_text_sentiment(text) -> float:
 
 ######-----------------Moving Average Sentiment and PI Scores----------------#######
 
-def get_search_results(screen_name: str, ticker: str, search_terms: str, since_id: int=None) -> list:
+def get_search_results(screen_name: str, ticker: str, search_terms: str, since_id: int = None) -> list:
     """
     RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
     """
@@ -266,7 +266,7 @@ def combine_search_results(first, second, third):
 
     return combined + a + b
 
-def get_recent_mentions(screen_name: str, since_id:int) -> list:
+def get_recent_mentions(screen_name: str, since_id: int) -> list:
     """
     find recent mentions of an account given its screen name by searching "@screen_name"
     """
@@ -442,7 +442,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
     neg_count = 0
     for term in search_terms.split():
         if term == "OR":
-                continue
+            continue
 
         for word_tup in pos_list:
 
@@ -488,7 +488,7 @@ def string_word_ratio(a_string, b_list):
         max_ratio = max(ratio, max_ratio)
     return max_ratio
 
-def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
+def scan_realtime_tweets(stock_symbol: str, account_id: int = None):
     """
     Begin streaming tweets matching the stock symbol or from the account in real time.
     """
@@ -498,7 +498,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
         if data[0] == stock_symbol:
             start_tweet_stream(data[1], follow_user_id=account_id)
 
-def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float):
+def save_to_file(db_name: str, query: tuple, tweet: dict, polarity_score: float):
     """
     save_tweet_to_file analog for tweets that are dictionaries instead of Status objects
     """
