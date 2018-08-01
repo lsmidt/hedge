@@ -245,7 +245,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) <1000:
+    while len(search_result["statuses"]) != 0 and len(tweets) <= 300:
         print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
@@ -696,16 +696,15 @@ while running:
 
         sentiment_score[id_tuple] = sum(sent_mag)
 
-        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
-                                        , pi_count[id_tuple], score[id_tuple]))
+        print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
+        .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
         
         save_data = dict (
             timestamp=datetime.datetime.now(),
             score=score[id_tuple],
             avg_sent_float=avg_sent,
             avg_sent_mag=sentiment_score[id_tuple],
-            pi_count=pi_count[id_tuple],
-            number_records=len()
+            pi_count=pi_count[id_tuple]
         )
         table.insert(save_data)
 
