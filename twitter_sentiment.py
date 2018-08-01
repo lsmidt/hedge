@@ -27,6 +27,7 @@ import pandas as pd
 import pprint
 import vaderSentiment.vaderSentiment as sia
 import time
+import datetime
 from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
 from nltk import word_tokenize
@@ -38,6 +39,7 @@ from fuzzywuzzy import fuzz
 from textblob import TextBlob
 
 db = dataset.connect("sqlite:///tweetbase.db") # connect Dataset to Tweetbase
+db2 = dataset.connect("sqlite://scorebase.db")
 
 printer = pprint.PrettyPrinter() # printer object
 
@@ -671,18 +673,19 @@ score = defaultdict(float)
 
 while running:
 
+    avg_sent = 0.0
+    num_records = 0
     search_count += 1
 
     for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
-        set_time = time.time()
-
+        set_time = time.time() #reset loop timer
 
         (sent, sent_mag, pi) = search_tweets(id_tuple, search_terms_dict)
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
-
         score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
+
 
         for pi_score in pi:
             if pi_score == 1:
@@ -690,14 +693,12 @@ while running:
 
         score[id_tuple] += pi_count[id_tuple] / len(pi) * 500 #greater score for larger percent PI
 
-        for sent_score in sent_mag:
-            if sent_score == 1:
-                score[id_tuple] += 5
-            elif sent_score == -1:
-                score[id_tuple] -= 5
+
+        sentiment_score[id_tuple] = sum(sent_mag)
 
         #print ( str( search_count) + "th iteration of search_tweets")
-        print ("{}: {}".format(id_tuple, score[id_tuple]))
+        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
+                                        , pi_count[id_tuple], score[id_tuple]))
         
         # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
         time_diff = time.time() - set_time
@@ -708,8 +709,24 @@ while running:
                 running = False
                 break
 
-    for company in score:
-        print ("SCORE: " + str(company) + ": " + str(score[company]))
+    # after every complete iteration, print scores and save to file
+    for company_tuple in score:
+        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
+                                        , pi_count[id_tuple], score[id_tuple]))
+
+        table = db2["Time_Series_Scores"]
+
+        save_data = dict (
+            timestamp=datetime.datetime.now(),
+            score=score[company_tuple],
+            avg_sent_float=avg_sent,
+            avg_sent_mag=sentiment_score[company_tuple],
+            pi_count=pi_count[company_tuple],
+            number_records=len()
+        )
+        table.insert(save_data)
+    
 
 
-# save scores to a file
+
+
