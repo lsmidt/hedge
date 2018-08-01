@@ -91,6 +91,9 @@ set_time = time.time()
 # Constants
 MINUTE_DELAY = 2
 
+# reference variables
+ref_date = datetime.datetime.today().date()
+
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -542,14 +545,15 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     """
     Manage the tweet search for each company 
     RETURN sentiment and purchase intent information for each company
+    
+    # TODO: perform spell correcting before passing into polarity/subjecitivty
+    # TODO: Code below for "search" if-else can be condensed.
     """
     # hold sentiment and PI results for each target company
     sentiment = []
     sentiment_magnitude = []
     purchase_intent = []
     
-    #TODO: Code below for "search" if-else can be condensed.
-
     ### Search Tweets
 
     # if a since_id already exists, use it. else use 0 as since_id
@@ -586,6 +590,12 @@ def search_tweets(id_tuple, search_terms_dic: dict):
 
         if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
 
+            date = get_tweet_date(tweet["created_at"]).date()
+
+            if date > ref_date:
+                # date has changed mid-stream
+                pass
+
             # check if tweet is a close copy of one already seen
             copy = False
             for passed_tweet in passed_tweets:
@@ -598,8 +608,6 @@ def search_tweets(id_tuple, search_terms_dic: dict):
                 continue
 
 
-            # TODO: perform spell correcting before passing into polarity/subjecitivty
-
             polarity = find_text_sentiment(tweet["text"])
             subjectivity = get_subjectivity(tweet["text"])
 
@@ -610,11 +618,11 @@ def search_tweets(id_tuple, search_terms_dic: dict):
             
             shows_pi = tweet_shows_purchase_intent(tweet["text"])
             
-            print (find_tweet_target(tweet["text"]))
             print ("Purchase Intent: " + str(shows_pi) + "\n")
             # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
             passed_tweets.append(tweet["text"])
+            
             sentiment.append(polarity)
             sentiment_magnitude.append(score_magnitude(polarity, 0.2))
             purchase_intent.append(1 if shows_pi else 0)
@@ -646,7 +654,7 @@ ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                                     "search_list": ["Snap", "Snapchat", "snap chat"],
                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                   "reject" : ["oh snap", "snap out", "snap on", "low-income"]},
+                                   "reject" : ["oh snap", "snap out", "snap on", "low-income", "SNAP benefits", "SNAP program"]},
                 ("AMZN", "Amazon"): {"search" : "Amazon OR Amazon Basics OR Audible OR Zappos",  \
                                     "search_list" : ["Amazon", "Amazon Basics", "Audible", "Zappos"],
                                     "accept" : [ "amazon" ],
@@ -677,6 +685,7 @@ search_count = 0 # keep track of number of iterations of loop
 sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
+ref_date = datetime.datetime.today()
 
 while running:
 
