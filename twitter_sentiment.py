@@ -39,7 +39,7 @@ from fuzzywuzzy import fuzz
 from textblob import TextBlob
 
 db = dataset.connect("sqlite:///tweetbase.db") # connect Dataset to Tweetbase
-db2 = dataset.connect("sqlite://scorebase.db")
+db2 = dataset.connect("sqlite:///scorebase.db")
 
 printer = pprint.PrettyPrinter() # printer object
 
@@ -635,7 +635,7 @@ def reduce_lengthening(text):
 ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Macbook OR iMac OR apple watch OR airpods", \
                                     "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
                                     "accept" : ["airpods"],
-                                    "reject" : ["pie", "big mac", "juice", "miller", "makeup", "fleetwood", "macaroni", "cheese"]},
+                                    "reject" : ["pie", "big mac", "juice", "miller", "makeup", "fleetwood", "macaroni", "cheese", "cider"]},
                 ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
                                     "search_list": ["Snap", "Snapchat", "snap chat"],
                                    "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
@@ -701,10 +701,10 @@ while running:
         
         save_data = dict (
             timestamp=datetime.datetime.now(),
-            score=score[company_tuple],
+            score=score[id_tuple],
             avg_sent_float=avg_sent,
-            avg_sent_mag=sentiment_score[company_tuple],
-            pi_count=pi_count[company_tuple],
+            avg_sent_mag=sentiment_score[id_tuple],
+            pi_count=pi_count[id_tuple],
             number_records=len()
         )
         table.insert(save_data)
@@ -720,8 +720,8 @@ while running:
 
     # after every complete iteration, print scores and save to file
     for company_tuple in score:
-        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(id_tuple, sentiment_score[id_tuple] \
-                                        , pi_count[id_tuple], score[id_tuple]))
+        print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(company_tuple, sentiment_score[company_tuple] \
+                                        , pi_count[company_tuple], score[company_tuple]))
 
         
     
