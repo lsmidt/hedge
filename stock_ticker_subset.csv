@@ -1,0 +1,10 @@
+Ticker,Name,Sector,Industry,Price,Collection
+AAPL,Apple Inc.,Consumer Goods,Electronic Equipment,WIKI/AAPL,stocks/aapl
+CMG,"Chipotle Mexican Grill, Inc.",Services,Restaurants,WIKI/CMG,stocks/cmg
+DATA,"Tableau Software, Inc.",Technology,Application Software,WIKI/DATA,stocks/data
+MSFT,Microsoft Corporation,Technology,Business Software & Services,WIKI/MSFT,stocks/msft
+PAYX,"Paychex, Inc.",Services,Staffing & Outsourcing Services,WIKI/PAYX,stocks/payx
+QCOM,QUALCOMM Incorporated,Technology,Communication Equipment,WIKI/QCOM,stocks/qcom
+RSH,RadioShack Corp.,Services,Electronics Stores,WIKI/RSH,stocks/rsh
+SBUX,Starbucks Corporation,Services,Specialty Eateries,WIKI/SBUX,stocks/sbux
+SNAP,"Snapchat",Technology,Social Media,,
