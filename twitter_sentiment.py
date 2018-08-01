@@ -91,7 +91,6 @@ set_time = time.time()
 # Constants
 MINUTE_DELAY = 2
 
-
 class StreamListener(tweepy.StreamListener):
     """
     Override the StreamListener class to add custom filtering functionality to the stream listener
@@ -670,7 +669,6 @@ search_count = 0 # keep track of number of iterations of loop
 sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
-table = db2["Time_Series_Scores"]
 
 while running:
 
@@ -699,6 +697,8 @@ while running:
         print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
         .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
         
+        table = db2[id_tuple]
+
         save_data = dict (
             timestamp=datetime.datetime.now(),
             score=score[id_tuple],
