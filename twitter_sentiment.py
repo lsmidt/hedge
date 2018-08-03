@@ -704,8 +704,7 @@ while running:
 
         if searched_date > ref_date_2:
             # date changed, clear existing scores
-            
-
+            pass
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
         score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
