@@ -630,7 +630,7 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     print ("Total Tweets found"  + str( len( combined)))
     print ("Rejected: " + str(reject_count))
  
-    return (sentiment, sentiment_magnitude, purchase_intent)
+    return (sentiment, sentiment_magnitude, purchase_intent, date)
 
 def reduce_lengthening(text):
     """
@@ -686,8 +686,7 @@ today_date = datetime.date.today()
 
 while running:
 
-    #avg_sent = 0.0
-    avg_sent = {}
+    avg_sent = 0.0
     num_records = 0
     search_count += 1
 
@@ -695,22 +694,12 @@ while running:
     _pi_count = defaultdict(float)
     _sentiment_score = defaultdict(float)
 
-    for id_tuple, search_terms_dict in ticker_keyword_dict.items():
-
-        (sent, sent_mag, pi) = search_tweets(id_tuple, search_terms_dict)
-        # return datetime : [score, score, score]
-
-        for date, sent_list in sent.items():
-            sentiment_score[date][id_tuple]
-
-
-
 
     for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
         set_time = time.time() #reset loop timer
 
-        (sent, sent_mag, pi) = search_tweets(id_tuple, search_terms_dict)
+        (sent, sent_mag, pi, searched_date) = search_tweets(id_tuple, search_terms_dict)
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
         score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
@@ -727,6 +716,7 @@ while running:
         print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
         .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
         
+        # save score to database
         table = db2[id_tuple[0]]
 
         save_data = dict (
