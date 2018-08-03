@@ -685,16 +685,12 @@ score = defaultdict(float)
 
 ref_date_2 = datetime.date.today()
 
+avg_sent = 0.0
+num_records = 0
+
 while running:
 
-    avg_sent = 0.0
-    num_records = 0
     search_count += 1
-
-    _score = defaultdict(float)
-    _pi_count = defaultdict(float)
-    _sentiment_score = defaultdict(float)
-
 
     for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
@@ -702,9 +698,14 @@ while running:
 
         (sent, sent_mag, pi, searched_date) = search_tweets(id_tuple, search_terms_dict)
 
-        if searched_date > ref_date_2:
-            # date changed, clear existing scores
-            pass
+        if searched_date > ref_date_2: # date changed, clear existing scores
+            sentiment_score.clear()
+            pi_count.clear()
+            score.clear()
+            ref_date_2 = searched_date
+            num_records = 0
+            avg_sent = 0.0
+
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
         score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
