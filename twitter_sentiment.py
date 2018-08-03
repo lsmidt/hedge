@@ -730,7 +730,8 @@ while running:
             score=score[id_tuple],
             avg_sent_float=avg_sent,
             avg_sent_mag=sentiment_score[id_tuple],
-            pi_count=pi_count[id_tuple]
+            pi_count=pi_count[id_tuple],
+            iteration=search_count
         )
         table.insert(save_data)
 
@@ -739,11 +740,11 @@ while running:
         if time_diff < (MINUTE_DELAY * 60):
             time.sleep( MINUTE_DELAY * 60 - time_diff)
 
-    if search_count > 2:
-        running = False
-        break
-
     # after every complete iteration, print scores and save to file
     for company_tuple in score:
         print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(company_tuple, sentiment_score[company_tuple] \
                                         , pi_count[company_tuple], score[company_tuple]))
+
+    if search_count > 2:
+        running = False
+        break
