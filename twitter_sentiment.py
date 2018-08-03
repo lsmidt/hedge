@@ -7,7 +7,7 @@ TODO:
     (max) IEX moving 'n' day average and standard deviation
     (max) read tweetbase.db to plot connection between scores and price
     maximum score for any specific sample
-    
+
 
 Louis Smidt & Max Gillespie
 FIRST COMMIT ----------------> 6/09/2018
@@ -100,7 +100,7 @@ class StreamListener(tweepy.StreamListener):
     """
 
     def on_status(self, status):
-        global tweet_counter, set_time 
+        global tweet_counter, set_time
         tweet_counter += 1
 
         if tweet_counter == 10:
@@ -116,7 +116,7 @@ class StreamListener(tweepy.StreamListener):
         # get polarity score of tweet contents
         polarity_score = find_text_sentiment(status.text)
         subj = get_subjectivity(status.text)
-        
+
         # save tweet contents and polarity score to file
         # save_tweet_to_file("live_stream", status, polarity_score)
 
@@ -158,7 +158,7 @@ def start_tweet_stream(search_terms: list = None, follow_user_id=None, filter_le
     stream.filter(track=search_terms, filter_level=filter_level, \
                     languages = ["en"])
 
-def find_tweet_target(tweet_text: str) -> str: 
+def find_tweet_target(tweet_text: str) -> str:
     """
     run tweet text through a database, return the companies it associates to.
     """
@@ -189,7 +189,7 @@ def find_tweet_target(tweet_text: str) -> str:
                 #         h_brand = brand
 
     return str(zip(h_company, h_brand))
-                        
+
 def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
     save the tweet to a SQLite DB using Dataset
@@ -255,7 +255,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) <= 300:
+    while len(search_result["statuses"]) != 0 and len(tweets) <= 500:
         print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
@@ -434,7 +434,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         reject_terms = reject_tms
 
     if timestamp.date() != datetime.date.today():
-        return False 
+        return False
 
     bad_words = "porn pussy babe nude pornstar sex \
         naked cock cocks dick gloryhole tits anal horny cum penis"
@@ -543,9 +543,9 @@ def score_magnitude(score: float, threshold: float):
 
 def search_tweets(id_tuple, search_terms_dic: dict):
     """
-    Manage the tweet search for each company 
+    Manage the tweet search for each company
     RETURN sentiment and purchase intent information for each company
-    
+
     # TODO: perform spell correcting before passing into polarity/subjecitivty
     # TODO: Code below for "search" if-else can be condensed.
     """
@@ -553,7 +553,7 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     sentiment = {}
     sentiment_magnitude = {}
     purchase_intent = {}
-    
+
     ### Search Tweets
 
     # if a since_id already exists, use it. else use 0 as since_id
@@ -611,14 +611,14 @@ def search_tweets(id_tuple, search_terms_dic: dict):
             print ( tweet["text"] )
             print ("Polarity: " + str(polarity))
             print ("Subjectivity: " + str( subjectivity))
-            
+
             shows_pi = tweet_shows_purchase_intent(tweet["text"])
-            
+
             print ("Purchase Intent: " + str(shows_pi) + "\n")
             # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
             passed_tweets.append(tweet["text"])
-            
+
             sentiment[date].append(polarity)
             sentiment_magnitude[date].append(score_magnitude(polarity, 0.2))
             purchase_intent[date].append(1 if shows_pi else 0)
@@ -629,7 +629,7 @@ def search_tweets(id_tuple, search_terms_dic: dict):
 
     print ("Total Tweets found"  + str( len( combined)))
     print ("Rejected: " + str(reject_count))
- 
+
     return (sentiment, sentiment_magnitude, purchase_intent)
 
 def reduce_lengthening(text):
@@ -658,7 +658,7 @@ ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad
                 ("SBUX", "Starbucks") : {"search": "Starbucks OR Starbs",
                                          "search_list" : ["Starbucks", "starbs"],
                                          "accept" : ["coffee"],
-                                          "reject" : [""] 
+                                          "reject" : [""]
                 }
                }
 
@@ -726,7 +726,7 @@ while running:
 
         print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
         .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
-        
+
         table = db2[id_tuple[0]]
 
         save_data = dict (
@@ -741,7 +741,7 @@ while running:
         # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
         time_diff = time.time() - set_time
         if time_diff < (MINUTE_DELAY * 60):
-            time.sleep( MINUTE_DELAY * 60 - time_diff) 
+            time.sleep( MINUTE_DELAY * 60 - time_diff)
 
     if search_count > 360:
         running = False
@@ -751,10 +751,3 @@ while running:
     for company_tuple in score:
         print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(company_tuple, sentiment_score[company_tuple] \
                                         , pi_count[company_tuple], score[company_tuple]))
-
-        
-    
-
-
-
-
