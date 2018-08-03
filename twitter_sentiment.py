@@ -586,11 +586,13 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     passed_tweets = []
     reject_count = 0 # count passed up tweets
 
+    if len(combined) == 0:
+        return (None, None, None, datetime.date.today())
+
     for tweet in combined:
+        date = get_tweet_date(tweet["created_at"]).date()
 
         if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
-
-            date = get_tweet_date(tweet["created_at"]).date()
 
             # check if tweet is a close copy of one already seen
             copy = False
@@ -627,9 +629,10 @@ def search_tweets(id_tuple, search_terms_dic: dict):
             reject_count += 1
 
 
+
     print ("Total Tweets found"  + str( len( combined)))
     print ("Rejected: " + str(reject_count))
- 
+
     return (sentiment, sentiment_magnitude, purchase_intent, date)
 
 
@@ -721,7 +724,7 @@ while running:
 
         print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
         .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
-        
+
         # save score to database
         table = db2[id_tuple[0]]
 
