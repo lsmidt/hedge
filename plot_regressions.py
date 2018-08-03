@@ -1,11 +1,14 @@
 import matplotlib.pyplot as plt
-from iexfinance import Stock, get_historical_data
 import datetime as DT
 import dataset
 
+from iexfinance import Stock, get_historical_data
+from collections import defaultdict
+
+
 today = DT.date.today() - DT.timedelta(days = 1)
 week_ago = today - DT.timedelta(days = 7)
-scores_db = dataset.connect("sqlite:///scores.db") # connect Dataset to Tweetbase
+scores_db = dataset.connect("sqlite:///scorebase.db") # connect Dataset to Tweetbase
 
 
 # function to plot stock's last opening and closing prices across a timeframe.
@@ -59,19 +62,45 @@ def populate_scores():
 # ---------------------------- MAIN -------------------------------------
 # new datetime object: DT.datetime(2018, 7, 10)  <== {YR, MM, DD}
 
-score_regression("TSLA")
+score_regression("SBUX")
 
 # populate_scores()
 
 '''
-******************** DATABASE VISUALIZATION ********************
+******************** DATABASE VISUALIZATION *********************
+'''
 
-print (scores_db.tables)                                # > TSLA
-print (scores_db["TSLA"].columns)
 
-for TSLA in scores_db["TSLA"]:
-    print (TSLA["date"], TSLA["score"])
+#print (scores_db.tables)                                # > TSLA
+#print (scores_db["AAPL"].columns)
 
+'''
+scores = defaultdict(float)
+for TABLE in scores_db.tables:
+    print (TABLE)
+    # scores[TABLE] = defaultdict(int)   # initialize dict of scores associated with a date
+                              # { 'date': score }
+    for SYM in scores_db[TABLE]:
+        print ( SYM["timestamp"].date(), SYM["score"] )
+        # scores[SYM["timestamp"].date()] += SYM["score"]
+'''
+'''
+print (scores_db.tables)
+for table in scores:
+    print(table)
+'''
+    #for date in scores[table]:
+    #    print (string(date))
+
+
+
+
+'''
+for AAPL in scores_db["AAPL"]:
+    print (AAPL["score"])
+'''
+
+'''
 ******************** DATABASE VISUALIZATION ********************
 '''
 
