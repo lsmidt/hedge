@@ -550,9 +550,9 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     # TODO: Code below for "search" if-else can be condensed.
     """
     # hold sentiment and PI results for each target company
-    sentiment = {}
-    sentiment_magnitude = {}
-    purchase_intent = {}
+    sentiment = []
+    sentiment_magnitude = []
+    purchase_intent = []
 
     ### Search Tweets
 
@@ -619,9 +619,9 @@ def search_tweets(id_tuple, search_terms_dic: dict):
 
             passed_tweets.append(tweet["text"])
 
-            sentiment[date].append(polarity)
-            sentiment_magnitude[date].append(score_magnitude(polarity, 0.2))
-            purchase_intent[date].append(1 if shows_pi else 0)
+            sentiment.append(polarity)
+            sentiment_magnitude.append(score_magnitude(polarity, 0.2))
+            purchase_intent.append(1 if shows_pi else 0)
 
         else:
             reject_count += 1
@@ -683,7 +683,7 @@ sentiment_score = defaultdict(dict)
 pi_count = defaultdict(dict)
 score = defaultdict(dict)
 
-today_date = datetime.date.today()
+ref_date_2 = datetime.date.today()
 
 while running:
 
@@ -701,6 +701,11 @@ while running:
         set_time = time.time() #reset loop timer
 
         (sent, sent_mag, pi, searched_date) = search_tweets(id_tuple, search_terms_dict)
+
+        if searched_date > ref_date_2:
+            # date changed, clear existing scores
+            pass
+
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
         score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
