@@ -679,9 +679,9 @@ index_dict = {x : {} for x in ticker_keyword_dict.keys()} # index's since_id's f
 search_count = 0 # keep track of number of iterations of loop
 
 # generate the score based on the search information
-sentiment_score = defaultdict(dict)
-pi_count = defaultdict(dict)
-score = defaultdict(dict)
+sentiment_score = defaultdict(float)
+pi_count = defaultdict(float)
+score = defaultdict(float)
 
 ref_date_2 = datetime.date.today()
 
@@ -704,7 +704,7 @@ while running:
 
         if searched_date > ref_date_2:
             # date changed, clear existing scores
-            pass
+            
 
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
