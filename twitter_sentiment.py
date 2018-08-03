@@ -1,7 +1,6 @@
 '''
 HEDGE CAPITAL LLC.
 
-PURPOSE:
 
 
 TODO:
@@ -13,6 +12,7 @@ TODO:
 Louis Smidt & Max Gillespie
 FIRST COMMIT ----------------> 6/09/2018
 MOST RECENT COMMIT ----------> 7/18/2018
+PURPOSE:
 '''
 
 from twython import Twython # used for mentions
@@ -92,7 +92,7 @@ set_time = time.time()
 MINUTE_DELAY = 2
 
 # reference variables
-ref_date = datetime.datetime.today().date()
+ref_date = datetime.date.today()
 
 class StreamListener(tweepy.StreamListener):
     """
@@ -550,9 +550,9 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     # TODO: Code below for "search" if-else can be condensed.
     """
     # hold sentiment and PI results for each target company
-    sentiment = []
-    sentiment_magnitude = []
-    purchase_intent = []
+    sentiment = {}
+    sentiment_magnitude = {}
+    purchase_intent = {}
     
     ### Search Tweets
 
@@ -592,10 +592,6 @@ def search_tweets(id_tuple, search_terms_dic: dict):
 
             date = get_tweet_date(tweet["created_at"]).date()
 
-            if date > ref_date:
-                # date has changed mid-stream
-                pass
-
             # check if tweet is a close copy of one already seen
             copy = False
             for passed_tweet in passed_tweets:
@@ -623,9 +619,9 @@ def search_tweets(id_tuple, search_terms_dic: dict):
 
             passed_tweets.append(tweet["text"])
             
-            sentiment.append(polarity)
-            sentiment_magnitude.append(score_magnitude(polarity, 0.2))
-            purchase_intent.append(1 if shows_pi else 0)
+            sentiment[date].append(polarity)
+            sentiment_magnitude[date].append(score_magnitude(polarity, 0.2))
+            purchase_intent[date].append(1 if shows_pi else 0)
 
         else:
             reject_count += 1
@@ -677,21 +673,38 @@ ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad
 
 
 # -------- SEARCH ------- #
-index_dict = {x : {} for x in ticker_keyword_dict.keys()}
+index_dict = {x : {} for x in ticker_keyword_dict.keys()} # index's since_id's for twitter API
 
 search_count = 0 # keep track of number of iterations of loop
 
 # generate the score based on the search information
-sentiment_score = defaultdict(float)
-pi_count = defaultdict(float)
-score = defaultdict(float)
-ref_date = datetime.datetime.today()
+sentiment_score = defaultdict(dict)
+pi_count = defaultdict(dict)
+score = defaultdict(dict)
+
+today_date = datetime.date.today()
 
 while running:
 
-    avg_sent = 0.0
+    #avg_sent = 0.0
+    avg_sent = {}
     num_records = 0
     search_count += 1
+
+    _score = defaultdict(float)
+    _pi_count = defaultdict(float)
+    _sentiment_score = defaultdict(float)
+
+    for id_tuple, search_terms_dict in ticker_keyword_dict.items():
+
+        (sent, sent_mag, pi) = search_tweets(id_tuple, search_terms_dict)
+        # return datetime : [score, score, score]
+
+        for date, sent_list in sent.items():
+            sentiment_score[date][id_tuple]
+
+
+
 
     for id_tuple, search_terms_dict in ticker_keyword_dict.items():
 
@@ -707,7 +720,7 @@ while running:
             if pi_score == 1:
                 pi_count[id_tuple] += 1
 
-        score[id_tuple] += pi_count[id_tuple] / len(pi) * 500 #greater score for larger percent PI
+        score[id_tuple] += (pi_count[id_tuple] / len(pi) * 500) if len(pi) != 0 else 0 #greater score for larger percent PI
 
         sentiment_score[id_tuple] = sum(sent_mag)
 
