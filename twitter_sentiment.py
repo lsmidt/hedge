@@ -89,7 +89,7 @@ tweet_counter = 0
 set_time = time.time()
 
 # Constants
-MINUTE_DELAY = 2
+MINUTE_DELAY = 0.5
 
 # reference variables
 ref_date = datetime.date.today()
@@ -738,7 +738,7 @@ while running:
         if time_diff < (MINUTE_DELAY * 60):
             time.sleep( MINUTE_DELAY * 60 - time_diff)
 
-    if search_count > 360:
+    if search_count > 2:
         running = False
         break
 
