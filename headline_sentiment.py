@@ -436,7 +436,8 @@ def news_api_format_data(news_api_object):
                 source.append(article_dict["source"]["name"])
 
 
-    return list(zip(title, desc, source, date_time))
+    #return list(zip(title, desc, source, date_time))
+    pass
 
 
 def news_api_get_scores(query_list):
@@ -448,20 +449,20 @@ def news_api_get_scores(query_list):
     """
     results_dict = {}
 
-    # iterate over every stock symbol query
-    for query in query_list:
-        headline_obj = NEWS_API.get_top_headlines(language="en", q=query, country="us")
+    # # iterate over every stock symbol query
+    # for query in query_list:
+    #     headline_obj = NEWS_API.get_top_headlines(language="en", q=query, country="us")
 
-        headline_list = news_api_format_data(headline_obj)
-        results_dict[query] = []
-        print("Number of articles for " + query + str(len(headline_list)))
+    #     headline_list = news_api_format_data(headline_obj)
+    #     results_dict[query] = []
+    #     print("Number of articles for " + query + str(len(headline_list)))
 
-        # extract headlines, get scores
-        for td_tuple in headline_list:
-            combined_txt = td_tuple[0] + ". " +  td_tuple[1]
-            article_polarity = get_polarity_score(combined_txt)
-            results = (td_tuple[0], article_polarity, td_tuple[2], td_tuple[3])
-            results_dict[query].append(results)
+    #     # extract headlines, get scores
+    #     for td_tuple in headline_list:
+    #         combined_txt = td_tuple[0] + ". " +  td_tuple[1]
+    #         article_polarity = get_polarity_score(combined_txt)
+    #         results = (td_tuple[0], article_polarity, td_tuple[2], td_tuple[3])
+    #         results_dict[query].append(results)
 
     #return results_dict
     pass
