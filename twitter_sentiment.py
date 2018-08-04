@@ -701,6 +701,8 @@ while running:
 
         (sent, sent_mag, pi, searched_date) = search_tweets(id_tuple, search_terms_dict)
 
+        num_records = len(sent)
+
         if searched_date > ref_date_2: # date changed, clear existing scores
             sentiment_score.clear()
             pi_count.clear()
@@ -714,9 +716,7 @@ while running:
         score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
 
 
-        for pi_score in pi:
-            if pi_score == 1:
-                pi_count[id_tuple] += 1
+        pi_count[id_tuple] += sum(pi)
 
         score[id_tuple] += (pi_count[id_tuple] / len(pi) * 500) if len(pi) != 0 else 0 #greater score for larger percent PI
 
@@ -734,7 +734,8 @@ while running:
             avg_sent_float=avg_sent,
             avg_sent_mag=sentiment_score[id_tuple],
             pi_count=pi_count[id_tuple],
-            iteration=search_count
+            iteration=search_count,
+            num_tweets=num_records
         )
         table.insert(save_data)
 
@@ -751,3 +752,8 @@ while running:
     if search_count > 2:
         running = False
         break
+
+    score.clear()
+    sentiment_score.clear()
+    pi_count.clear()
+
