@@ -62,7 +62,7 @@ def populate_scores():
 # ---------------------------- MAIN -------------------------------------
 # new datetime object: DT.datetime(2018, 7, 10)  <== {YR, MM, DD}
 
-score_regression("SBUX")
+# score_regression("SBUX")
 
 # populate_scores()
 
@@ -74,16 +74,30 @@ score_regression("SBUX")
 #print (scores_db.tables)                                # > TSLA
 #print (scores_db["AAPL"].columns)
 
-'''
+
 scores = defaultdict(float)
 for TABLE in scores_db.tables:
     print (TABLE)
-    # scores[TABLE] = defaultdict(int)   # initialize dict of scores associated with a date
+    scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
                               # { 'date': score }
     for SYM in scores_db[TABLE]:
         print ( SYM["timestamp"].date(), SYM["score"] )
-        # scores[SYM["timestamp"].date()] += SYM["score"]
-'''
+
+        if (SYM["timestamp"].date() in scores.keys()):
+            tmp = scores[SYM["timestamp"].date()]
+            scores[TABLE][SYM["timestamp"].date()] = (tmp + SYM["score"])/2
+        else:
+            scores[TABLE][SYM["timestamp"].date()] = SYM["score"]
+
+
+for key in scores.keys():
+    print (key)
+
+    for SYM in scores[key].keys():
+        print (SYM, scores[key][SYM])
+
+#print (scores)
+
 '''
 print (scores_db.tables)
 for table in scores:
