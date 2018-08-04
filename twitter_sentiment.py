@@ -90,6 +90,8 @@ set_time = time.time()
 
 # Constants
 MINUTE_DELAY = 0.5
+NUM_TWEETS_TO_FETCH = 500
+LOOP_ITERATIONS = 10
 
 # reference variables
 ref_date = datetime.date.today()
@@ -255,7 +257,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) <= 500:
+    while len(search_result["statuses"]) != 0 and len(tweets) <= NUM_TWEETS_TO_FETCH:
         print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
@@ -749,7 +751,7 @@ while running:
         print ("{}: Sentiment Score: {}, PI count : {}, Score: {}".format(company_tuple, sentiment_score[company_tuple] \
                                         , pi_count[company_tuple], score[company_tuple]))
 
-    if search_count > 2:
+    if search_count > LOOP_ITERATIONS:
         running = False
         break
 
