@@ -726,6 +726,7 @@ while running:
 
         # save score to database
         table = db2[ticker_symbol]
+        aws_table = AWS_RDS[ticker_symbol]
 
         save_data = dict (
             timestamp=datetime.datetime.now(),
@@ -737,6 +738,7 @@ while running:
             num_tweets=num_records
         )
         table.insert(save_data)
+        aws_table.insert(save_data)
 
         # pause time of loop execution until MINUTE_DELAY passes between each search_tweets call
         time_diff = time.time() - set_time
