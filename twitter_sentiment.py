@@ -469,13 +469,12 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
                 if (word_tup[1] == "NOUN" or word_tup[1] == "PRON"):
                     pos_count += 1
 
-    if string_word_ratio(text, reject_terms) >= 90:
-        neg_count += 1
+    if string_word_ratio(text, reject_terms) >= 95:
+        neg_count += 2
 
     if string_word_ratio(text, accept_terms) > 85:
         pos_count += 1
-    else:
-        neg_count += 1
+
 
     if pos_count > neg_count:
         flag = False
