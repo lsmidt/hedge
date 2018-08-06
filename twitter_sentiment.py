@@ -599,7 +599,7 @@ def search_tweets(ticker_symbol, search_terms_dic: dict):
     reject_count = 0 # count passed up tweets
 
     if len(combined) == 0:
-        return (None, None, None, datetime.date.today())
+        return ([], [], [], datetime.date.today())
 
     for tweet in combined:
 
