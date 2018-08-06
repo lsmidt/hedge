@@ -637,7 +637,6 @@ def search_tweets(ticker_symbol, search_terms_dic: dict):
 
     return (sentiment, sentiment_magnitude, purchase_intent, date)
 
-
 def reduce_lengthening(text):
     """
     function to shorten words that have been made too long. IE "finallllllly"
@@ -715,7 +714,7 @@ while running:
         .format(ticker_symbol, sentiment_score[ticker_symbol], avg_sent, pi_count[ticker_symbol], score[ticker_symbol]))
 
         # save score to database
-        table = db2[ticker_symbol[0]]
+        table = db2[ticker_symbol]
 
         save_data = dict (
             timestamp=datetime.datetime.now(),
