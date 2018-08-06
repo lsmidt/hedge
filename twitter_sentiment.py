@@ -90,8 +90,8 @@ set_time = time.time()
 
 # Constants
 MINUTE_DELAY = 0.5
-NUM_TWEETS_TO_FETCH = 300
-LOOP_ITERATIONS = 10
+NUM_TWEETS_TO_FETCH = 500
+LOOP_ITERATIONS = 1000
 
 # reference variables
 ref_date = datetime.date.today()
@@ -744,4 +744,3 @@ while running:
     score.clear()
     sentiment_score.clear()
     pi_count.clear()
-
