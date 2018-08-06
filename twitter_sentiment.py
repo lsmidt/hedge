@@ -22,24 +22,35 @@ import urllib.parse
 import copy
 import re
 import json
-from datetime import date
 import pandas as pd
 import pprint
 import vaderSentiment.vaderSentiment as sia
 import time
 import datetime
-from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
-from nltk.metrics.scores import accuracy
+
 from nltk import word_tokenize
 from nltk import pos_tag
 from collections import defaultdict
-
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 from textblob import TextBlob
+import dbapi
+import sqlalchemy
+import pymysql
+
+# Set up AWS Database for storage
+HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
+PORT = 3306
+DB_NAME = "scores_timeseries"
+DB_USER = "hedgeADMIN"
+DB_PW = "bluefootedboobie123"
+
+AWS_RDS = dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
+(DB_USER, DB_PW, HOST, DB_NAME))
 
 db = dataset.connect("sqlite:///tweetbase.db") # connect Dataset to Tweetbase
 db2 = dataset.connect("sqlite:///scorebase.db")
+
 
 printer = pprint.PrettyPrinter() # printer object
 
