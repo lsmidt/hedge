@@ -1,0 +1,87 @@
+{
+    "AAPL": {
+        "accept": [
+            "airpods"
+        ],
+        "name": "Apple Inc.",
+        "reject": [
+            "pie",
+            "big mac",
+            "juice",
+            "miller",
+            "makeup",
+            "fleetwood",
+            "macaroni",
+            "cheese",
+            "cider"
+        ],
+        "search": "apple OR iphone OR iPad OR ios OR Macbook OR iMac OR apple watch OR airpods",
+        "search_list": [
+            "apple",
+            "iPhone",
+            "iPad",
+            "iPod",
+            "Mac",
+            "macOS",
+            "Apple watch",
+            "iTunes"
+        ]
+    },
+    "AMZN": {
+        "accept": [
+            "amazon"
+        ],
+        "name": "Amazon",
+        "reject": [
+            "rain forest",
+            "river"
+        ],
+        "search": "Amazon OR Amazon Basics OR Audible OR Zappos",
+        "search_list": [
+            "Amazon",
+            "Amazon Basics",
+            "Audible",
+            "Zappos"
+        ]
+    },
+    "SBUX": {
+        "accept": [
+            "coffee"
+        ],
+        "name": "Starbucks",
+        "reject": [
+            ""
+        ],
+        "search": "Starbucks OR Starbs",
+        "search_list": [
+            "Starbucks",
+            "starbs"
+        ]
+    },
+    "SNAP": {
+        "accept": [
+            "snapchat",
+            "snap chat",
+            "snap story",
+            "on snap",
+            "our snap",
+            "snap me",
+            "snapped me"
+        ],
+        "name": "Snapchat",
+        "reject": [
+            "oh snap",
+            "snap out",
+            "snap on",
+            "low-income",
+            "SNAP benefits",
+            "SNAP program"
+        ],
+        "search": "Snap OR Snapchat",
+        "search_list": [
+            "Snap",
+            "Snapchat",
+            "snap chat"
+        ]
+    }
+}

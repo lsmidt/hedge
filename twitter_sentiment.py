@@ -592,7 +592,7 @@ def search_tweets(ticker_symbol, search_terms_dic: dict):
         return (None, None, None, datetime.date.today())
 
     for tweet in combined:
-        
+
         date = get_tweet_date(tweet["created_at"]).date()
 
         if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
@@ -650,7 +650,7 @@ def reduce_lengthening(text):
 
 ####---------- Run Program --------------#####
 
-with open("ticker_keywords.json", "w") as tdk:
+with open("ticker_keywords.json") as tdk:
     ticker_keyword_dict = json.load(tdk)
 
 # ------ STREAM ----- #
