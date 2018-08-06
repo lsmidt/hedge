@@ -543,7 +543,7 @@ def score_magnitude(score: float, threshold: float):
     else:
         return 0
 
-def search_tweets(id_tuple, search_terms_dic: dict):
+def search_tweets(ticker_symbol, search_terms_dic: dict):
     """
     Manage the tweet search for each company
     RETURN sentiment and purchase intent information for each company
@@ -559,28 +559,28 @@ def search_tweets(id_tuple, search_terms_dic: dict):
     ### Search Tweets
 
     # if a since_id already exists, use it. else use 0 as since_id
-    if "search" in index_dict[id_tuple]:
-        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], \
-                                                    since_id=index_dict[id_tuple]["search"])
-        index_dict[id_tuple]["search"] = since_id
+    if "search" in index_dict[ticker_symbol]:
+        found_tweets, since_id = get_search_results(search_terms_dic["name"], ticker_symbol, search_terms_dic["search"], \
+                                                    since_id=index_dict[ticker_symbol]["search"])
+        index_dict[ticker_symbol]["search"] = since_id
     else:
-        found_tweets, since_id = get_search_results(id_tuple[1], id_tuple[0], search_terms_dic["search"], since_id=0)
-        index_dict[id_tuple]["search"] = since_id
+        found_tweets, since_id = get_search_results(search_terms_dic["name"], ticker_symbol, search_terms_dic["search"], since_id=0)
+        index_dict[ticker_symbol]["search"] = since_id
 
 
-    screen_name = id_tuple[1]
+    screen_name = search_terms_dic["name"]
     user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
 
 
     ### Mentions
-    men_since_id = index_dict[id_tuple]["mentions"] if "mentions" in index_dict[id_tuple] else 0
+    men_since_id = index_dict[ticker_symbol]["mentions"] if "mentions" in index_dict[ticker_symbol] else 0
     men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
-    index_dict[id_tuple]["mentions"] = new_men_since_id
+    index_dict[ticker_symbol]["mentions"] = new_men_since_id
 
     ### Timeline
-    # tl_since_id = index_dict[id_tuple]["timeline"] if "timeline" in index_dict[id_tuple] else 0
+    # tl_since_id = index_dict[ticker_symbol]["timeline"] if "timeline" in index_dict[ticker_symbol] else 0
     # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
-    # index_dict[id_tuple]["timeline"] = new_tl_since_id
+    # index_dict[ticker_symbol]["timeline"] = new_tl_since_id
 
 
     combined = combine_search_results(found_tweets, [], [])
@@ -592,6 +592,7 @@ def search_tweets(id_tuple, search_terms_dic: dict):
         return (None, None, None, datetime.date.today())
 
     for tweet in combined:
+        
         date = get_tweet_date(tweet["created_at"]).date()
 
         if filter_tweet(tweet, search_terms_dic["search"], search_terms_dic["accept"], search_terms_dic["reject"]):
@@ -619,7 +620,7 @@ def search_tweets(id_tuple, search_terms_dic: dict):
             shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
             print ("Purchase Intent: " + str(shows_pi) + "\n")
-            # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
+            # save_to_file( "searched_tweets", ticker_symbol, tweet, polarity)
 
             passed_tweets.append(tweet["text"])
 
@@ -649,27 +650,11 @@ def reduce_lengthening(text):
 
 ####---------- Run Program --------------#####
 
-ticker_keyword_dict = { ("AAPL", "Apple") : {"search" : "apple OR iphone OR iPad OR ios OR Macbook OR iMac OR apple watch OR airpods", \
-                                    "search_list" : ["apple", "iPhone", "iPad", "iPod", "Mac", "macOS", "Apple watch", "iTunes"],
-                                    "accept" : ["airpods"],
-                                    "reject" : ["pie", "big mac", "juice", "miller", "makeup", "fleetwood", "macaroni", "cheese", "cider"]},
-                ("SNAP", "Snap"): {"search" : "Snap OR Snapchat", \
-                                    "search_list": ["Snap", "Snapchat", "snap chat"],
-                                   "accept" : ["snapchat", "snap chat", "snap story", "on snap", "our snap", "snap me", "snapped me"],
-                                   "reject" : ["oh snap", "snap out", "snap on", "low-income", "SNAP benefits", "SNAP program"]},
-                ("AMZN", "Amazon"): {"search" : "Amazon OR Amazon Basics OR Audible OR Zappos",  \
-                                    "search_list" : ["Amazon", "Amazon Basics", "Audible", "Zappos"],
-                                    "accept" : [ "amazon" ],
-                                    "reject" : ["rain forest", "river"]},
-                ("SBUX", "Starbucks") : {"search": "Starbucks OR Starbs",
-                                         "search_list" : ["Starbucks", "starbs"],
-                                         "accept" : ["coffee"],
-                                          "reject" : [""]
-                }
-               }
+with open("ticker_keywords.json", "w") as tdk:
+    ticker_keyword_dict = json.load(tdk)
 
 # ------ STREAM ----- #
-# for id_tuple, search_terms_dict in ticker_keyword_dic.items():
+# for ticker_symbol, search_terms_dict in ticker_keyword_dic.items():
 
 #     search_tms = search_terms_dict["search"]
 #     search_tms_list = search_terms_dict["search_list"]
@@ -697,11 +682,11 @@ while running:
 
     search_count += 1
 
-    for id_tuple, search_terms_dict in ticker_keyword_dict.items():
+    for ticker_symbol, search_terms_dict in ticker_keyword_dict.items():
 
         set_time = time.time() #reset loop timer
 
-        (sent, sent_mag, pi, searched_date) = search_tweets(id_tuple, search_terms_dict)
+        (sent, sent_mag, pi, searched_date) = search_tweets(ticker_symbol, search_terms_dict)
 
         num_records = len(sent)
 
@@ -715,27 +700,27 @@ while running:
 
 
         avg_sent = sum(sent) / len(sent) if len(sent) != 0 else 0
-        score[id_tuple] += 500 * avg_sent #greater score for greater avg sentiment
+        score[ticker_symbol] += 500 * avg_sent #greater score for greater avg sentiment
 
 
-        pi_count[id_tuple] += sum(pi)
+        pi_count[ticker_symbol] += sum(pi)
 
-        score[id_tuple] += (pi_count[id_tuple] / len(pi) * 500) if len(pi) != 0 else 0 #greater score for larger percent PI
+        score[ticker_symbol] += (pi_count[ticker_symbol] / len(pi) * 500) if len(pi) != 0 else 0 #greater score for larger percent PI
 
-        sentiment_score[id_tuple] = sum(sent_mag)
+        sentiment_score[ticker_symbol] = sum(sent_mag)
 
         print ("{}: Sentiment Score: {}, Avg Sent: {}, PI count : {}, Score: {}"\
-        .format(id_tuple, sentiment_score[id_tuple], avg_sent, pi_count[id_tuple], score[id_tuple]))
+        .format(ticker_symbol, sentiment_score[ticker_symbol], avg_sent, pi_count[ticker_symbol], score[ticker_symbol]))
 
         # save score to database
-        table = db2[id_tuple[0]]
+        table = db2[ticker_symbol[0]]
 
         save_data = dict (
             timestamp=datetime.datetime.now(),
-            score=score[id_tuple],
+            score=score[ticker_symbol],
             avg_sent_float=avg_sent,
-            avg_sent_mag=sentiment_score[id_tuple],
-            pi_count=pi_count[id_tuple],
+            avg_sent_mag=sentiment_score[ticker_symbol],
+            pi_count=pi_count[ticker_symbol],
             iteration=search_count,
             num_tweets=num_records
         )
