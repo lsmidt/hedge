@@ -236,7 +236,8 @@ def find_text_sentiment(text) -> float:
     """
     determine the sentiment of a tweet for a specific company
     """
-    negative_words = ["crash", "crashing", "problems", "not working", "fix", "shutting down"]
+    negative_words = ["crash", "crashing", "problems", "not working", "fix", "shutting down", "sucks", "sucking",\
+     "closed", "blows", "shitty", "shit", "crap", "terrible"]
 
     score = SIA.polarity_scores(text)["compound"]
 
