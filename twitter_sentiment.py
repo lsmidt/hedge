@@ -90,7 +90,7 @@ set_time = time.time()
 
 # Constants
 MINUTE_DELAY = 0.5
-NUM_TWEETS_TO_FETCH = 500
+NUM_TWEETS_TO_FETCH = 300
 LOOP_ITERATIONS = 10
 
 # reference variables
@@ -568,14 +568,14 @@ def search_tweets(ticker_symbol, search_terms_dic: dict):
         index_dict[ticker_symbol]["search"] = since_id
 
 
-    screen_name = search_terms_dic["name"]
-    user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
+    #screen_name = search_terms_dic["name"]
+    #user_id = lookup_user_id(screen_name) # assume screen_name from TSD is always correct
 
 
     ### Mentions
-    men_since_id = index_dict[ticker_symbol]["mentions"] if "mentions" in index_dict[ticker_symbol] else 0
-    men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
-    index_dict[ticker_symbol]["mentions"] = new_men_since_id
+    # men_since_id = index_dict[ticker_symbol]["mentions"] if "mentions" in index_dict[ticker_symbol] else 0
+    # men_tweets, new_men_since_id = get_recent_mentions(screen_name, men_since_id)
+    # index_dict[ticker_symbol]["mentions"] = new_men_since_id
 
     ### Timeline
     # tl_since_id = index_dict[ticker_symbol]["timeline"] if "timeline" in index_dict[ticker_symbol] else 0
@@ -651,7 +651,10 @@ def reduce_lengthening(text):
 ####---------- Run Program --------------#####
 
 with open("ticker_keywords.json") as tdk:
-    ticker_keyword_dict = json.load(tdk)
+    try:
+        ticker_keyword_dict = json.load(tdk)
+    except json.decoder.JSONDecodeError as JSON_error:
+        print("Error reading ticker_keyword dicitonary.")
 
 # ------ STREAM ----- #
 # for ticker_symbol, search_terms_dict in ticker_keyword_dic.items():
