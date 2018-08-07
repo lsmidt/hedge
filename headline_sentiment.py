@@ -474,4 +474,4 @@ def news_api_get_scores(query_list):
 #----------- run program ------------#
 
 RESULT = run_news_scan(["AA", "TIVO"])
-# print(RESULT)
+print(RESULT)
