@@ -259,7 +259,15 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
         since_id = 0
 
     print ("Grabbing Tweets for query {}".format(search_terms))
-    search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=200, lang="en")
+    
+    try:
+        search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=200, lang="en")
+   
+    except TwythonError as e:
+        print("Twython Error (on FIRST search): {}".format( str(e) ))
+        return ([], 0)
+    
+    
     tweets = []
 
     _max_id = search_result["search_metadata"]["max_id"]
@@ -277,8 +285,12 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
             highest_id = max(highest_id, tweet["id"])
             tweets.append(tweet)
 
-        search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=200, lang="en")
-
+        try:
+            search_result = TWY.search(q=search_terms, result_type="recent", max_id=lowest_id-1, since_id=since_id, count=200, lang="en")
+        except TwythonError as e:
+            print ("Twython Error (on a subsequent search): {}".format( str(e) ))
+            return (tweets, highest_id)
+        
     return (tweets, highest_id)
 
 def combine_search_results(first, second, third):
@@ -593,7 +605,6 @@ def search_tweets(ticker_symbol, search_terms_dic: dict):
     # tl_tweets, new_tl_since_id = get_user_timeline(user_id, tl_since_id)
     # index_dict[ticker_symbol]["timeline"] = new_tl_since_id
 
-
     combined = combine_search_results(found_tweets, [], [])
 
     passed_tweets = []
@@ -624,13 +635,13 @@ def search_tweets(ticker_symbol, search_terms_dic: dict):
             subjectivity = get_subjectivity(tweet["text"])
 
 
-            print ( tweet["text"] )
-            print ("Polarity: " + str(polarity))
-            print ("Subjectivity: " + str( subjectivity))
+            #print ( tweet["text"] )
+            #print ("Polarity: " + str(polarity))
+            #print ("Subjectivity: " + str( subjectivity))
 
             shows_pi = tweet_shows_purchase_intent(tweet["text"])
 
-            print ("Purchase Intent: " + str(shows_pi) + "\n")
+            #print ("Purchase Intent: " + str(shows_pi) + "\n")
             # save_to_file( "searched_tweets", ticker_symbol, tweet, polarity)
 
             passed_tweets.append(tweet["text"])
