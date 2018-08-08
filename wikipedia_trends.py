@@ -52,8 +52,11 @@ def get_wiki_views(article: str, start_date: str, end_date: str):
     """
     return dict of datetime : views for the period between start and end date (both inclusive)
     """
-    full_result = pageviewapi.per_article('en.wikipedia', article, start_date, end_date,\
+    try:
+        full_result = pageviewapi.per_article('en.wikipedia', article, start_date, end_date,\
                          access='all-access', agent='all-agents', granularity='daily') 
+    except pageviewapi.client.ZeroOrDataNotLoadedException as e:
+        full_result = dict(items=[])
 
     result_subset = {}
     
@@ -69,6 +72,8 @@ def get_wiki_views(article: str, start_date: str, end_date: str):
 for ticker, terms in ticker_keyword_dict.items():
     article_list = terms["wiki"]
 
+    total_views = 0
+
     for article in article_list:
         today = datetime.datetime.today()
         yesterday = today - datetime.timedelta(1)
@@ -78,18 +83,20 @@ for ticker, terms in ticker_keyword_dict.items():
 
         wiki_views_dict = get_wiki_views(article, ys, ys)
 
-        # save to database 
-        name = "WIKI: {}".format(ticker)
-        table = AWS_RDS[name]
+        for date, score in wiki_views_dict.items():
+            total_views += score
+        
+    # save to database 
+    name = "WIKI: {}".format(ticker)
+    table = AWS_RDS[name]
 
-        for date, views in wiki_views_dict.items():
-
-            save_info = dict(
-                timestamp=date,
-                views=views
-            )
-
-            table.insert(save_info)
+    save_info = dict(
+        timestamp=date,
+        views=total_views
+    )
+    print ("{}: ({}, {})".format(ticker, date, total_views))
+    
+    table.insert(save_info)
 
 
    
