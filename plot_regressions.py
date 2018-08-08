@@ -95,7 +95,7 @@ print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
 print ("-------------------- PRE --------------------")
 scores = defaultdict(float)
 
-for TABLE in scores_db.tables:
+for TABLE in AWS_RDS.tables:
     print (TABLE)
     scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
                               # { 'date': score }
