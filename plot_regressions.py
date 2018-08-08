@@ -4,7 +4,6 @@ import dataset
 import dbapi
 import sqlalchemy
 import pymysql
-import boto3
 
 from iexfinance import Stock, get_historical_data
 from collections import defaultdict
@@ -133,7 +132,8 @@ print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
 print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
 print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
 
-#print (AWS_RDS.tables)
+#print (scores_db.tables)
+print (AWS_RDS.tables)
 
 #for table in scores:
 #    print(table)
