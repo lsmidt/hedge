@@ -22,7 +22,7 @@ DB_PW = "bluefootedboobie123"
 # connect to Datasets
 scores_db = dataset.connect("sqlite:///scorebase.db")
 AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
-(DB_USER, DB_PW, HOST, DB_NAME))
+(DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
 
 # function to plot stock's last opening and closing prices across a timeframe.
 # DEFAULT TIMEFRAME IS ONE WEEK
