@@ -4,6 +4,15 @@
             "airpods"
         ],
         "name": "Apple Inc.",
+        "wiki": [
+            "Apple Inc.",
+            "iPhone",
+            "iPad",
+            "iTunes",
+            "iOS",
+            "Macintosh",
+            "Apple Music"
+        ],
         "reject": [
             "pie",
             "big mac",
@@ -32,6 +41,12 @@
             "amazon"
         ],
         "name": "Amazon",
+        "wiki" : [
+            "Amazon (company)",
+            "Zappos",
+            "Audible (store)",
+            "Amazon Kindle"
+        ],
         "reject": [
             "rain forest",
             "river"
@@ -49,6 +64,9 @@
             "coffee"
         ],
         "name": "Starbucks",
+        "wiki": [
+            "Starbucks"
+        ],
         "reject": [
             ""
         ],
@@ -69,6 +87,11 @@
             "snapped me"
         ],
         "name": "Snapchat",
+        "wiki": [
+            "Snap Inc.",
+            "Snapchat",
+            "Evan Speigel"
+        ],
         "reject": [
             "oh snap",
             "snap out",
