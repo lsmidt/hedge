@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 import datetime as DT
 import dataset
+import dbapi
+import sqlalchemy
 import pymysql
+import boto3
 
 from iexfinance import Stock, get_historical_data
 from collections import defaultdict
@@ -105,6 +108,9 @@ for TABLE in scores_db.tables:
             tmp_num_tweets = scores[TABLE][SYM["timestamp"].date()][1]
 
             num_tweets = tmp_num_tweets + SYM["num_tweets"]
+            if (num_tweets == 0):
+                continue
+
             score = (tmp_score * tmp_num_tweets + SYM["score"] * SYM["num_tweets"])/num_tweets
 
             scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
@@ -127,7 +133,7 @@ print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
 print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
 print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
 
-print (AWS_RDS.tables)
+#print (AWS_RDS.tables)
 
 #for table in scores:
 #    print(table)
