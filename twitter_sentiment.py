@@ -27,6 +27,7 @@ import pprint
 import vaderSentiment.vaderSentiment as sia
 import time
 import datetime
+import sys
 
 from nltk import word_tokenize
 from nltk import pos_tag
@@ -459,7 +460,7 @@ def filter_tweet(tweet, search_terms="", accept_terms=[], reject_terms=[]):
         accept_terms = accept_tms
         reject_terms = reject_tms
 
-    if timestamp.date() != datetime.date.today():
+    if timestamp.date() < datetime.date.today():
         return False
 
     bad_words = "porn pussy babe nude pornstar sex \
