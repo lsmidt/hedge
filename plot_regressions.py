@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import datetime as DT
 import dataset
+import pymysql
 
 from iexfinance import Stock, get_historical_data
 from collections import defaultdict
@@ -8,8 +9,18 @@ from collections import defaultdict
 
 today = DT.date.today() - DT.timedelta(days = 1)
 week_ago = today - DT.timedelta(days = 7)
-scores_db = dataset.connect("sqlite:///scorebase.db") # connect Dataset to Tweetbase
 
+# AWS CREDENTIALS
+HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
+PORT = 3306
+DB_NAME = "scores_timeseries"
+DB_USER = "hedgeADMIN"
+DB_PW = "bluefootedboobie123"
+
+# connect to Datasets
+scores_db = dataset.connect("sqlite:///scorebase.db")
+AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
+(DB_USER, DB_PW, HOST, DB_NAME))
 
 # function to plot stock's last opening and closing prices across a timeframe.
 # DEFAULT TIMEFRAME IS ONE WEEK
@@ -74,6 +85,9 @@ def populate_scores():
 #print (scores_db.tables)                                # > TSLA
 #print (scores_db["AAPL"].columns)
 
+print ("- - - - - - - - - - - - - - - - - - - - - - -")
+print ("- - - - - - - - - - LOCAL - - - - - - - - - -")
+print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
 
 
 print ("-------------------- PRE --------------------")
@@ -108,6 +122,15 @@ for key in scores.keys():
     for SYM in scores[key].keys():
         print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
 
+
+print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
+print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
+print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
+
+print (AWS_RDS.tables)
+
+#for table in scores:
+#    print(table)
 
 
 
