@@ -12,7 +12,7 @@ import sqlalchemy
 import pymysql
 import dbapi
 
-class wiki_trends():
+class WikiTrends():
 
 ###------- GLOBAL VARS --------####
 
