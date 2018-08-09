@@ -4,6 +4,7 @@ import dataset
 import dbapi
 import sqlalchemy
 import pymysql
+import time
 
 from iexfinance import Stock, get_historical_data
 from collections import defaultdict
@@ -129,41 +130,44 @@ for key in scores.keys():
         print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
 '''
 
+while True:
+    print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
+    print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
+    print ("- - - - - - - - - - - - - - - - - - - - - - -")
+    for TABLE in AWS_RDS.tables:
+        if (TABLE.find("WIKI") != -1):
+            continue
 
-print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
-print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
-print ("- - - - - - - - - - - - - - - - - - - - - - -")
-for TABLE in AWS_RDS.tables:
-    if (TABLE.find("WIKI") != -1):
-        continue
+        #print (TABLE)
+        scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
+                                  # { 'date': score }
+        for SYM in AWS_RDS[TABLE]:
+            #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
 
-    #print (TABLE)
-    scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
-                              # { 'date': score }
-    for SYM in AWS_RDS[TABLE]:
-        #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
+            if (SYM["timestamp"].date() in scores[TABLE].keys()):
+                tmp_score = scores[TABLE][SYM["timestamp"].date()][0]
+                tmp_num_tweets = scores[TABLE][SYM["timestamp"].date()][1]
 
-        if (SYM["timestamp"].date() in scores[TABLE].keys()):
-            tmp_score = scores[TABLE][SYM["timestamp"].date()][0]
-            tmp_num_tweets = scores[TABLE][SYM["timestamp"].date()][1]
+                num_tweets = tmp_num_tweets + SYM["num_tweets"]
+                if (num_tweets == 0):
+                    continue
 
-            num_tweets = tmp_num_tweets + SYM["num_tweets"]
-            if (num_tweets == 0):
-                continue
+                score = (tmp_score * tmp_num_tweets + SYM["score"] * SYM["num_tweets"])/num_tweets
 
-            score = (tmp_score * tmp_num_tweets + SYM["score"] * SYM["num_tweets"])/num_tweets
-
-            scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
-        else:
-            scores[TABLE][SYM["timestamp"].date()] = \
-                        (SYM["score"], SYM["num_tweets"])
+                scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
+            else:
+                scores[TABLE][SYM["timestamp"].date()] = \
+                            (SYM["score"], SYM["num_tweets"])
 
 
-for key in scores.keys():
-    print (key, "   |            |        |")
+    for key in scores.keys():
+        print (key, "   |            |        |")
 
-    for SYM in scores[key].keys():
-        print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
+        for SYM in scores[key].keys():
+            print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
+
+    time.sleep(10)
+
 
 
 #print (scores_db.tables)
