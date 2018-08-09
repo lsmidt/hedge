@@ -14,7 +14,7 @@ import dbapi
 
 class WikiTrends():
 
-###------- GLOBAL VARS --------####
+    ###------- GLOBAL VARS --------####
 
     # Set up AWS Database for storage
     HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
@@ -50,12 +50,16 @@ class WikiTrends():
 
 
 
-    def get_wiki_views(self, article: str, start_date: str, end_date: str):
+    def get_wiki_views(self, article: str, start_date, end_date):
         """
         return dict of datetime : views for the period between start and end date (both inclusive)
         """
+
+        _st = self._to_wiki_date_string(start_date)
+        _nd = self._to_wiki_date_string(end_date)
+
         try:
-            full_result = pageviewapi.per_article('en.wikipedia', article, start_date, end_date,\
+            full_result = pageviewapi.per_article('en.wikipedia', article, _st, _nd,\
                             access='all-access', agent='all-agents', granularity='daily') 
         except pageviewapi.client.ZeroOrDataNotLoadedException as e:
             full_result = dict(items=[])
