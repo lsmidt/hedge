@@ -39,6 +39,7 @@ import dbapi
 import sqlalchemy
 import pymysql
 
+
 # Set up AWS Database for storage
 HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
 PORT = 3306
