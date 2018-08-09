@@ -5,6 +5,7 @@ import dbapi
 import sqlalchemy
 import pymysql
 import time
+import datetime
 
 from iexfinance import Stock, get_historical_data
 from collections import defaultdict
@@ -133,6 +134,7 @@ for key in scores.keys():
 while True:
     print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
     print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
+    print ("- - - -  %s - - - - -" % datetime.datetime.now())
     print ("- - - - - - - - - - - - - - - - - - - - - - -")
     for TABLE in AWS_RDS.tables:
         if (TABLE.find("WIKI") != -1):
