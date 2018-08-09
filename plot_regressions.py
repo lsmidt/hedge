@@ -112,21 +112,26 @@ def AWS_refresh():
 
 
 # ---------------------------- MAIN -------------------------------------
-# new datetime object: DT.datetime(2018, 7, 10)  <== {YR, MM, DD}
+
+scores = defaultdict(float)
+
+while True:
+    print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
+    print ("- - - -  %s - - - - -" % datetime.datetime.now())
+
+    AWS_refresh()
+
+    wiki_poll()
+
+    time.sleep(10)
+
+
 
 # score_regression("SBUX")
 
 # populate_scores()
 
-'''
-******************** DATABASE VISUALIZATION *********************
-'''
 
-
-#print (scores_db.tables)                                # > TSLA
-#print (scores_db["AAPL"].columns)
-
-scores = defaultdict(float)
 
 '''
 print ("- - - - - - - - - - - - - - - - - - - - - - -")
@@ -166,48 +171,4 @@ for key in scores.keys():
 
     for SYM in scores[key].keys():
         print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
-'''
-
-while True:
-    print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
-    print ("- - - -  %s - - - - -" % datetime.datetime.now())
-
-    AWS_refresh()
-
-    time.sleep(10)
-
-
-
-#print (scores_db.tables)
-#print (AWS_RDS.tables)
-
-#for table in scores:
-#    print(table)
-
-
-
-'''
-print (scores_db.tables)
-for table in scores:
-    print(table)
-'''
-    #for date in scores[table]:
-    #    print (string(date))
-
-
-
-
-'''
-for AAPL in scores_db["AAPL"]:
-    print (AAPL["score"])
-'''
-
-'''
-******************** DATABASE VISUALIZATION ********************
-'''
-
-'''
-tsla = Stock('TSLA')
-tsla.get_open()
-tsla.get_price()
 '''
