@@ -1,7 +1,7 @@
 # Goals:    combine wikipedia trends, scorebase.db, hedge_neural_net, and
 #           trends_twitter in a meaningful way;
 #           1. read in data from wikipedia trends and scorebase
-#           2. TWO PHASES:
+#           2. TWO Options:
 #                a) [EASY] plot last 90 days, scan every hour for breaks from
 #                   90 day standard deviation of moving average
 #                b) [HARDER] based on prediation from hedge_neural_net, scan
