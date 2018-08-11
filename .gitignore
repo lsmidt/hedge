@@ -5,3 +5,7 @@ create_company_data
 companies.db
 create_company_data
 scorebase.db
+AAPL.csv
+AMZN.csv
+SBUX.csv
+SNAP.csv

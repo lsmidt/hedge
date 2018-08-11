@@ -44,22 +44,16 @@ wiki = WikiTrends()
 #         result = AWS_RDS[table].all()
 #         datafreeze.freeze(result, format="csv", filename="{}.csv".format(table))
 
-#         # #print (TABLE)
-#         # scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
-#         #                         # { 'date': score }
-#         # for SYM in AWS_RDS[TABLE]:
-#             #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
-
 
 ### Run this to populate df and instantiate Prophet
 
 apple = pd.read_csv("AAPL.csv")
-apple.rename(index=str, columns = {"score" : "y", "timestamp" : "ds"})
-apple.head()
+apple.rename(columns={"score" : "y", "timestamp" : "ds"}, inplace=True)
+print (apple.head()) 
 
 prophet = fbprophet.Prophet()
 prophet.fit(apple[["ds", "y"]])
 
-forward = prophet.make_future_dataframe(365)
+forward = prophet.make_future_dataframe(50)
 
-forward.plot().line()
+forward.plot(type="scatter")
