@@ -49,7 +49,6 @@ class WikiTrends():
         return datetime_obj.strftime("%Y%m%d")
 
 
-
     def get_wiki_views(self, article: str, start_date, end_date):
         """
         return dict of datetime : views for the period between start and end date (both inclusive)
@@ -72,39 +71,40 @@ class WikiTrends():
 
         return result_subset
 
+    def run_wiki(self):
+        """
+        run the wikipedia scan, save for today
+        """
+        for ticker, terms in self.ticker_keyword_dict.items():
+            article_list = terms["wiki"]
 
-###------RUN PROGRAM ---------###
+            total_views = 0
 
-# for ticker, terms in ticker_keyword_dict.items():
-#     article_list = terms["wiki"]
+            for article in article_list:
+                today = datetime.datetime.today()
+                yesterday = today - datetime.timedelta(1)
+                
+                # td = self._to_wiki_date_string(today)
+                # ys = self._to_wiki_date_string(yesterday)
 
-#     total_views = 0
+                wiki_views_dict = self.get_wiki_views(article, yesterday.date(), today.date())
 
-#     for article in article_list:
-#         today = datetime.datetime.today()
-#         yesterday = today - datetime.timedelta(1)
-        
-#         td = _to_wiki_date_string(today)
-#         ys = _to_wiki_date_string(yesterday)
+                for date, score in wiki_views_dict.items():
+                    total_views += score
+                
+            # save to database 
+            name = "WIKI: {}".format(ticker)
+            table = self.AWS_RDS[name]
 
-#         wiki_views_dict = get_wiki_views(article, ys, ys)
+            save_info = dict(
+                timestamp=date,
+                views=total_views
+            )
+            print ("{}: ({}, {})".format(ticker, date, total_views))
+            
+            table.insert(save_info)
 
-#         for date, score in wiki_views_dict.items():
-#             total_views += score
-        
-#     # save to database 
-#     name = "WIKI: {}".format(ticker)
-#     table = AWS_RDS[name]
 
-#     save_info = dict(
-#         timestamp=date,
-#         views=total_views
-#     )
-#     print ("{}: ({}, {})".format(ticker, date, total_views))
     
-#     table.insert(save_info)
-
-
-   
 
 

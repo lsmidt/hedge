@@ -1,0 +1,65 @@
+"""
+File designed to test the prophet forcasting package on our data
+"""
+
+import fbprophet
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime as DT
+import dataset
+import dbapi
+import sqlalchemy
+import pymysql
+import time
+import datetime
+import datafreeze
+
+from iexfinance import Stock, get_historical_data
+from collections import defaultdict
+from wikipedia_trends import WikiTrends as WT
+
+from wikipedia_trends import WikiTrends
+
+# AWS CREDENTIALS
+HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
+PORT = 3306
+DB_NAME = "scores_timeseries"
+DB_USER = "hedgeADMIN"
+DB_PW = "bluefootedboobie123"
+
+# connect to Datasets
+scores_db = dataset.connect("sqlite:///scorebase.db")
+AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
+(DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
+
+wiki = WikiTrends()
+
+#wiki.run_wiki()
+
+### Run this to create company CSVs 
+
+# for table in AWS_RDS.tables:
+#     if (table.find("WIKI") == -1):
+        
+#         result = AWS_RDS[table].all()
+#         datafreeze.freeze(result, format="csv", filename="{}.csv".format(table))
+
+#         # #print (TABLE)
+#         # scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
+#         #                         # { 'date': score }
+#         # for SYM in AWS_RDS[TABLE]:
+#             #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
+
+
+### Run this to populate df and instantiate Prophet
+
+apple = pd.read_csv("AAPL.csv")
+apple.rename(index=str, columns = {"score" : "y", "timestamp" : "ds"})
+apple.head()
+
+prophet = fbprophet.Prophet()
+prophet.fit(apple[["ds", "y"]])
+
+forward = prophet.make_future_dataframe(365)
+
+forward.plot().line()
