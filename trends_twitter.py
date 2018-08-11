@@ -99,7 +99,7 @@ class MyListener(StreamListener):
 
 ''' ---------------------------- FUNCTIONS ---------------------------------'''
 
-'''
+
 def sync(topics):
     global most_common_words
     global tweets_per_topic
@@ -201,7 +201,7 @@ def filter_tweet(tweet):
 
     return True
 
-'''
+
 
 ''' ------------------------------ MAIN -----------------------------------'''
 # topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
@@ -217,7 +217,6 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
 '''
 
 
-'''
 
 topics = [ [ "bitcoin" ], ["BMW"], ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
             "Mr. Pure", "Ritz", "Crystal Bay", "Cascadia", "Ohana", "Big Shot", \
@@ -241,4 +240,3 @@ for i in range(len(topics)):
     print(most_common_words[i][0])
     print("NEG SENTIMENT: ({})".format(neg_sentiment[i]))
     print(most_common_words[i][1])
-'''
