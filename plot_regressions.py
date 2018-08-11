@@ -1,3 +1,8 @@
+#           PLOT REGRESSIONS                        #
+#                                                   #
+# Purpose: analyze data inside of our database,     #
+# relevant plots using matplotlib                   #
+
 import matplotlib.pyplot as plt
 import datetime as DT
 import dataset
@@ -121,7 +126,7 @@ while True:
 
     AWS_refresh()
 
-    wiki_poll()
+    #wiki_poll()
 
     time.sleep(10)
 
