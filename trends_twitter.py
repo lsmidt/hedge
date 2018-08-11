@@ -94,7 +94,12 @@ class MyListener(StreamListener):
         return True
 
 
+
+
+
 ''' ---------------------------- FUNCTIONS ---------------------------------'''
+
+'''
 def sync(topics):
     global most_common_words
     global tweets_per_topic
@@ -112,10 +117,10 @@ def sync(topics):
 
         # start_time = time.time()
 
-        '''
-        for t in topic:
-            twitter_stream.filter(track=[t])
-        '''
+
+        #for t in topic:
+        #    twitter_stream.filter(track=[t])
+
         twitter_stream.filter(track = topic)
 
         tweets_per_topic.append(tweets_collected)
@@ -196,6 +201,7 @@ def filter_tweet(tweet):
 
     return True
 
+'''
 
 ''' ------------------------------ MAIN -----------------------------------'''
 # topics = [ ["Programming", "Python", "Computer Science"], ["Lego"], ]
@@ -207,6 +213,10 @@ TEST FOR National Beverage Holding Co. (FIZZ)
 topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
             "Mr. Pure", "Ritz", "Crystal Bay", "Cascadia", "Ohana", "Big Shot", \
             "St. Nick's", "Double Hit"] ]
+
+'''
+
+
 '''
 
 topics = [ [ "bitcoin" ], ["BMW"], ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
@@ -231,3 +241,4 @@ for i in range(len(topics)):
     print(most_common_words[i][0])
     print("NEG SENTIMENT: ({})".format(neg_sentiment[i]))
     print(most_common_words[i][1])
+'''
