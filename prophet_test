@@ -13,12 +13,15 @@ import pymysql
 import time
 import datetime
 import datafreeze
-
 from iexfinance import Stock, get_historical_data
 from collections import defaultdict
 from wikipedia_trends import WikiTrends as WT
-
 from wikipedia_trends import WikiTrends
+
+import torch
+import torch.nn as nn
+import numpy as np
+from torch.autograd import Variable
 
 # AWS CREDENTIALS
 HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
@@ -56,4 +59,4 @@ prophet.fit(apple[["ds", "y"]])
 
 forward = prophet.make_future_dataframe(50)
 
-forward.plot(type="scatter")
+forward.plot() 
