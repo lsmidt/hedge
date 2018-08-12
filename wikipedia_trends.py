@@ -71,7 +71,7 @@ class WikiTrends():
 
         return result_subset
 
-    def run_wiki(self):
+    def run_wiki(self, days_back:int=0):
         """
         run the wikipedia scan, save today's run
         """
@@ -83,11 +83,12 @@ class WikiTrends():
             for article in article_list:
                 today = datetime.datetime.today()
                 yesterday = today - datetime.timedelta(1)
+                start_date = today - datetime.timedelta(days_back)
                 
                 # td = self._to_wiki_date_string(today)
                 # ys = self._to_wiki_date_string(yesterday)
-
-                wiki_views_dict = self.get_wiki_views(article, yesterday.date(), today.date())
+ 
+                wiki_views_dict = self.get_wiki_views(article, start_date, yesterday.date())
 
                 for date, score in wiki_views_dict.items():
                     total_views += score
