@@ -61,6 +61,9 @@ class MyListener(StreamListener):
             return
 
         try:
+            if (tweets_collected >= 5):
+                return False
+
             # if positive sentiment, write to j_pos
             # else, write to j_neg
             if (self.find_tweet_sentiment(t) > 0):
@@ -80,10 +83,9 @@ class MyListener(StreamListener):
                     return False
             '''
 
-            if (tweets_collected > 3):
-                return False
-
             return True
+
+
         except BaseException as e:
             print("Error on_data: %s" % str(e))
         return True
@@ -118,10 +120,9 @@ class TwitterTrends():
 
     def sync(self, topics):
         for topic in topics:
+            print("SEARCHING FOR %s" %topic)
             total_sentiment = 0
             tweets_collected = 0
-            tweets_per_topic = []
-
 
             # start_time = time.time()
 
@@ -129,9 +130,6 @@ class TwitterTrends():
             #    twitter_stream.filter(track=[t])
 
             self.twitter_stream.filter(track = topic)
-
-            tweets_per_topic.append(tweets_collected)
-
 
             extra_stop = list()
             for t in topic:
@@ -171,27 +169,28 @@ class TwitterTrends():
         total_sentiment = [ 0, 0 ]
         files = [ self.j_pos, self.j_neg ]
         file_counter = 0
-        count = list()
-        total_tweets = list()
+        count = []
+        # total_tweets = []
 
-        for f in files:
+        for list in files:
             count_all = Counter()
-            total_collected = 0
+            # total_collected = 0
 
-            for line in f:
-                tweet = json.loads(line) # load it as Python dict
+            for item in list:
+                tweet = json.loads(item) # load it as Python dict
 
                 terms_stop = [term for term in word_tokenize(tweet['text'].lower()) if \
                                         (term not in stop and term not in extra_stop)]
                 count_all.update(terms_stop)
-                total_sentiment[file_counter] += self.find_tweet_sentiment(tweet)
-                total_collected += 1
+                # total_sentiment[file_counter] += self.find_tweet_sentiment(tweet)
+                # total_collected += 1
 
-            total_tweets.append(total_collected)
+            # total_tweets.append(total_collected)
             count.append(count_all.most_common(5))
-            file_counter += 1
+            # file_counter += 1
 
-        return ([count, total_sentiment, total_tweets])
+        # return ([count, total_sentiment, total_tweets])
+        return ( [count, 0, 0] )
 
     def filter_tweet(tweet):
         """
@@ -220,38 +219,16 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
 
 '''
 
-topics = [ ["World Cup", "Mesi"], ["Lego"] ]
+topics = [ ["Donald Trump", "Trump"] ]
 
 tt = TwitterTrends()
 tt.sync(topics)
 
-'''
-topics = [ [ "bitcoin" ], ["BMW"], ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", \
-            "Mr. Pure", "Ritz", "Crystal Bay", "Cascadia", "Ohana", "Big Shot", \
-            "St. Nick's", "Double Hit"] ]
-most_common_words = []     # list of most common words to match each topic
-pos_sentiment = []
-neg_sentiment = []
-hash_sentiment = []
-twitter_stream = Stream(auth, MyListener())
-tweets_per_topic = []
 
-sync(topics)
-
-'''
+print (len(most_common_words))
 
 for i in range(len(topics)):
+    for topic in topics[i]:
+        print (topic)
+
     print (most_common_words[i][0])
-
-'''
-# PARSING
-for i in range(len(topics)):
-    print ("---------------------------------------------------")
-    print ("TWEETS COLLECTED:", tweets_per_topic[i])
-    for t in topics[i]:
-        print(t)
-    print("POS SENTIMENT: ({})".format(pos_sentiment[i]))
-    print(most_common_words[i][0])
-    print("NEG SENTIMENT: ({})".format(neg_sentiment[i]))
-    print(most_common_words[i][1])
-'''
