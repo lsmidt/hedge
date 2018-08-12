@@ -56,4 +56,4 @@ prophet.fit(apple[["ds", "y"]])
 
 forward = prophet.make_future_dataframe(50)
 
-forward.plot(type="scatter")
+forward.plot() 

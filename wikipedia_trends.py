@@ -73,7 +73,7 @@ class WikiTrends():
 
     def run_wiki(self):
         """
-        run the wikipedia scan, save for today
+        run the wikipedia scan, save today's run
         """
         for ticker, terms in self.ticker_keyword_dict.items():
             article_list = terms["wiki"]
