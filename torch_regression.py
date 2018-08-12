@@ -25,14 +25,12 @@ AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
 
 input_size = 3 # twitter_sent, headline_sent, wiki_views
 output_size = 1 # composite output
-num_epochs = 100
-learning_rate = 0.02
+num_epochs = 300
+learning_rate = 0.002
 
 
-#Data set
-#x_train = np.array([[1.564],[2.11],[3.3],[5.4]], dtype=np.float32)
+#Data and shit
 x_train = np.array([[450.,80.,14752.],[300.,88.,11000.],[260.,91.,9000.],[496.,98.,1000.],[200.,63.,2000.]],dtype=np.float32)
-#y_train = np.array([[8.0],[19.0],[25.0],[34.45]], dtype= np.float32)
 y_train = np.array([[3.2],[1.8],[0.2],[1.0],[-1.0]],dtype=np.float32)
 print('x_train:\n',x_train)
 print('y_train:\n',y_train)
@@ -52,6 +50,7 @@ model = LinearRegression(input_size,output_size)
 criterion = nn.MSELoss() # using Mean Squared Error loss
 optimizer = torch.optim.SGD(model.parameters(),lr=learning_rate) # using Stochastic Gradient Descent
 
+
 # train the Model
 for epoch in range(num_epochs):
 
@@ -63,11 +62,8 @@ for epoch in range(num_epochs):
     outputs = model(inputs) # generate output from model with all input vectors
     loss = criterion(outputs,targets) #loss function
     
-    optimizer.zero_grad() # zero the gradients
-    loss.backward() #backward propogation
-    optimizer.step() #1-step optimization(gradient descent)
     
-    if(epoch+1) % 1 ==0:
+    if(epoch+1) %5 ==0:
         print('epoch [%d/%d], Loss: %.4f' % (epoch +1, num_epochs, loss.data[0]))
         predicted = model(Variable(torch.from_numpy(x_train))).data.numpy()
         plt.plot(x_train,y_train,'ro',label='Original Data')
@@ -75,7 +71,8 @@ for epoch in range(num_epochs):
         plt.legend()
         plt.show()
 
-    
+    optimizer.zero_grad() # zero the gradients
+    loss.backward() #backward propogation
+    optimizer.step() #1-step optimization(gradient descent)
 
         
-    

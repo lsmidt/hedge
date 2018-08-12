@@ -23,6 +23,8 @@ import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
 
+
+
 # AWS CREDENTIALS
 HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
 PORT = 3306
@@ -30,13 +32,13 @@ DB_NAME = "scores_timeseries"
 DB_USER = "hedgeADMIN"
 DB_PW = "bluefootedboobie123"
 
-# connect to Datasets
+# connect to Dataset and AWS to pull data 
 scores_db = dataset.connect("sqlite:///scorebase.db")
 AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
 (DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
 
+# Run wikipedia trends for today
 wiki = WikiTrends()
-
 #wiki.run_wiki()
 
 ### Run this to create company CSVs 
@@ -52,7 +54,6 @@ wiki = WikiTrends()
 
 apple = pd.read_csv("AAPL.csv")
 apple.rename(columns={"score" : "y", "timestamp" : "ds"}, inplace=True)
-print (apple.head()) 
 
 prophet = fbprophet.Prophet()
 prophet.fit(apple[["ds", "y"]])

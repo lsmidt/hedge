@@ -83,7 +83,7 @@ class WikiTrends():
             for article in article_list:
                 today = datetime.datetime.today()
                 yesterday = today - datetime.timedelta(1)
-                start_date = today - datetime.timedelta(days_back)
+                start_date = yesterday - datetime.timedelta(days_back)
                 
                 # td = self._to_wiki_date_string(today)
                 # ys = self._to_wiki_date_string(yesterday)
