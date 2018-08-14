@@ -1,5 +1,5 @@
 #           PLOT REGRESSIONS                        #
-#           
+#
 # Purpose: analyze data inside of our database,     #
 # relevant plots using matplotlib                   #
 
@@ -19,100 +19,101 @@ from wikipedia_trends import WikiTrends as WT
 today = DT.date.today() - DT.timedelta(days = 1)
 week_ago = today - DT.timedelta(days = 7)
 
-# AWS CREDENTIALS
-HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
-PORT = 3306
-DB_NAME = "scores_timeseries"
-DB_USER = "hedgeADMIN"
-DB_PW = "bluefootedboobie123"
+class Analytics():
+    # AWS CREDENTIALS
+    HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
+    PORT = 3306
+    DB_NAME = "scores_timeseries"
+    DB_USER = "hedgeADMIN"
+    DB_PW = "bluefootedboobie123"
 
-# connect to Datasets
-scores_db = dataset.connect("sqlite:///scorebase.db")
-AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
-(DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
+    # connect to Datasets
+    scores_db = dataset.connect("sqlite:///scorebase.db")
+    AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
+    (DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
 
-# function to plot stock's last opening and closing prices across a timeframe.
-# DEFAULT TIMEFRAME IS ONE WEEK
-def score_regression(symbol, start = week_ago, end = today):
+    # function to plot stock's last opening and closing prices across a timeframe.
+    # DEFAULT TIMEFRAME IS ONE WEEK
+    def score_regression(self, symbol, start = week_ago, end = today):
 
-    log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
-                                                    output_format = 'pandas')
-    print(log)
+        log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
+                                                        output_format = 'pandas')
+        print(log)
 
-    # LOG STORES:
-    #          open, high, low, close, and volume
-    # PLOT DIFFERENT CHARACTERISTICS BY REFERENCING TERM AS YOU WOULD A DICTIONARY
-    # ex. log.plot(log["close"])
+        # LOG STORES:
+        #          open, high, low, close, and volume
+        # PLOT DIFFERENT CHARACTERISTICS BY REFERENCING TERM AS YOU WOULD A DICTIONARY
+        # ex. log.plot(log["close"])
 
-    difference = (log["close"] - log["open"])*100/log["open"]
-    plt.plot(difference, color = 'g', label = 'percent change in price', marker = 'd')
+        difference = (log["close"] - log["open"])*100/log["open"]
+        plt.plot(difference, color = 'g', label = 'percent change in price', marker = 'd')
 
-    # normalized = normalize_PI("TSLA", start, end)
+        # normalized = normalize_PI("TSLA", start, end)
 
-    # plt.plot(log["close"], color = 'r', label = "close")
-    # plt.plot(log["open"], color = 'g', label = 'open')
-    plt.legend(loc = "best")
-    plt.ylabel('CHANGE (in %)')
-    plt.xlabel('DATE')
+        # plt.plot(log["close"], color = 'r', label = "close")
+        # plt.plot(log["open"], color = 'g', label = 'open')
+        plt.legend(loc = "best")
+        plt.ylabel('CHANGE (in %)')
+        plt.xlabel('DATE')
 
-    plt.show()
+        plt.show()
 
-# function that returns a dataframe object with dates that are the same as
-# those in the difference log
-def normalize_PI(symbol, start = week_ago, end = today):
-    data = dict()
-    data['PI'] = list()
-    data['datetime'] = list()
-    for SYM in scores_db[symbol]:
-        data['PI'].append(SYM['purchase_intent'])
-        data['datetime'].append(SYM['datetime'])
-
-
-# TODO: enter scores based on TWEETS.
-# one entry per day???
-def populate_scores():
-    table = scores_db["TSLA"]
-
-    table.insert( dict (
-        date = "2018_7_16",
-        score = 1100
-    ) )
-
-def AWS_refresh():
-    print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
-    print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
-
-    for TABLE in AWS_RDS.tables:
-        if (TABLE.find("WIKI") != -1):
-            continue
-
-        #print (TABLE)
-        scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
-                                  # { 'date': score }
-        for SYM in AWS_RDS[TABLE]:
-            #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
-
-            if (SYM["timestamp"].date() in scores[TABLE].keys()):
-                tmp_score = scores[TABLE][SYM["timestamp"].date()][0]
-                tmp_num_tweets = scores[TABLE][SYM["timestamp"].date()][1]
-
-                num_tweets = tmp_num_tweets + SYM["num_tweets"]
-                if (num_tweets == 0):
-                    continue
-
-                score = (tmp_score * tmp_num_tweets + SYM["score"] * SYM["num_tweets"])/num_tweets
-
-                scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
-            else:
-                scores[TABLE][SYM["timestamp"].date()] = \
-                            (SYM["score"], SYM["num_tweets"])
+    # function that returns a dataframe object with dates that are the same as
+    # those in the difference log
+    def normalize_PI(self, symbol, start = week_ago, end = today):
+        data = dict()
+        data['PI'] = list()
+        data['datetime'] = list()
+        for SYM in scores_db[symbol]:
+            data['PI'].append(SYM['purchase_intent'])
+            data['datetime'].append(SYM['datetime'])
 
 
-    for key in scores.keys():
-        print (key, "   |            |        |")
+    # TODO: enter scores based on TWEETS.
+    # one entry per day???
+    def populate_scores(self):
+        table = scores_db["TSLA"]
 
-        for SYM in scores[key].keys():
-            print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
+        table.insert( dict (
+            date = "2018_7_16",
+            score = 1100
+        ) )
+
+    def AWS_refresh(self):
+        print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
+        print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
+
+        for TABLE in self.AWS_RDS.tables:
+            if (TABLE.find("WIKI") != -1):
+                continue
+
+            #print (TABLE)
+            scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
+                                      # { 'date': score }
+            for SYM in self.AWS_RDS[TABLE]:
+                #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
+
+                if (SYM["timestamp"].date() in scores[TABLE].keys()):
+                    tmp_score = scores[TABLE][SYM["timestamp"].date()][0]
+                    tmp_num_tweets = scores[TABLE][SYM["timestamp"].date()][1]
+
+                    num_tweets = tmp_num_tweets + SYM["num_tweets"]
+                    if (num_tweets == 0):
+                        continue
+
+                    score = (tmp_score * tmp_num_tweets + SYM["score"] * SYM["num_tweets"])/num_tweets
+
+                    scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
+                else:
+                    scores[TABLE][SYM["timestamp"].date()] = \
+                                (SYM["score"], SYM["num_tweets"])
+
+
+        for key in scores.keys():
+            print (key, "   |            |        |")
+
+            for SYM in scores[key].keys():
+                print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
 
 
 
@@ -120,16 +121,17 @@ def AWS_refresh():
 
 scores = defaultdict(float)
 
+an = Analytics()
+
 while True:
     print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
     print ("- - - -  %s - - - - -" % datetime.datetime.now())
 
-    AWS_refresh()
+    an.AWS_refresh()
 
     #wiki_poll()
 
     time.sleep(10)
-
 
 
 # score_regression("SBUX")
