@@ -1,5 +1,5 @@
 #           PLOT REGRESSIONS                        #
-#                                                   #
+#
 # Purpose: analyze data inside of our database,     #
 # relevant plots using matplotlib                   #
 
@@ -19,26 +19,22 @@ from wikipedia_trends import WikiTrends as WT
 today = DT.date.today() - DT.timedelta(days = 1)
 week_ago = today - DT.timedelta(days = 7)
 
+class Analytics():
+    # AWS CREDENTIALS
+    HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
+    PORT = 3306
+    DB_NAME = "scores_timeseries"
+    DB_USER = "hedgeADMIN"
+    DB_PW = "bluefootedboobie123"
 
-# ---------------------------- VARIABLES -------------------------------------
-# AWS CREDENTIALS
-HOST = "hedgedb.c288vca6ravj.us-east-2.rds.amazonaws.com"
-PORT = 3306
-DB_NAME = "scores_timeseries"
-DB_USER = "hedgeADMIN"
-DB_PW = "bluefootedboobie123"
+    # connect to Datasets
+    scores_db = dataset.connect("sqlite:///scorebase.db")
+    AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
+    (DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
 
-# connect to Datasets
-scores_db = dataset.connect("sqlite:///scorebase.db")
-AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
-(DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
-
-
-# ---------------------------- CLASSES -------------------------------------
-class PrettyPlot():
     # function to plot stock's last opening and closing prices across a timeframe.
     # DEFAULT TIMEFRAME IS ONE WEEK
-    def score_regression(symbol, start = week_ago, end = today):
+    def score_regression(self, symbol, start = week_ago, end = today):
 
         log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
                                                         output_format = 'pandas')
@@ -64,7 +60,7 @@ class PrettyPlot():
 
     # function that returns a dataframe object with dates that are the same as
     # those in the difference log
-    def normalize_PI(symbol, start = week_ago, end = today):
+    def normalize_PI(self, symbol, start = week_ago, end = today):
         data = dict()
         data['PI'] = list()
         data['datetime'] = list()
@@ -75,7 +71,7 @@ class PrettyPlot():
 
     # TODO: enter scores based on TWEETS.
     # one entry per day???
-    def populate_scores():
+    def populate_scores(self):
         table = scores_db["TSLA"]
 
         table.insert( dict (
@@ -83,18 +79,18 @@ class PrettyPlot():
             score = 1100
         ) )
 
-    def AWS_refresh():
+    def AWS_refresh(self):
         print ("- - - - - - - - - -  AWS  - - - - - - - - - -")
         print ("- - - - - - - - - - - - - - - - - - - - - - -\n")
 
-        for TABLE in AWS_RDS.tables:
+        for TABLE in self.AWS_RDS.tables:
             if (TABLE.find("WIKI") != -1):
                 continue
 
             #print (TABLE)
             scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
                                       # { 'date': score }
-            for SYM in AWS_RDS[TABLE]:
+            for SYM in self.AWS_RDS[TABLE]:
                 #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
 
                 if (SYM["timestamp"].date() in scores[TABLE].keys()):
@@ -125,16 +121,17 @@ class PrettyPlot():
 
 scores = defaultdict(float)
 
+an = Analytics()
+
 while True:
     print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
     print ("- - - -  %s - - - - -" % datetime.datetime.now())
 
-    AWS_refresh()
+    an.AWS_refresh()
 
     #wiki_poll()
 
     time.sleep(10)
-
 
 
 # score_regression("SBUX")

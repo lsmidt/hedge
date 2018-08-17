@@ -9,6 +9,7 @@ TODO:
     POSITIVE, NEGATIVE, HASHTAG most common words
     Sentiment scores for each
 
+
 Max Gillespie
 6/15/2018
 '''
@@ -19,7 +20,6 @@ import pprint
 import json
 import string
 import operator
-import time
 
 from tweepy import OAuthHandler
 from tweepy import Stream
@@ -61,7 +61,7 @@ class MyListener(StreamListener):
             return
 
         try:
-            if (tweets_collected >= 5):
+            if (tweets_collected >= 1000):
                 return False
 
             # if positive sentiment, write to j_pos
@@ -119,39 +119,36 @@ class TwitterTrends():
 
 
     def sync(self, topics):
-        for topic in topics:
-            print("SEARCHING FOR %s" %topic)
-            total_sentiment = 0
-            tweets_collected = 0
+        print("SEARCHING FOR %s" %topics)
+        total_sentiment = 0
+        tweets_collected = 0
 
-            # start_time = time.time()
+        #for t in topic:
+        #    twitter_stream.filter(track=[t])
 
-            #for t in topic:
-            #    twitter_stream.filter(track=[t])
+        self.twitter_stream.filter(track = topics)
 
-            self.twitter_stream.filter(track = topic)
+        extra_stop = list()
+        for t in topics:
+            temp = word_tokenize(t.lower())
 
-            extra_stop = list()
-            for t in topic:
-                temp = word_tokenize(t.lower())
+            if len(temp) == 1:
+                extra_stop.append(temp[0])
+            else:
+                for i in range(0, len(temp)):
+                    extra_stop.append(temp[i])
 
-                if len(temp) == 1:
-                    extra_stop.append(temp[0])
-                else:
-                    for i in range(0, len(temp)):
-                        extra_stop.append(temp[i])
+        tok = self.tokenize_tweets(extra_stop)
+        most_common_words.append(tok[0])
 
-            tok = self.tokenize_tweets(extra_stop)
-            most_common_words.append(tok[0])
+        #self.pos_sentiment.append(float(tok[1][0]/tok[2][0]))
+        #self.neg_sentiment.append(float(tok[1][1]/tok[2][1]))
 
-            j_pos = []
-            j_neg = []
+        #print ("{}/{}".format(tok[1][0], tok[2][0] ))
+        #print ("{}/{}".format(tok[1][1], tok[2][1] ))
 
-            #self.pos_sentiment.append(float(tok[1][0]/tok[2][0]))
-            #self.neg_sentiment.append(float(tok[1][1]/tok[2][1]))
-
-            #print ("{}/{}".format(tok[1][0], tok[2][0] ))
-            #print ("{}/{}".format(tok[1][1], tok[2][1] ))
+        return { 'Search_Terms': topics, 'Positive': most_common_words[0][0],
+                                    'Negative': most_common_words[0][1] }
 
 
     def find_tweet_sentiment(self, tweet) -> float:
@@ -168,7 +165,6 @@ class TwitterTrends():
     def tokenize_tweets(self, extra_stop = []):
         total_sentiment = [ 0, 0 ]
         files = [ self.j_pos, self.j_neg ]
-        file_counter = 0
         count = []
         # total_tweets = []
 
@@ -187,7 +183,6 @@ class TwitterTrends():
 
             # total_tweets.append(total_collected)
             count.append(count_all.most_common(5))
-            # file_counter += 1
 
         # return ([count, total_sentiment, total_tweets])
         return ( [count, 0, 0] )
@@ -219,16 +214,11 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
 
 '''
 
-topics = [ ["Donald Trump", "Trump"] ]
+topics = [ "Trump", "POTUS", "Donald Trump", "realdonaldtrump" ]
 
 tt = TwitterTrends()
-tt.sync(topics)
+MCW = tt.sync(topics)
 
-
-print (len(most_common_words))
-
-for i in range(len(topics)):
-    for topic in topics[i]:
-        print (topic)
-
-    print (most_common_words[i][0])
+print ("SEARCH TERMS:  ", MCW['Search_Terms'])
+print ("POSITIVE WORDS:", MCW['Positive'])
+print ("NEGATIVE WORDS:", MCW['Negative'])
