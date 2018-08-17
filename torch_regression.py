@@ -77,4 +77,4 @@ for epoch in range(num_epochs):
     optimizer.zero_grad() # zero the gradients
     optimizer.step() #1-step optimization(gradient descent)
 
-        
+    model.
