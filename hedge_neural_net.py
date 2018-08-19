@@ -25,14 +25,14 @@ AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
 
 in_size = 3 # twitter_sent, headline_sent, wiki_views
 out_size = 1 # composite output
-num_epochs = 300
-learning_rate = 0.0002
+num_epochs = 800
+learning_rate = 0.002
 
 
 #Data set
 
 #x_train = np.array([[1.564],[2.11],[3.3],[5.4]], dtype=np.float32)
-x_train = np.array([[450.,80.,14752.],[300.,88.,11000.],[260.,91.,9000.],[496.,98.,1000.],[200.,63.,2000.]],dtype=np.float32)
+x_train = np.array([[450.,80.,14752.],[300.,88.,11000.],[260.,91.,9000.],[496.,98.,11000.],[200.,63.,12000.]],dtype=np.float32)
 
 #y_train = np.array([[8.0],[19.0],[25.0],[34.45]], dtype= np.float32)
 y_train = np.array([[3.2],[1.8],[0.2],[1.0],[0.5]],dtype=np.float32)
@@ -58,8 +58,8 @@ class LinearRegression(nn.Module):
 model = LinearRegression()
 
 #Lost and Optimizer
-criterion = nn.MSELoss() # using Mean Squared Error loss
-optimizer = torch.optim.SGD(model.parameters(),lr=learning_rate) # using Stochastic Gradient Descent
+criterion = nn.SmoothL1Loss() # using Mean Squared Error loss
+optimizer = torch.optim.SGD(model.parameters(),lr=learning_rate, weight_decay=1) # using Stochastic Gradient Descent
 
 # train the Model
 for epoch in range(num_epochs):
