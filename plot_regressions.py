@@ -4,6 +4,7 @@
 # relevant plots using matplotlib                   #
 
 import matplotlib.pyplot as plt
+import numpy as np
 import datetime as DT
 import dataset
 import dbapi
@@ -47,14 +48,17 @@ class Analytics():
 
         log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
                                                         output_format = 'pandas')
-        print(log)
+        # print(log)
 
-        # LOG STORES:
-        #          open, high, low, close, and volume
-        # PLOT DIFFERENT CHARACTERISTICS BY REFERENCING TERM AS YOU WOULD A DICTIONARY
-        # ex. log.plot(log["close"])
+        '''
+        LOG STORES:
+            open, high, low, close, and volume
+        PLOT DIFFERENT CHARACTERISTICS BY REFERENCING TERM AS YOU WOULD A DICTIONARY
+        ex. log.plot(log["close"])
+        '''
 
         difference = (log["close"] - log["open"])*100/log["open"]
+
         plt.plot(difference, color = 'g', label = 'percent change in price', marker = 'd')
 
         # normalized = normalize_PI("TSLA", start, end)
@@ -62,8 +66,10 @@ class Analytics():
         # plt.plot(log["close"], color = 'r', label = "close")
         # plt.plot(log["open"], color = 'g', label = 'open')
         plt.legend(loc = "best")
+
         plt.ylabel('CHANGE (in %)')
         plt.xlabel('DATE')
+        plt.xticks(rotation = 70)
 
         plt.show()
 
