@@ -29,12 +29,21 @@ class Analytics():
 
     # connect to Datasets
     scores_db = dataset.connect("sqlite:///scorebase.db")
-    AWS_RDS =  dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
+    AWS_RDS = dataset.connect("mysql+pymysql://{}:{}@{}/{}".format\
     (DB_USER, DB_PW, HOST, DB_NAME), engine_kwargs = {'pool_recycle': 3600})
+    scores = defaultdict(float)
 
     # function to plot stock's last opening and closing prices across a timeframe.
     # DEFAULT TIMEFRAME IS ONE WEEK
-    def score_regression(self, symbol, start = week_ago, end = today):
+    def score_regression(self, symbol, mode):
+
+        if (mode == "last_week"):
+            start = week_ago
+            end = today
+        elif (mode == "match_AWS"):
+            tmp = self.get_dates_for_table(symbol)
+            start = tmp[0]
+            end   = tmp[1]
 
         log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
                                                         output_format = 'pandas')
@@ -57,6 +66,15 @@ class Analytics():
         plt.xlabel('DATE')
 
         plt.show()
+
+
+    def get_dates_for_table(self, symbol):
+        # print (len(self.scores[symbol]))
+        tmp_keys = []
+        for key in self.scores[symbol].keys():
+            tmp_keys.append(key)
+
+        return ( [tmp_keys[0], tmp_keys[-1]] )
 
     # function that returns a dataframe object with dates that are the same as
     # those in the difference log
@@ -88,14 +106,14 @@ class Analytics():
                 continue
 
             #print (TABLE)
-            scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
+            self.scores[TABLE] = defaultdict(float)   # initialize dict of scores associated with a date
                                       # { 'date': score }
             for SYM in self.AWS_RDS[TABLE]:
                 #print ( "  %s | %3.2f | %i " % (SYM["timestamp"].date(), SYM["score"], SYM["num_tweets"]) )
 
-                if (SYM["timestamp"].date() in scores[TABLE].keys()):
-                    tmp_score = scores[TABLE][SYM["timestamp"].date()][0]
-                    tmp_num_tweets = scores[TABLE][SYM["timestamp"].date()][1]
+                if (SYM["timestamp"].date() in self.scores[TABLE].keys()):
+                    tmp_score = self.scores[TABLE][SYM["timestamp"].date()][0]
+                    tmp_num_tweets = self.scores[TABLE][SYM["timestamp"].date()][1]
 
                     num_tweets = tmp_num_tweets + SYM["num_tweets"]
                     if (num_tweets == 0):
@@ -103,38 +121,41 @@ class Analytics():
 
                     score = (tmp_score * tmp_num_tweets + SYM["score"] * SYM["num_tweets"])/num_tweets
 
-                    scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
+                    self.scores[TABLE][SYM["timestamp"].date()] = (score, num_tweets)
                 else:
-                    scores[TABLE][SYM["timestamp"].date()] = \
+                    self.scores[TABLE][SYM["timestamp"].date()] = \
                                 (SYM["score"], SYM["num_tweets"])
 
 
-        for key in scores.keys():
+        for key in self.scores.keys():
             print (key, "   |            |        |")
 
-            for SYM in scores[key].keys():
-                print ("\t| %s | %.2f | %i" % (SYM, scores[key][SYM][0], scores[key][SYM][1]) )
+            for SYM in self.scores[key].keys():
+                print ("\t| %s | %.2f | %i" % (SYM, self.scores[key][SYM][0], self.scores[key][SYM][1]) )
 
 
 
 # ---------------------------- MAIN -------------------------------------
 
-scores = defaultdict(float)
 
 an = Analytics()
 
-while True:
-    print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
-    print ("- - - -  %s - - - - -" % datetime.datetime.now())
+#while True:
+print ("\n- - - - - - - - - - - - - - - - - - - - - - -")
+print ("- - - -  %s - - - - -" % datetime.datetime.now())
 
-    an.AWS_refresh()
+an.AWS_refresh()
 
-    #wiki_poll()
-
-    time.sleep(10)
+an.score_regression("SBUX", "match_AWS")
 
 
-# score_regression("SBUX")
+# -------------
+
+#wiki_poll()
+
+#time.sleep(10)
+
+
 
 # populate_scores()
 
