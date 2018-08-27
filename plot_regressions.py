@@ -44,7 +44,7 @@ class Analytics():
         elif (mode == "match_AWS"):
             tmp = self.get_dates_for_table(symbol)
             start = tmp[0]
-            end   = tmp[1]
+            end   = tmp[1] + DT.timedelta(days = 1)
 
         log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
                                                         output_format = 'pandas')
@@ -61,8 +61,13 @@ class Analytics():
 
         plt.plot(difference, color = 'g', label = 'pct change in price', marker = 'd')
 
+        plt.legend(loc = "best")
+        plt.ylabel('CHANGE (in %)')
+        plt.xlabel('DATE')
+        plt.xticks(rotation = 70)
+
         ## UNDER DEV ##
-        # tmp = self.get_PI_pctChng(symbol)  # return [ datetime, pct change ]
+        self.get_PI_pctChng(symbol)  # return [ datetime, pct change ]
         #plt.plot(tmp[0], tmp[1], color = 'r', label = 'pct change in purchase intent', marker = 'd')
         ## UNDER DEV ##
 
@@ -70,13 +75,8 @@ class Analytics():
 
         # plt.plot(log["close"], color = 'r', label = "close")
         # plt.plot(log["open"], color = 'g', label = 'open')
-        plt.legend(loc = "best")
 
-        plt.ylabel('CHANGE (in %)')
-        plt.xlabel('DATE')
-        plt.xticks(rotation = 70)
-
-        # plt.show()
+        plt.show()
 
     def get_PI_pctChng(self, symbol):
         table_dates = []
@@ -88,9 +88,9 @@ class Analytics():
 
         print(self.scores[symbol])
 
-        plt.plot([ DT.date.today() ], [ 1 ], color = 'r', label = 'pct change in purchase intent')
+        #plt.plot([ DT.date.today() ], [ 1 ], color = 'r', label = 'pct change in purchase intent')
 
-        plt.show()
+        # plt.show()
 
         exit(0)
 
