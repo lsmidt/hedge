@@ -86,13 +86,12 @@ class Analytics():
 
         # PI_df = pd.DataFrame()
 
-        print(self.scores[symbol])
+        for date in self.scores[symbol]:
+            print (date)
 
         #plt.plot([ DT.date.today() ], [ 1 ], color = 'r', label = 'pct change in purchase intent')
 
-        # plt.show()
-
-        exit(0)
+        # exit(0)
 
     def get_dates_for_table(self, symbol):
         # print (len(self.scores[symbol]))
