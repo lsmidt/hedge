@@ -59,7 +59,12 @@ class Analytics():
 
         difference = (log["close"] - log["open"])*100/log["open"]
 
-        plt.plot(difference, color = 'g', label = 'percent change in price', marker = 'd')
+        plt.plot(difference, color = 'g', label = 'pct change in price', marker = 'd')
+
+        ## UNDER DEV ##
+        # tmp = self.get_PI_pctChng(symbol)  # return [ datetime, pct change ]
+        #plt.plot(tmp[0], tmp[1], color = 'r', label = 'pct change in purchase intent', marker = 'd')
+        ## UNDER DEV ##
 
         # normalized = normalize_PI("TSLA", start, end)
 
@@ -71,8 +76,23 @@ class Analytics():
         plt.xlabel('DATE')
         plt.xticks(rotation = 70)
 
+        # plt.show()
+
+    def get_PI_pctChng(self, symbol):
+        table_dates = []
+        PI_change = []
+        for date in self.scores[symbol].keys():
+            table_dates.append(date)
+
+        # PI_df = pd.DataFrame()
+
+        print(self.scores[symbol])
+
+        plt.plot([ DT.date.today() ], [ 1 ], color = 'r', label = 'pct change in purchase intent')
+
         plt.show()
 
+        exit(0)
 
     def get_dates_for_table(self, symbol):
         # print (len(self.scores[symbol]))
