@@ -5,6 +5,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import datetime as DT
 import dataset
 import dbapi
@@ -48,7 +49,8 @@ class Analytics():
 
         log = get_historical_data(symbol, start = start, end = end + DT.timedelta(days = 1) , \
                                                         output_format = 'pandas')
-        # print(log)
+        print (type(log))
+        print (log)
 
         '''
         LOG STORES:
@@ -84,10 +86,14 @@ class Analytics():
         for date in self.scores[symbol].keys():
             table_dates.append(date)
 
-        # PI_df = pd.DataFrame()
+        PI_df = pd.DataFrame( columns = ["Date", "PI"] )
 
         for date in self.scores[symbol]:
-            print (date)
+            #print (date, self.scores[symbol][date][0])      # DATA:
+                                                             # date | [ PI, #_samples ]
+            PI_df.append( { "Date": date, "PI":self.scores[symbol][date][0]},
+                                                        ignore_index = True)
+        print (PI_df)
 
         #plt.plot([ DT.date.today() ], [ 1 ], color = 'r', label = 'pct change in purchase intent')
 
