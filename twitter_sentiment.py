@@ -104,7 +104,7 @@ set_time = time.time()
 # Constants
 MINUTE_DELAY = 0.5
 NUM_TWEETS_TO_FETCH = 500
-LOOP_ITERATIONS = 1000
+LOOP_ITERATIONS = 1000000000000
 
 # reference variables
 ref_date = datetime.date.today()
@@ -261,15 +261,15 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
         since_id = 0
 
     print ("Grabbing Tweets for query {}".format(search_terms))
-    
+
     try:
         search_result = TWY.search(q=search_terms, result_type="recent", since_id=since_id, count=200, lang="en")
-   
+
     except TwythonError as e:
         print("Twython Error (on FIRST search): {}".format( str(e) ))
         return ([], 0)
-    
-    
+
+
     tweets = []
 
     _max_id = search_result["search_metadata"]["max_id"]
@@ -292,7 +292,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
         except TwythonError as e:
             print ("Twython Error (on a subsequent search): {}".format( str(e) ))
             return (tweets, highest_id)
-        
+
     return (tweets, highest_id)
 
 def combine_search_results(first, second, third):

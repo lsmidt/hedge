@@ -214,7 +214,7 @@ topics = [ ["Shasta", "Faygo", "Everfresh", "La Croix", "Rip It", "Clearfruit", 
 
 '''
 
-topics = [ "Trump", "POTUS", "Donald Trump", "realdonaldtrump" ]
+topics = [  ]
 
 tt = TwitterTrends()
 MCW = tt.sync(topics)

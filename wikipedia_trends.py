@@ -1,5 +1,5 @@
 """
-Return Wikipedia trends score daily. 
+Return Wikipedia trends score daily.
 """
 
 
@@ -59,12 +59,12 @@ class WikiTrends():
 
         try:
             full_result = pageviewapi.per_article('en.wikipedia', article, _st, _nd,\
-                            access='all-access', agent='all-agents', granularity='daily') 
+                            access='all-access', agent='all-agents', granularity='daily')
         except pageviewapi.client.ZeroOrDataNotLoadedException as e:
             full_result = dict(items=[])
 
         result_subset = {}
-        
+
         for item in full_result["items"]:
             py_dt = self._to_datetime(item["timestamp"] )
             result_subset[py_dt] = item["views"]
@@ -84,16 +84,16 @@ class WikiTrends():
                 today = datetime.datetime.today()
                 yesterday = today - datetime.timedelta(1)
                 start_date = yesterday - datetime.timedelta(days_back)
-                
+
                 # td = self._to_wiki_date_string(today)
                 # ys = self._to_wiki_date_string(yesterday)
- 
+
                 wiki_views_dict = self.get_wiki_views(article, start_date, yesterday.date())
 
                 for date, score in wiki_views_dict.items():
                     total_views += score
-                
-            # save to database 
+
+            # save to database
             name = "WIKI: {}".format(ticker)
             table = self.AWS_RDS[name]
 
@@ -102,10 +102,5 @@ class WikiTrends():
                 views=total_views
             )
             print ("{}: ({}, {})".format(ticker, date, total_views))
-            
+
             table.insert(save_info)
-
-
-    
-
-
