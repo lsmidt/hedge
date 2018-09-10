@@ -32,7 +32,12 @@ learning_rate = 0.002
 #Data set
 
 #x_train = np.array([[1.564],[2.11],[3.3],[5.4]], dtype=np.float32)
-x_train = np.array([[450.,80.,14752.],[300.,88.,11000.],[260.,91.,9000.],[496.,98.,11000.],[200.,63.,12000.]],dtype=np.float32)
+x_train = np.array([
+    [450.,80.,14752.],
+    [300.,88.,11000.],
+    [260.,91.,9000.],
+    [496.,98.,11000.],
+    [200.,63.,12000.]],dtype=np.float32)
 
 #y_train = np.array([[8.0],[19.0],[25.0],[34.45]], dtype= np.float32)
 y_train = np.array([[3.2],[1.8],[0.2],[1.0],[0.5]],dtype=np.float32)
@@ -40,16 +45,14 @@ y_train = np.array([[3.2],[1.8],[0.2],[1.0],[0.5]],dtype=np.float32)
 print('x_train:\n',x_train)
 print('y_train:\n',y_train)
 
-x_train = torch.from_numpy(x_train)
-y_train = torch.from_numpy(y_train)
-
-
+inputs, outputs = torch.Tensor(x_train).unsqueeze(1), torch.Tensor(Y).unsqueeze(1)
 
 class LinearRegression(nn.Module):
 
     def __init__(self):
         super(LinearRegression,self).__init__()
-        self.linear = nn.Linear(3, 1)
+        self.linear = nn.Linear(3, 1, bias=True)
+
 
     def forward(self,x):
         out = self.linear(x) #Forward propogation using linear model
@@ -67,6 +70,8 @@ for epoch in range(num_epochs):
     #convert numpy arrays for training and results to torch tensor Variable class
     inputs = Variable(x_train)
     target = Variable(y_train)
+
+    inputs, outputs = Variable(inputs.cuda()), Variable(outputs.cuda())
 
     #forward
     outputs = model(inputs) # generate output from model with all input vectors
