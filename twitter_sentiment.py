@@ -1,49 +1,42 @@
 '''
-HEDGE CAPITAL LLC.
+HEDGE
 
-PURPOSE:
-
-
-TODO:
-    (max) IEX moving 'n' day average and standard deviation
-    (max) read tweetbase.db to plot connection between scores and price
-    maximum score for any specific sample
-    
+Purpose: Search Tweets for specific keywords and 
 
 Louis Smidt & Max Gillespie
 FIRST COMMIT ----------------> 6/09/2018
-MOST RECENT COMMIT ----------> 7/18/2018
+MOST RECENT COMMIT ----------> 3/9/2019
 '''
 
 from twython import Twython # used for mentions
 import tweepy # used for streaming
+#import twint 
 import dataset
 import urllib.parse
-import copy
 import re
+import copy
 import json
 from datetime import date
-import pandas as pd
 import pprint
 import vaderSentiment.vaderSentiment as sia
 import time
 import datetime
-from nltk.tag import StanfordNERTagger # used for Named Entity Resolution
 from nltk.metrics.scores import accuracy
-from nltk import word_tokenize
-from nltk import pos_tag
+from nltk import word_tokenize, pos_tag
 from collections import defaultdict
 
-from fuzzywuzzy import process
-from fuzzywuzzy import fuzz
+from fuzzywuzzy import process, fuzz
 from textblob import TextBlob
 
-db = dataset.connect("sqlite:///tweetbase.db") # connect Dataset to Tweetbase
-db2 = dataset.connect("sqlite://scorebase.db")
 
 printer = pprint.PrettyPrinter() # printer object
 
-SIA = sia.SentimentIntensityAnalyzer() # VADER Senitiment object
+# Senitiment analyzer 
+SIA = sia.SentimentIntensityAnalyzer()
+
+# connect Dataset module to "tweetbase" AWS database
+db = dataset.connect("sqlite:///tweetbase.db") 
+db2 = dataset.connect("sqlite://scorebase.db")
 
 # Twitter Keys
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
@@ -375,8 +368,6 @@ def filter_text(text):
     """
     spell check, remove @mentions
     """
-    # FIXME: This shit doesn't work
-    mention_expression = re.compile(r"\s([@#][\w_-]+)")
 
     short = reduce_lengthening(text)
     no_mentions = re.sub(mention_expression, short)
