@@ -35,8 +35,8 @@ printer = pprint.PrettyPrinter() # printer object
 SIA = sia.SentimentIntensityAnalyzer()
 
 # connect Dataset module to "tweetbase" AWS database
-db = dataset.connect("sqlite:///tweetbase.db") 
-db2 = dataset.connect("sqlite://scorebase.db")
+DB = dataset.connect("sqlite:///tweetbase.DB") 
+DB2 = dataset.connect("sqlite://scorebase.DB2")
 
 # Twitter Keys
 CONSUMER_KEY = 'zQuVUVHVWNZd7yfMNdyXx4NgJ'
@@ -53,7 +53,7 @@ auth = tweepy.OAuthHandler(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_S
 auth.set_access_token(key=AXS_TOKEN_KEY, secret=AXS_TOKEN_SECRET)
 TWEEPY_API = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-running = True # start and stop search
+RUNNING = True # start and stop search
 
 index_dict = {} # hold twitter since_ids for each searched company
 
@@ -95,12 +95,12 @@ class StreamListener(tweepy.StreamListener):
         tweet_counter += 1
 
         if tweet_counter == 10:
-            time_diff = time.time() - set_time
+            time_diff = time.time() - set_time         # keep track of how long it takes to fetch each batch of 10 tweets
             print ("\n TIMER: {} \n".format(tweet_counter / time_diff))
             set_time = time.time()
             tweet_counter = 0
 
-
+        # filter tweet against rules
         if not filter_tweet( status):
             return
 
@@ -115,7 +115,7 @@ class StreamListener(tweepy.StreamListener):
         target = find_tweet_target(status.text)
         # sentiment[target] .append(polarity_score)
 
-        # print tweet and score
+        # print tweet properties
         print("TEXT: {} \n (Polarity: {}) \n (Subjectivity: {}) \n (Target: {}) \n" \
         .format(status.text, polarity_score, subj, target))
 
@@ -123,8 +123,10 @@ class StreamListener(tweepy.StreamListener):
     def on_error(self, error_code):
         print("Error" + str( error_code))
         if error_code == 420:
-            print("420: Rate Limit Error")
+            print("Error 420: Rate Limit Error")
             return False
+        else:
+            print("-- Not a Rate Limit Error")
 
 
 ######----------------- Live Stream Processing -------------------######
@@ -150,17 +152,18 @@ def find_tweet_target(tweet_text: str) -> str:
     h_company = []
     h_brand = []
 
-    for company, brand_dict in companies_db.items():
+    # fuzzy string match the tweet text to branding names and phrases in the Brand Dictionary
+    for _company, brand_dict in companies_db.items():
         for brand, tag_list in brand_dict.items():
             for tag in tag_list:
                 score = fuzz.partial_token_sort_ratio(tag, tweet_text)
-                if score > 90:
-                    highest_score = score
-                    h_company.append(company)
-                    h_brand.append(brand)
+                    if score > highest_score and score > 90:
+                        highest_score = score
+                        h_company.append(_company)
+                        h_brand.append(brand)
                     #company_matches[h_company][h_brand] += 1
                 # if tag in tweet_text:
-                #     h_company = company
+                #     h_company = _company
                 #     h_brand = brand
                 #     return (h_company, h_brand)
 
@@ -177,7 +180,7 @@ def save_tweet_to_file(db_title: str, tweet, polarity_score: float):
     """
     save the tweet to a SQLite DB using Dataset
     """
-    table = db[db_title]
+    table = DB[db_title]
 
     tweet_contents = dict(
     user_description=tweet.user.description,
@@ -221,7 +224,7 @@ def find_text_sentiment(text) -> float:
 
 def get_search_results(screen_name: str, ticker: str, search_terms: str, since_id: int=None) -> list:
     """
-    RETURN the 'number' most influential tweets after 'from_date' and before 'to_date'
+    RETURN the most influential tweets after Tweet ID since_id
     """
     # Method 1: Search for tweets matching search_terms
     if since_id is None:
@@ -234,7 +237,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     _max_id = search_result["search_metadata"]["max_id"]
     _since_id = search_result["search_metadata"]["since_id"]
 
-    highest_id = _since_id
+    highest_id = _since_id          # update since_id to avoid duplicate results
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
@@ -262,7 +265,7 @@ def combine_search_results(first, second, third):
 
 def get_recent_mentions(screen_name: str, since_id:int) -> list:
     """
-    find recent mentions of an account given its screen name by searching "@screen_name"
+    find most-recent mentions of an account given its screen name 
     """
     mentions = TWY.search(q="@" + screen_name, count=100, since_id=since_id, lang="en")
     tweets = []
@@ -495,7 +498,7 @@ def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float
     save_tweet_to_file analog for tweets that are dictionaries instead of Status objects
     """
 
-    table = db[db_name]
+    table = DB[db_name]
 
     tweet_contents = dict(
     text=tweet["text"],
@@ -661,9 +664,9 @@ search_count = 0 # keep track of number of iterations of loop
 sentiment_score = defaultdict(float)
 pi_count = defaultdict(float)
 score = defaultdict(float)
-table = db2["Time_Series_Scores"]
+table = DB2["Time_Series_Scores"]
 
-while running:
+while RUNNING:
 
     avg_sent = 0.0
     num_records = 0
@@ -706,7 +709,7 @@ while running:
             time.sleep( MINUTE_DELAY * 60 - time_diff) 
 
     if search_count > 360:
-        running = False
+        RUNNING = False
         break
 
     # after every complete iteration, print scores and save to file
