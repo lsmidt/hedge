@@ -241,7 +241,7 @@ def get_search_results(screen_name: str, ticker: str, search_terms: str, since_i
     lowest_id = _max_id
 
     # paginate results by updating max_id variable
-    while len(search_result["statuses"]) != 0 and len(tweets) <1000:
+    while len(search_result["statuses"]) > 0 and len(tweets) < 1000:
         print("Returned {} Tweets from Search".format(len(tweets)))
 
         for tweet in search_result["statuses"]:
@@ -304,6 +304,7 @@ def get_user_timeline(account_id: int, since_id: int):
     lowest_id = _max_id
     highest_id = _since_id
 
+    # paginate results
     while len(timeline_tweets["statuses"]) != 0:
 
         for tweet in timeline_tweets["statuses"]:
@@ -312,7 +313,7 @@ def get_user_timeline(account_id: int, since_id: int):
             if tweet["id"] > since_id:
                tweets.append(tweet)
 
-    timeline_tweets = TWY.get_user_timeline(user_id=account_id)
+        timeline_tweets = TWY.get_user_timeline(user_id=account_id)
 
     return (timeline_tweets, highest_id)
 
@@ -483,7 +484,7 @@ def string_word_ratio(a_string, b_list):
         max_ratio = max(ratio, max_ratio)
     return max_ratio
 
-def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
+def realtime_user_tweets(stock_symbol: str, account_id: int=None):
     """
     Begin streaming tweets matching the stock symbol or from the account in real time.
     """
@@ -493,7 +494,7 @@ def scan_realtime_tweets(stock_symbol: str, account_id: int=None):
         if data[0] == stock_symbol:
             start_tweet_stream(data[1], follow_user_id=account_id)
 
-def save_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float):
+def save_tweet_dict_to_file(db_name: str, query: tuple,  tweet: dict, polarity_score: float):
     """
     save_tweet_to_file analog for tweets that are dictionaries instead of Status objects
     """
@@ -599,7 +600,7 @@ def search_tweets(id_tuple, search_terms_dic: dict):
             
             print (find_tweet_target(tweet["text"]))
             print ("Purchase Intent: " + str(shows_pi) + "\n")
-            # save_to_file( "searched_tweets", id_tuple, tweet, polarity)
+            # save_tweet_dict_to_file( "searched_tweets", id_tuple, tweet, polarity)
 
             passed_tweets.append(tweet["text"])
             sentiment.append(polarity)
